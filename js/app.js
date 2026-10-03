@@ -222,7 +222,7 @@
   function triggerPopunder(customUrl) {
     const config = window.LEGION_CONFIG || {};
     const ads = config.ADS || {};
-    const url = customUrl || ads.POPUNDER_URL || "https://www.profitablecpmrate.com/popunder_main";
+    const url = customUrl || ads.POPUNDER_URL || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
 
     if (url && url !== "#") {
       try {
