@@ -1,0 +1,300 @@
+/**
+ * LEGION Free VPN - Admin Panel Logic
+ * Manages ISP Packages, Trojan Credentials, Stock Toggle, and User Ban Controller
+ */
+
+(function () {
+  'use strict';
+
+  const ADMIN_SESSION_KEY = 'legion_admin_auth_token';
+  const DEFAULT_PIN = 'admin123';
+
+  // State
+  let packages = [];
+  let users = [];
+
+  // DOM Elements
+  const loginView = document.getElementById('admin-login-view');
+  const dashboardView = document.getElementById('admin-dashboard-view');
+  const loginForm = document.getElementById('admin-login-form');
+  const passInput = document.getElementById('admin-pass-input');
+  const logoutBtn = document.getElementById('admin-logout-btn');
+
+  const packagesListEl = document.getElementById('admin-packages-list');
+  const usersTableEl = document.getElementById('admin-users-table');
+  
+  // Modal Elements
+  const pkgModal = document.getElementById('package-edit-modal');
+  const closePkgModalBtn = document.getElementById('close-pkg-modal');
+  const btnAddPkg = document.getElementById('btn-add-pkg-modal');
+  const pkgForm = document.getElementById('package-edit-form');
+  const pkgModalTitle = document.getElementById('pkg-modal-title');
+
+  // Stats
+  const statUsers = document.getElementById('stat-total-users');
+  const statBanned = document.getElementById('stat-banned-users');
+  const statAvailable = document.getElementById('stat-available-pkgs');
+  const statOutOfStock = document.getElementById('stat-outofstock-pkgs');
+
+  // --- Auth Guard ---
+  function checkAuth() {
+    const token = sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (token === 'authorized') {
+      loginView.classList.add('hidden');
+      dashboardView.classList.remove('hidden');
+      dashboardView.classList.add('flex');
+      loadDashboardData();
+    } else {
+      loginView.classList.remove('hidden');
+      dashboardView.classList.add('hidden');
+      dashboardView.classList.remove('flex');
+    }
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const pin = passInput.value.trim();
+    if (pin === DEFAULT_PIN) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, 'authorized');
+      passInput.value = '';
+      checkAuth();
+    } else {
+      alert("Invalid Security PIN! Default PIN is: admin123");
+    }
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    checkAuth();
+  }
+
+  // --- Data Loader ---
+  function loadDashboardData() {
+    packages = window.LegionStore.getPackages();
+    users = window.LegionStore.getUsers();
+    renderStats();
+    renderPackages();
+    renderUsers();
+  }
+
+  function renderStats() {
+    const totalUsers = users.length;
+    const bannedUsers = users.filter(u => window.LegionStore.isUserBanned(u.email)).length;
+    const available = packages.filter(p => p.inStock).length;
+    const outOfStock = packages.length - available;
+
+    if (statUsers) statUsers.textContent = totalUsers;
+    if (statBanned) statBanned.textContent = bannedUsers;
+    if (statAvailable) statAvailable.textContent = available;
+    if (statOutOfStock) statOutOfStock.textContent = outOfStock;
+  }
+
+  // --- Render Packages ---
+  function renderPackages() {
+    if (!packagesListEl) return;
+    packagesListEl.innerHTML = '';
+
+    packages.forEach(pkg => {
+      const card = document.createElement('div');
+      card.className = `m3-surface-2 p-5 rounded-3xl border transition-all ${
+        pkg.inStock ? 'border-emerald-900/50' : 'border-red-950/60 opacity-80'
+      }`;
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+            pkg.inStock ? 'bg-neon/10 border border-neon/30 text-neon' : 'bg-red-950/40 border border-red-500/40 text-red-400'
+          }">
+            ${pkg.inStock ? '● In Stock' : '✕ Out of Stock'}
+          </span>
+          <span class="text-xs text-zinc-400 font-mono">${pkg.ispPrice || ''}</span>
+        </div>
+
+        <h4 class="text-base font-bold text-white mb-1">${pkg.title}</h4>
+        <p class="text-xs text-zinc-400 mb-4 line-clamp-2 leading-relaxed">${pkg.desc || ''}</p>
+
+        <!-- Trojan Link Preview -->
+        <div class="p-2.5 rounded-xl bg-surface-100 border border-emerald-950/80 mb-4">
+          <span class="block text-[10px] text-zinc-500 font-mono uppercase mb-0.5">Trojan Config Link</span>
+          <p class="text-[11px] font-mono text-emerald-400 truncate">${pkg.trojanConfig || 'No trojan link set'}</p>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2 border-t border-emerald-950/60">
+          <button data-id="${pkg.id}" class="js-toggle-stock flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+            pkg.inStock 
+              ? 'bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-900/50' 
+              : 'bg-neon/20 border border-neon/50 text-neon hover:bg-neon hover:text-black'
+          }">
+            ${pkg.inStock ? 'Mark Out of Stock' : 'Mark In Stock (Click Here)'}
+          </button>
+          
+          <button data-id="${pkg.id}" class="js-edit-pkg p-2 rounded-xl bg-surface-300 hover:bg-surface-200 border border-zinc-700 text-zinc-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </button>
+        </div>
+      `;
+
+      packagesListEl.appendChild(card);
+    });
+
+    // Attach listeners
+    document.querySelectorAll('.js-toggle-stock').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        window.LegionStore.togglePackageStock(id);
+        loadDashboardData();
+      });
+    });
+
+    document.querySelectorAll('.js-edit-pkg').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        openEditModal(id);
+      });
+    });
+  }
+
+  // --- Render Users Table ---
+  function renderUsers() {
+    if (!usersTableEl) return;
+    usersTableEl.innerHTML = '';
+
+    if (users.length === 0) {
+      usersTableEl.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-8 text-center text-zinc-500">
+            No user logins recorded yet. Users will appear here automatically when they sign in with Google on the main site.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    users.forEach(u => {
+      const isBanned = window.LegionStore.isUserBanned(u.email);
+      const tr = document.createElement('tr');
+      tr.className = `hover:bg-surface-200/50 transition-colors ${isBanned ? 'bg-red-950/10' : ''}`;
+
+      tr.innerHTML = `
+        <td class="py-3.5 px-4 flex items-center gap-2.5">
+          <img src="${u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'}" class="w-7 h-7 rounded-full bg-emerald-950 border border-neon/40">
+          <span class="font-semibold text-white">${u.name || 'Anonymous'}</span>
+        </td>
+        <td class="py-3.5 px-4 font-mono text-zinc-300">${u.email}</td>
+        <td class="py-3.5 px-4 text-zinc-400">${u.firstLogin || 'Recent'}</td>
+        <td class="py-3.5 px-4 text-zinc-400 font-mono">${u.lastLogin || 'Recent'}</td>
+        <td class="py-3.5 px-4 font-mono text-zinc-300">${u.loginCount || 1}</td>
+        <td class="py-3.5 px-4">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+            isBanned 
+              ? 'bg-red-950 border border-red-500/50 text-red-400' 
+              : 'bg-emerald-950 border border-neon/50 text-neon'
+          }">
+            ${isBanned ? 'BANNED' : 'ACTIVE'}
+          </span>
+        </td>
+        <td class="py-3.5 px-4 text-right">
+          <button data-email="${u.email}" class="js-toggle-ban px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            isBanned 
+              ? 'bg-emerald-900/40 hover:bg-emerald-800 text-neon border border-neon/40' 
+              : 'bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/40'
+          }">
+            ${isBanned ? 'Unban User' : 'Ban User'}
+          </button>
+        </td>
+      `;
+
+      usersTableEl.appendChild(tr);
+    });
+
+    document.querySelectorAll('.js-toggle-ban').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const email = btn.getAttribute('data-email');
+        const isBannedNow = window.LegionStore.toggleBanUser(email);
+        alert(`User ${email} has been ${isBannedNow ? 'BANNED' : 'UNBANNED'}!`);
+        loadDashboardData();
+      });
+    });
+  }
+
+  // --- Modal Operations ---
+  function openEditModal(pkgId = null) {
+    if (!pkgModal) return;
+
+    if (pkgId) {
+      const pkg = window.LegionStore.getPackageById(pkgId);
+      if (pkg) {
+        pkgModalTitle.textContent = "Edit Package & Trojan Key";
+        document.getElementById('edit-pkg-id').value = pkg.id;
+        document.getElementById('edit-pkg-title').value = pkg.title;
+        document.getElementById('edit-pkg-badge').value = pkg.badge || '';
+        document.getElementById('edit-pkg-price').value = pkg.ispPrice || '';
+        document.getElementById('edit-pkg-desc').value = pkg.desc || '';
+        document.getElementById('edit-pkg-trojan').value = pkg.trojanConfig || '';
+        document.getElementById('edit-pkg-stock').checked = pkg.inStock;
+      }
+    } else {
+      pkgModalTitle.textContent = "Add New ISP Package";
+      document.getElementById('edit-pkg-id').value = "pkg_" + Date.now();
+      document.getElementById('edit-pkg-title').value = "";
+      document.getElementById('edit-pkg-badge').value = "Normal Package";
+      document.getElementById('edit-pkg-price').value = "";
+      document.getElementById('edit-pkg-desc').value = "";
+      document.getElementById('edit-pkg-trojan').value = "trojan://password@sg01.legionvpn.net:443?security=tls#LEGION-SG-NEW";
+      document.getElementById('edit-pkg-stock').checked = true;
+    }
+
+    pkgModal.classList.remove('hidden');
+    pkgModal.classList.add('flex');
+  }
+
+  function closeEditModal() {
+    if (pkgModal) {
+      pkgModal.classList.add('hidden');
+      pkgModal.classList.remove('flex');
+    }
+  }
+
+  function handlePackageFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-pkg-id').value;
+    const title = document.getElementById('edit-pkg-title').value.trim();
+    const badge = document.getElementById('edit-pkg-badge').value.trim();
+    const ispPrice = document.getElementById('edit-pkg-price').value.trim();
+    const desc = document.getElementById('edit-pkg-desc').value.trim();
+    const trojanConfig = document.getElementById('edit-pkg-trojan').value.trim();
+    const inStock = document.getElementById('edit-pkg-stock').checked;
+
+    const existingList = window.LegionStore.getPackages();
+    const exists = existingList.find(p => p.id === id);
+
+    if (exists) {
+      window.LegionStore.updatePackage(id, {
+        title, badge, ispPrice, desc, trojanConfig, inStock
+      });
+    } else {
+      existingList.push({
+        id, title, badge, ispPrice, desc, trojanConfig, inStock,
+        badgeType: 'normal',
+        network: 'General',
+        simType: 'Mobile Sim',
+        logins: 'Up to 2 Logins'
+      });
+      window.LegionStore.savePackages(existingList);
+    }
+
+    closeEditModal();
+    loadDashboardData();
+  }
+
+  // Event Listeners
+  document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    if (closePkgModalBtn) closePkgModalBtn.addEventListener('click', closeEditModal);
+    if (btnAddPkg) btnAddPkg.addEventListener('click', () => openEditModal());
+    if (pkgForm) pkgForm.addEventListener('submit', handlePackageFormSubmit);
+  });
+})();

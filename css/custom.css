@@ -1,0 +1,420 @@
+/* LEGION Free VPN - Material 3 AMOLED Green Theme (Mobile-First 6-Step Edition) */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --color-amoled: #000000;
+  --color-surface-1: #060907;
+  --color-surface-2: #0b110e;
+  --color-surface-3: #121d17;
+  --color-border: #18271e;
+  --color-border-glow: rgba(0, 255, 102, 0.35);
+  
+  --color-neon: #00FF66;
+  --color-neon-hover: #00df59;
+  --color-neon-dim: rgba(0, 255, 102, 0.12);
+  --color-neon-glow: rgba(0, 255, 102, 0.28);
+  --color-neon-rgb: 0, 255, 102;
+
+  --color-text-main: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-header-bg: rgba(0, 0, 0, 0.92);
+}
+
+/* Light Mode Overrides */
+html.light {
+  --color-amoled: #f8fafc;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f1f5f9;
+  --color-surface-3: #e2e8f0;
+  --color-border: #cbd5e1;
+  --color-border-glow: rgba(var(--color-neon-rgb), 0.35);
+
+  --color-text-main: #0f172a;
+  --color-text-muted: #475569;
+  --color-header-bg: rgba(255, 255, 255, 0.92);
+}
+
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light header {
+  background-color: var(--color-header-bg) !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light .bg-surface-100 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-surface-200 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .bg-surface-300 {
+  background-color: #e2e8f0 !important;
+}
+
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-zinc-100,
+html.light .text-zinc-200,
+html.light .text-zinc-300 {
+  color: #334155 !important;
+}
+
+html.light .text-zinc-400 {
+  color: #64748b !important;
+}
+
+html.light .border-emerald-950,
+html.light .border-emerald-900\/60,
+html.light .border-emerald-900\/50,
+html.light .border-emerald-900\/40,
+html.light .border-zinc-800,
+html.light .border-zinc-700 {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .m3-surface-1 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .m3-surface-2 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+html.light .m3-surface-3 {
+  background-color: #f1f5f9 !important;
+  border-color: rgba(var(--color-neon-rgb), 0.3) !important;
+}
+
+html.light .modal-glass {
+  background: rgba(255, 255, 255, 0.94) !important;
+}
+
+html.light .video-hero-overlay {
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 0%, rgba(248, 250, 252, 0.95) 85%), linear-gradient(to bottom, transparent 65%, #f8fafc 100%) !important;
+}
+
+html.light .ad-slot-box {
+  background: #f1f5f9 !important;
+  border-color: rgba(var(--color-neon-rgb), 0.35) !important;
+}
+
+html.light input[type="text"],
+html.light input[type="email"],
+html.light input[type="password"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input[readonly] {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+html.light .bg-surface-200\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+html.light .bg-surface-200\/50 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+html.light .border-emerald-800\/40,
+html.light .border-emerald-800\/60 {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .bg-emerald-950\/30,
+html.light .bg-emerald-950\/40,
+html.light .bg-emerald-950\/50,
+html.light .bg-emerald-950 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .bg-red-950\/30,
+html.light .bg-red-950\/40,
+html.light .bg-red-950\/70 {
+  background-color: #fef2f2 !important;
+}
+
+html.light .bg-amber-950\/20 {
+  background-color: #fffbeb !important;
+}
+
+html.light .text-red-100 {
+  color: #991b1b !important;
+}
+
+html.light .text-red-200 {
+  color: #b91c1c !important;
+}
+
+html.light .text-amber-200 {
+  color: #92400e !important;
+}
+
+html.light .text-amber-300 {
+  color: #b45309 !important;
+}
+
+html.light .selection\:text-black {
+  color: #000000 !important;
+}
+
+/* ================= LENIS SMOOTH SCROLL STYLES ================= */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Sinhala', sans-serif;
+  background-color: var(--color-amoled);
+  color: #e5e7eb;
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Prevent auto zoom on iOS inputs */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #14221a;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 255, 102, 0.15);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00FF66;
+}
+
+/* Material 3 AMOLED Surfaces */
+.m3-surface-1 {
+  background-color: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+}
+.m3-surface-2 {
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+}
+.m3-surface-3 {
+  background-color: var(--color-surface-3);
+  border: 1px solid rgba(0, 255, 102, 0.22);
+}
+
+/* Neon Glows */
+.neon-glow {
+  box-shadow: 0 0 25px var(--color-neon-glow);
+}
+.neon-border {
+  border-color: rgba(0, 255, 102, 0.55);
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+}
+.text-neon {
+  color: var(--color-neon) !important;
+}
+.bg-neon {
+  background-color: var(--color-neon) !important;
+}
+.border-neon {
+  border-color: var(--color-neon) !important;
+}
+.bg-neon\/10 {
+  background-color: var(--color-neon-dim) !important;
+}
+.bg-neon\/15 {
+  background-color: rgba(var(--color-neon-rgb), 0.15) !important;
+}
+.bg-neon\/20 {
+  background-color: rgba(var(--color-neon-rgb), 0.20) !important;
+}
+.border-neon\/30 {
+  border-color: rgba(var(--color-neon-rgb), 0.30) !important;
+}
+.border-neon\/40 {
+  border-color: rgba(var(--color-neon-rgb), 0.40) !important;
+}
+.border-neon\/50 {
+  border-color: rgba(var(--color-neon-rgb), 0.50) !important;
+}
+.border-neon\/70 {
+  border-color: rgba(var(--color-neon-rgb), 0.70) !important;
+}
+
+/* Subtle Animated Radar / Ping */
+@keyframes ping-slow {
+  0% { transform: scale(1); opacity: 0.9; }
+  70% { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-ping-slow {
+  animation: ping-slow 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Video Background Overlay */
+.video-hero-overlay {
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.96) 85%), linear-gradient(to bottom, transparent 65%, #000000 100%);
+}
+
+/* M3 Floating Ripple Button effect with touch optimization */
+.m3-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  touch-action: manipulation;
+  min-height: 44px;
+}
+.m3-btn:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .m3-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px var(--color-neon-glow);
+  }
+}
+
+/* Modal backdrop blur with mobile safe scrolling */
+.modal-glass {
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Adsterra / Monetag Ad Placeholder Container */
+.ad-slot-box {
+  background: #040705;
+  border: 1px dashed rgba(0, 255, 102, 0.25);
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 1.25rem;
+  transition: border-color 0.3s ease;
+}
+.ad-slot-box:hover {
+  border-color: rgba(0, 255, 102, 0.45);
+}
+.ad-slot-badge {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+/* Language selection cards */
+.lang-card {
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+.lang-card:active {
+  transform: scale(0.98);
+  border-color: #00FF66;
+}
+@media (hover: hover) {
+  .lang-card:hover {
+    border-color: #00FF66;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 255, 102, 0.15);
+  }
+}
+
+/* Robust, non-overlapping feature bullet list */
+.feature-list-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  line-height: 1.5;
+  word-break: normal;
+}
+.feature-list-bullet svg {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+/* Mobile header: guaranteed zero truncation with flexible layout */
+header {
+  overflow-x: visible;
+}
+
+/* ================= TAMPER-PROOF SECURITY LOCKDOWN ================= */
+html.security-locked,
+body.security-locked {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+/* Total blackout lockdown: Hide all site elements if security alert is active */
+body.security-locked > *:not(#devtools-blocker-modal):not(#brave-blocker-modal):not(#adblock-modal):not(#banned-user-modal):not(#toast-container) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.security-locked header,
+body.security-locked main,
+body.security-locked section,
+body.security-locked footer {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.modal-security-critical {
+  z-index: 9999999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.95) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+}

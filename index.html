@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>LEGION Free VPN - High-Speed Singapore VPS Nodes</title>
+  
+  <!-- Meta tags for SEO & performance -->
+  <meta name="description" content="100% Free Singapore High-Speed Trojan VPN for Dialog, Airtel, and Hutch ISP packages. Zero subscription required.">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            amoled: '#000000',
+            surface: {
+              100: '#060907',
+              200: '#0b110e',
+              300: '#121d17'
+            },
+            neon: {
+              DEFAULT: '#00FF66',
+              hover: '#00df59',
+              dim: 'rgba(0, 255, 102, 0.12)',
+              glow: 'rgba(0, 255, 102, 0.28)'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lenis Smooth Scroll CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+
+  <!-- Custom Stylesheet (Material 3 AMOLED Green) -->
+  <link rel="stylesheet" href="css/custom.css">
+
+  <!-- Theme Engine (Light / Dark Mode & Accent Colors) -->
+  <script src="js/theme.js"></script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Ad Detection Bait Script -->
+  <script src="ads-bait.js"></script>
+</head>
+<body class="bg-black text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-[#00FF66] selection:text-black">
+
+  <!-- ================= TOP NAVIGATION BAR (MOBILE HEAVILY OPTIMIZED & ZERO CLIPPING) ================= -->
+  <header class="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-emerald-950/70 transition-all">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1 sm:gap-2">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="flex items-center gap-1.5 sm:gap-2.5 group flex-shrink-0">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-surface-200 border border-emerald-500/30 flex items-center justify-center group-hover:border-neon transition-colors duration-300 flex-shrink-0">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-sm sm:text-lg font-extrabold tracking-wider text-white">LEGION</span>
+          <span class="text-[9px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-neon/10 border border-neon/30 text-neon tracking-normal">VPN</span>
+        </div>
+      </a>
+
+      <!-- Server Status: Visible on md+, hidden on mobile to guarantee zero clipping -->
+      <div class="hidden md:flex whitespace-nowrap items-center gap-1.5 px-3 py-1 rounded-full bg-surface-200 border border-emerald-900/50 text-xs flex-shrink-0">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-neon opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-neon"></span>
+        </span>
+        <span class="text-zinc-400" data-i18n="server_online">SG VPS:</span>
+        <span id="nav-live-ping-val" class="font-mono font-bold text-neon">45 ms</span>
+      </div>
+
+      <!-- Right Controls: Theme Toggle + Palette + Language Selector + Auth (Never clipped!) -->
+      <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        
+        <!-- Theme Mode Toggle Button (Sun/Moon) -->
+        <button class="js-theme-toggle-btn p-1.5 sm:p-2 rounded-xl bg-surface-200 border border-emerald-900/60 text-zinc-300 hover:text-white transition-all flex items-center justify-center flex-shrink-0" title="Toggle Light/Dark Mode">
+          <span class="js-theme-toggle-icon">
+            <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </span>
+        </button>
+
+        <!-- Palette Customizer Button -->
+        <button id="open-palette-btn" class="p-1.5 sm:p-2 rounded-xl bg-surface-200 border border-emerald-900/60 text-neon hover:scale-105 transition-all flex items-center justify-center flex-shrink-0" title="Change Theme Accent Color">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 4 4 0 014-4c.75 0 1.45.2 2.05.55A8.96 8.96 0 0115 13a9 9 0 118 8v1a2 2 0 01-2 2H9a2 2 0 01-2-2v-1z"/>
+          </svg>
+        </button>
+
+        <!-- Language Switcher Pill -->
+        <div class="flex items-center p-0.5 rounded-xl bg-surface-200 border border-emerald-900/60 text-xs flex-shrink-0">
+          <button id="lang-btn-si" class="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg transition-all font-semibold flex items-center gap-1 text-zinc-400 hover:text-white text-[10px] sm:text-xs">
+            <span>🇱🇰</span> <span class="hidden lg:inline">සිංහල</span>
+          </button>
+          <button id="lang-btn-en" class="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg transition-all font-bold bg-neon text-black flex items-center gap-1 text-[10px] sm:text-xs">
+            <span>🌐</span> <span class="hidden lg:inline">EN</span>
+          </button>
+        </div>
+
+        <!-- Guest State: Google Sign-in Trigger -->
+        <div id="nav-guest-actions" class="flex items-center flex-shrink-0">
+          <button class="js-google-login-trigger m3-btn flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-surface-200 border border-emerald-500/30 hover:border-neon text-white text-[11px] sm:text-xs font-semibold whitespace-nowrap flex-shrink-0">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span class="text-[11px] sm:text-xs font-bold">Sign In</span>
+          </button>
+        </div>
+
+        <!-- Logged-in State: User Profile (Never cut off!) -->
+        <div id="nav-user-actions" class="hidden items-center gap-1 sm:gap-1.5 flex-shrink-0">
+          <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-xl bg-surface-200 border border-emerald-800/40 flex-shrink-0">
+            <img id="nav-user-avatar" src="" alt="Avatar" class="w-5 h-5 rounded-full bg-emerald-950 border border-neon/50 flex-shrink-0">
+            <span id="nav-user-name" class="hidden sm:inline text-[11px] font-semibold text-zinc-200 max-w-[80px] truncate">User</span>
+          </div>
+          <button id="btn-logout" title="Sign Out" class="p-1 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-zinc-900 transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= HERO SECTION WITH VIDEO BACKGROUND ================= -->
+  <section class="relative min-h-[520px] sm:min-h-[600px] flex items-center justify-center overflow-hidden border-b border-emerald-950/40 py-12 sm:py-20 lg:py-24">
+    
+    <!-- Video Element -->
+    <video id="hero-bg-video" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover z-0 opacity-40">
+      <source id="hero-video-source" src="" type="video/mp4">
+    </video>
+
+    <div class="absolute inset-0 video-hero-overlay z-10 pointer-events-none"></div>
+
+    <div class="relative z-20 max-w-5xl mx-auto px-4 text-center">
+      
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 sm:py-1.5 rounded-full bg-surface-200/90 border border-neon/30 text-neon text-[11px] sm:text-xs font-semibold mb-6 sm:mb-8 neon-border">
+        <span class="w-2 h-2 rounded-full bg-neon animate-pulse"></span>
+        <span data-i18n="badge_hero">Dedicated Singapore 1Gbps VPS Node</span>
+      </div>
+
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight mb-6 sm:mb-8">
+        <span>Next-Gen Freedom with</span> <br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00FF66] via-emerald-300 to-[#00df59]">
+          LEGION Free Singapore VPN
+        </span>
+      </h1>
+
+      <!-- Value Proposition Notice -->
+      <div class="max-w-2xl mx-auto bg-surface-200/90 backdrop-blur-md p-5 sm:p-7 rounded-3xl border border-emerald-900/60 mb-8 sm:mb-10 text-left shadow-2xl">
+        <div class="flex items-start gap-3.5 sm:gap-4">
+          <div class="p-2 sm:p-2.5 rounded-2xl bg-neon/10 text-neon flex-shrink-0 mt-0.5">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-white mb-1.5 sm:mb-2" data-i18n="why_free_title">How is this 100% Free?</h2>
+            <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed" data-i18n="why_free_desc">
+              High-speed Singapore VPS servers cost real money to host. We sustain all server infrastructure purely through ad revenue. By completing our quick 10-step sponsored verification, you generate the funding we need to keep buying and renewing fast servers for you.
+            </p>
+            <p class="text-xs sm:text-sm text-emerald-400 font-semibold mt-2.5 sm:mt-3" data-i18n="why_free_sub">
+              Want zero ads and instant private connection? You can upgrade to our Premium Package (LKR 250) anytime!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-5 w-full">
+        <a href="#packages-selection-section" class="js-scroll-claim w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-extrabold text-sm sm:text-base tracking-wide m3-btn flex items-center justify-center gap-2 neon-glow">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span>Choose ISP Package & Claim VPN</span>
+        </a>
+        <a href="#premium-section" class="w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-surface-200 hover:bg-surface-300 border border-emerald-800/60 hover:border-neon text-white font-bold text-sm sm:text-base m3-btn flex items-center justify-center gap-2">
+          <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          </svg>
+          <span data-i18n="btn_premium_hero">Get Premium (LKR 250)</span>
+        </a>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="grid grid-cols-3 gap-3 sm:gap-6 max-w-xl mx-auto mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-emerald-950/70 text-center">
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-surface-200/50 border border-emerald-950/60">
+          <div class="text-lg sm:text-2xl font-black text-neon font-mono">1 Gbps</div>
+          <div class="text-[10px] sm:text-[11px] text-zinc-500 uppercase tracking-wider mt-0.5 sm:mt-1" data-i18n="metric_uplink">Uplink Port</div>
+        </div>
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-surface-200/50 border border-emerald-950/60">
+          <div id="hero-live-ping-val" class="text-lg sm:text-2xl font-black text-white font-mono tracking-tight">45 ms</div>
+          <div class="text-[10px] sm:text-[11px] text-zinc-500 uppercase tracking-wider mt-0.5 sm:mt-1" data-i18n="metric_ping">SG Live Ping</div>
+        </div>
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-surface-200/50 border border-emerald-950/60">
+          <div class="text-lg sm:text-2xl font-black text-neon font-mono">100%</div>
+          <div class="text-[10px] sm:text-[11px] text-zinc-500 uppercase tracking-wider mt-0.5 sm:mt-1" data-i18n="metric_free">Free Daily</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ================= TOP RESPONSIVE ADSTERRA BANNER ================= -->
+  <section class="max-w-7xl mx-auto px-4 my-6 sm:my-8 w-full">
+    <div class="ad-slot-box w-full max-w-4xl mx-auto p-3 sm:p-4">
+      <span class="ad-slot-badge" data-i18n="ad_sponsored">Sponsored Advertisement</span>
+      <div class="text-center py-3">
+        <p class="text-[11px] sm:text-xs text-zinc-400 font-mono">
+          [Adsterra / Monetag Responsive Banner Slot - 728x90 / 300x250]
+        </p>
+        <span class="text-[10px] sm:text-[11px] text-zinc-500 mt-1 block" data-i18n="ad_banner_note">Insert your CPA Network ad code into this container</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= PROMINENT SUPPORT DISCLAIMER BANNER ================= -->
+  <section class="max-w-6xl mx-auto px-3 sm:px-4 my-4 sm:my-6 w-full">
+    <div class="rounded-3xl bg-red-950/30 border border-red-500/50 p-4 sm:p-6 shadow-xl relative overflow-hidden">
+      <div class="flex items-start gap-3 sm:gap-4">
+        <!-- Warning Icon -->
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-red-950/70 border border-red-500/60 text-red-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        
+        <div class="space-y-1.5 text-left flex-1 min-w-0">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 uppercase tracking-wider">
+              ⚠️ Strict Policy Notice
+            </span>
+          </div>
+          <h2 class="text-sm sm:text-base font-extrabold text-red-100 tracking-wide leading-snug">
+            ⚠️ STRICT NOTICE: NO INBOX SUPPORT FOR FREE VPN
+          </h2>
+          <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans font-medium">
+            Please DO NOT send messages or inquiries to our WhatsApp or Telegram inbox regarding Free VPN issues. We provide ABSOLUTELY ZERO troubleshooting or maintenance for free servers. Direct personal support is strictly reserved for paid Premium Package users.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= SECTION: ISP PACKAGES SELECTION (DIALOG, AIRTEL, HUTCH) ================= -->
+  <section id="packages-selection-section" class="max-w-6xl mx-auto px-4 py-12 sm:py-16 w-full">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-neon/30 text-neon text-xs font-mono mb-2">
+        ⚡ SRI LANKAN ISP BYPASS TUNNELS
+      </div>
+      <h2 class="text-2xl sm:text-4xl font-black text-white">Select Your ISP Data Package</h2>
+      <p class="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto mt-2 leading-relaxed">
+        Choose your active mobile SIM package. Available packages feature an active <strong>"Click Here"</strong> button to unlock your dedicated Trojan configuration.
+      </p>
+    </div>
+
+    <!-- Packages Grid (Populated dynamically from LegionStore) -->
+    <div id="home-packages-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cards rendered by js/app.js -->
+    </div>
+  </section>
+
+
+  <!-- ================= 6-STEP AD-REWARDED CLAIM FUNNEL ================= -->
+  <section id="claim-section" class="max-w-6xl mx-auto px-4 py-12 sm:py-16 w-full">
+    
+    <div class="text-center mb-8 sm:mb-12">
+      <span class="text-xs font-mono uppercase tracking-widest text-neon" data-i18n="funnel_tag">Zero Subscription Required</span>
+      <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white mt-2" data-i18n="funnel_title">Unlock Singapore VPN Node</h2>
+      <p class="text-xs sm:text-base text-zinc-400 max-w-2xl mx-auto mt-2.5 sm:mt-3 leading-relaxed" data-i18n="funnel_desc">
+        Complete 6 quick sponsored verification steps (1 ad view per step) to claim your high-speed Singapore Trojan credentials.
+      </p>
+    </div>
+
+    <!-- Auth Gate Notice -->
+    <div id="auth-gate-notice" class="mb-8 sm:mb-10 p-5 sm:p-7 rounded-3xl bg-amber-950/20 border border-amber-500/40 text-center max-w-3xl mx-auto">
+      <p class="text-xs sm:text-base font-bold text-amber-200" data-i18n="auth_gate_title">
+        🔐 Google Authentication Required to Prevent Node Abuse
+      </p>
+      <p class="text-[11px] sm:text-sm text-zinc-400 mt-1 mb-3.5 sm:mb-4 leading-relaxed" data-i18n="auth_gate_desc">
+        Please sign in with your Google account so our Singapore VPS cluster can assign your unique session token.
+      </p>
+      <button class="js-google-login-trigger px-6 sm:px-7 py-2.5 sm:py-3 rounded-2xl bg-white hover:bg-zinc-100 text-black font-bold text-xs sm:text-sm m3-btn inline-flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span data-i18n="auth_gate_btn">Sign in to Start Verification</span>
+      </button>
+    </div>
+
+    <!-- Main Funnel Card -->
+    <div id="claim-funnel-card" class="m3-surface-1 p-5 sm:p-10 rounded-3xl border border-emerald-950/80 transition-opacity duration-300">
+      
+      <!-- Progress Bar Header -->
+      <div class="mb-8 sm:mb-10 max-w-3xl mx-auto">
+        <div class="flex items-center justify-between text-xs sm:text-sm font-semibold mb-2">
+          <span class="text-zinc-400" data-i18n="status_label">Node Allocation Status</span>
+          <span id="funnel-progress-text" class="text-neon font-mono">0% Ready</span>
+        </div>
+        <div class="w-full h-3 sm:h-3.5 bg-surface-200 rounded-full overflow-hidden p-0.5 border border-emerald-950">
+          <div id="funnel-progress-bar" class="h-full bg-gradient-to-r from-[#00FF66] to-[#00df59] rounded-full transition-all duration-500 w-0"></div>
+        </div>
+      </div>
+
+      <!-- 10 Steps High-Yield Reward Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        
+        <!-- STEP 1 CARD -->
+        <div id="step-card-1" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-900/40 relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-neon/10 border border-neon/30 text-neon font-bold flex items-center justify-center text-sm">1</span>
+              <div id="step-status-1" class="text-xs text-zinc-500" data-i18n="step_pending">Pending</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step1_title">Singapore Routing</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step1_desc">
+              Connect to Singapore SG-01 VPS gateway and reserve session slot.
+            </p>
+          </div>
+          <button id="step-btn-1" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm tracking-wide m3-btn flex items-center justify-center gap-2">
+            <span data-i18n="step1_btn">Verify Step 1 (View Ad)</span>
+          </button>
+        </div>
+
+        <!-- STEP 2 CARD -->
+        <div id="step-card-2" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">2</span>
+              <div id="step-status-2" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step2_title">Bandwidth Allocation</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step2_desc">
+              Allocate dedicated 1Gbps uplink speed for your session.
+            </p>
+          </div>
+          <button id="step-btn-2" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step2_btn">Unlock in Step 1</span>
+          </button>
+        </div>
+
+        <!-- STEP 3 CARD -->
+        <div id="step-card-3" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">3</span>
+              <div id="step-status-3" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step3_title">Trojan Key Pair</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step3_desc">
+              Generate 256-bit Trojan encryption credentials for ISP bypass.
+            </p>
+          </div>
+          <button id="step-btn-3" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step3_btn">Unlock in Step 2</span>
+          </button>
+        </div>
+
+        <!-- STEP 4 CARD -->
+        <div id="step-card-4" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">4</span>
+              <div id="step-status-4" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step4_title">DNS Leak Protection</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step4_desc">
+              Activate stealth tunneling & Singapore DNS resolver.
+            </p>
+          </div>
+          <button id="step-btn-4" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step4_btn">Unlock in Step 3</span>
+          </button>
+        </div>
+
+        <!-- STEP 5 CARD -->
+        <div id="step-card-5" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">5</span>
+              <div id="step-status-5" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step5_title">TLS Obfuscation</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step5_desc">
+              Apply anti-censorship camouflage for bypass on strict ISPs.
+            </p>
+          </div>
+          <button id="step-btn-5" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step5_btn">Unlock in Step 4</span>
+          </button>
+        </div>
+
+        <!-- STEP 6 CARD -->
+        <div id="step-card-6" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">6</span>
+              <div id="step-status-6" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step6_title">Anti-DDoS Relay</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step6_desc">
+              Route traffic through Singapore DDoS-shielded reverse proxies.
+            </p>
+          </div>
+          <button id="step-btn-6" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step6_btn">Unlock in Step 5</span>
+          </button>
+        </div>
+
+        <!-- STEP 7 CARD -->
+        <div id="step-card-7" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">7</span>
+              <div id="step-status-7" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step7_title">VLESS Transport</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step7_desc">
+              Generate WebSocket & gRPC transport failover protocols.
+            </p>
+          </div>
+          <button id="step-btn-7" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step7_btn">Unlock in Step 6</span>
+          </button>
+        </div>
+
+        <!-- STEP 8 CARD -->
+        <div id="step-card-8" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">8</span>
+              <div id="step-status-8" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step8_title">Route Optimization</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step8_desc">
+              Calibrate low-latency routing and packet integrity filters.
+            </p>
+          </div>
+          <button id="step-btn-8" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step8_btn">Unlock in Step 7</span>
+          </button>
+        </div>
+
+        <!-- STEP 9 CARD (CLOUDFLARE TURNSTILE SCAN INTERSTITIAL) -->
+        <div id="step-card-9" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">9</span>
+              <div id="step-status-9" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300">CLOUDFLARE TURNSTILE</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step9_title">Security Verification</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step9_desc">
+              Complete Cloudflare Turnstile security scan to authorize release.
+            </p>
+          </div>
+          <button id="step-btn-9" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step9_btn">Unlock in Step 8</span>
+          </button>
+        </div>
+
+        <!-- STEP 10 CARD -->
+        <div id="step-card-10" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">10</span>
+              <div id="step-status-10" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step10_title">Fetch Trojan Credentials</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step10_desc">
+              Handshake with Cloudflare Worker API & unlock dedicated Trojan configs.
+            </p>
+          </div>
+          <button id="step-btn-10" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
+            <span data-i18n="step10_btn">Unlock in Step 9</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ================= PREMIUM PACKAGE SECTION ================= -->
+  <section id="premium-section" class="max-w-6xl mx-auto px-4 py-14 sm:py-20 w-full">
+    <div class="relative rounded-3xl m3-surface-2 border border-emerald-800/50 p-6 sm:p-10 lg:p-12 overflow-hidden shadow-2xl">
+      
+      <div class="absolute -right-20 -top-20 w-96 h-96 rounded-full bg-neon/10 blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col lg:flex-row items-stretch justify-between gap-8 lg:gap-12">
+        
+        <!-- Left Side: Clean description & non-overlapping bullet list -->
+        <div class="flex-1 flex flex-col justify-between text-left">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] sm:text-xs font-semibold mb-4">
+              <span data-i18n="premium_tag">★ Instant Zero-Ad VIP Access</span>
+            </div>
+            
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight" data-i18n="premium_title">
+              LEGION VIP Dedicated VPS
+            </h2>
+            
+            <p class="text-xs sm:text-sm text-zinc-300 mt-3 leading-relaxed max-w-xl" data-i18n="premium_desc">
+              Don't want to complete ad steps? Get dedicated Singapore 1Gbps ports with 100% ad-free instant Trojan & OpenVPN profiles, private IPs, and priority 24/7 support for just LKR 250/mo.
+            </p>
+          </div>
+
+          <!-- Feature Bullets (NO OVERLAPPING!) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-8 pt-6 border-t border-emerald-950/60">
+            <div class="feature-list-bullet">
+              <span class="w-5 h-5 rounded-full bg-neon/15 border border-neon/40 text-neon flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3 text-neon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </span>
+              <span class="text-xs sm:text-sm text-zinc-200 font-medium" data-i18n="premium_feat_1">Zero Advertisements (100% Ad-Free)</span>
+            </div>
+
+            <div class="feature-list-bullet">
+              <span class="w-5 h-5 rounded-full bg-neon/15 border border-neon/40 text-neon flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3 text-neon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </span>
+              <span class="text-xs sm:text-sm text-zinc-200 font-medium" data-i18n="premium_feat_2">Private Dedicated Singapore Static IP</span>
+            </div>
+
+            <div class="feature-list-bullet">
+              <span class="w-5 h-5 rounded-full bg-neon/15 border border-neon/40 text-neon flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3 text-neon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </span>
+              <span class="text-xs sm:text-sm text-zinc-200 font-medium">Trojan & V2Ray High-Speed Tunneling</span>
+            </div>
+
+            <div class="feature-list-bullet">
+              <span class="w-5 h-5 rounded-full bg-neon/15 border border-neon/40 text-neon flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3 text-neon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </span>
+              <span class="text-xs sm:text-sm text-zinc-200 font-medium" data-i18n="premium_feat_4">Low-Ping Gaming & Streaming Optimized</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Pricing Card (LKR 250) -->
+        <div class="m3-surface-3 p-6 sm:p-8 rounded-3xl border border-emerald-500/40 text-center w-full lg:w-96 flex flex-col justify-center flex-shrink-0 shadow-xl">
+          <span class="text-xs font-mono uppercase text-zinc-400 tracking-wider" data-i18n="premium_pass">Monthly Pass</span>
+          
+          <div class="text-3xl sm:text-4xl font-extrabold text-white mt-1.5 mb-2 font-mono">
+            LKR 250 <span class="text-xs text-zinc-400 font-normal" data-i18n="premium_month">/ month</span>
+          </div>
+          
+          <p class="text-xs text-zinc-400 mb-6 leading-relaxed" data-i18n="premium_bot_note">Instant activation via Website or WhatsApp.</p>
+
+          <div class="flex flex-col gap-3.5">
+            <a href="https://vpn.legiongraphics.site" target="_blank" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm m3-btn flex items-center justify-center gap-2 neon-glow">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+              </svg>
+              <span data-i18n="btn_website">Order via Website</span>
+            </a>
+
+            <a href="https://wa.me/441163504152" target="_blank" class="w-full py-3.5 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-black font-bold text-xs sm:text-sm m3-btn flex items-center justify-center gap-2">
+              <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.477-.15-.678.15s-.778.978-.954 1.179c-.176.2-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.676-2.085-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.2-.301.301-.502.101-.2.05-.376-.025-.526-.075-.15-.678-1.633-.929-2.235-.244-.588-.492-.508-.678-.518l-.578-.01c-.2 0-.527.075-.803.376s-1.054 1.029-1.054 2.509 1.079 2.91 1.229 3.111c.15.201 2.123 3.242 5.144 4.547.719.31 1.28.496 1.718.636.723.23 1.381.197 1.902.119.58-.088 1.78-.728 2.03-1.43.251-.702.251-1.304.176-1.43-.076-.126-.277-.201-.578-.351zM12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.98-1.396A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+              <span data-i18n="btn_whatsapp">Order via WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mt-auto border-t border-emerald-950/60 bg-black py-8 sm:py-10">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <span class="text-sm font-extrabold text-white">LEGION Free VPN</span>
+        <span class="text-xs text-zinc-600 font-mono">v3.0.0</span>
+      </div>
+      <p class="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto" data-i18n="footer_desc">
+        100% Free High-Speed Singapore VPS Nodes funded by user-supported ad impressions.
+      </p>
+      
+      <!-- Admin Portal Link -->
+      <div class="mt-4 flex items-center justify-center gap-4 text-xs text-zinc-600">
+        <span>&copy; 2026 LEGION VPN Project. All Rights Reserved.</span>
+        <span>•</span>
+        <a href="admin.html" class="hover:text-neon transition-colors flex items-center gap-1 font-mono">
+          🔒 Admin Control Panel
+        </a>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ================= MANDATORY SERVER NOTICE & RULES MODAL ================= -->
+  <div id="ad-rules-modal" class="fixed inset-0 z-[999999] hidden modal-glass items-center justify-center p-3 sm:p-4">
+    <div class="m3-surface-2 p-6 sm:p-9 rounded-3xl border border-neon/50 max-w-lg w-full text-center shadow-2xl relative neon-glow max-h-[92vh] overflow-y-auto">
+      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-surface-300 border border-neon/40 text-neon mx-auto flex items-center justify-center mb-4 sm:mb-5">
+        <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon/15 border border-neon/40 text-neon text-xs font-mono mb-2">
+        ⚡ MANDATORY PORTAL RULES & POLICY
+      </div>
+
+      <h2 class="text-xl sm:text-2xl font-black text-white leading-snug" data-i18n="rules_modal_title">
+        Free VPN Server Notice & Rules
+      </h2>
+
+      <div class="mt-4 p-4 rounded-2xl bg-surface-100 border border-emerald-950 text-left space-y-2.5 text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+        <p>
+          🌐 <strong>100% Ad-Funded Infrastructure:</strong> Our dedicated 1Gbps Singapore VPS servers cost real hosting fees. To keep free nodes continuously renewed, <strong>popunder smartlinks and sponsored verification steps are strictly mandatory</strong>.
+        </p>
+        <p>
+          ⚠️ <strong>Strict Zero Inbox Support:</strong> Please DO NOT message our WhatsApp or Telegram inbox for free server issues. Personal troubleshooting is strictly reserved for paid VIP subscribers (LKR 250).
+        </p>
+        <p class="text-neon text-[11px]">
+          ✓ By clicking below, you accept our fair-use monetization terms and acknowledge that sponsored smartlinks will open in background tabs to fund your connection.
+        </p>
+      </div>
+
+      <button id="btn-accept-ad-rules" class="w-full mt-6 py-4 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-extrabold text-sm sm:text-base m3-btn flex items-center justify-center gap-2 neon-glow shadow-xl">
+        <span data-i18n="rules_modal_agree">I Understand & Agree (Unlock Portal)</span> →
+      </button>
+    </div>
+  </div>
+
+  <!-- 0. INITIAL LANGUAGE PICKER POPUP -->
+  <div id="language-picker-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
+    <div class="m3-surface-2 p-6 sm:p-10 rounded-3xl border border-neon/50 max-w-lg w-full text-center shadow-2xl relative neon-glow max-h-[90vh] overflow-y-auto">
+      <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-3xl bg-surface-300 border border-neon/40 text-neon mx-auto flex items-center justify-center mb-4 sm:mb-5 p-3">
+        <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+        </svg>
+      </div>
+
+      <h2 class="text-xl sm:text-3xl font-black text-white">භාෂාව තෝරන්න / Select Language</h2>
+      <p class="text-xs sm:text-sm text-zinc-400 mt-1.5 mb-6 sm:mb-8 leading-relaxed">
+        කරුණාකර ඔබට පහසු භාෂාව තෝරා ඉදිරියට යන්න.<br>
+        Please choose your preferred language to continue.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+        <button id="choose-lang-si" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
+          <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
+            <span class="text-2xl sm:text-3xl">🇱🇰</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neon/10 border border-neon/30 text-neon">RECOMMENDED</span>
+          </div>
+          <div>
+            <div class="text-sm sm:text-base font-extrabold text-white group-hover:text-neon">සිංහල (Sinhala)</div>
+            <p class="text-[11px] sm:text-xs text-zinc-400 mt-1">නොමිලේ සිංගප්පූරු VPN ලබාගැනීමට</p>
+          </div>
+        </button>
+
+        <button id="choose-lang-en" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
+          <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
+            <span class="text-2xl sm:text-3xl">🌐</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-100 border border-zinc-700 text-zinc-400">GLOBAL</span>
+          </div>
+          <div>
+            <div class="text-sm sm:text-base font-extrabold text-white group-hover:text-neon">English</div>
+            <p class="text-[11px] sm:text-xs text-zinc-400 mt-1">Free Singapore High-Speed VPN</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= THEME & ACCENT CUSTOMIZER MODAL ================= -->
+  <div id="theme-customizer-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
+    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-neon/40 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button id="close-theme-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 p-2.5 rounded-2xl bg-surface-300 border border-neon/30 mx-auto flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 4 4 0 014-4c.75 0 1.45.2 2.05.55A8.96 8.96 0 0115 13a9 9 0 118 8v1a2 2 0 01-2 2H9a2 2 0 01-2-2v-1z"/>
+          </svg>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold text-white">Appearance & Theme</h2>
+        <p class="text-xs text-zinc-400 mt-1">Personalize your display mode and neon accent color</p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Display Mode (Dark / Light) -->
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Display Mode</label>
+          <div class="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-surface-100 border border-emerald-950">
+            <button id="theme-mode-dark-btn" class="py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-neon text-black">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+              <span>AMOLED Dark</span>
+            </button>
+            <button id="theme-mode-light-btn" class="py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all text-zinc-400 hover:text-white">
+              <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+              <span>Clean Light</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Neon Accent Colors -->
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Accent Color</label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <button class="js-color-dot p-3 rounded-2xl bg-surface-100 border border-zinc-800 hover:border-zinc-600 flex flex-col items-center gap-1.5 transition-all" data-color="green">
+              <span class="w-6 h-6 rounded-full shadow-md" style="background-color: #00FF66;"></span>
+              <span class="text-[11px] font-semibold text-zinc-300">Green</span>
+            </button>
+            <button class="js-color-dot p-3 rounded-2xl bg-surface-100 border border-zinc-800 hover:border-zinc-600 flex flex-col items-center gap-1.5 transition-all" data-color="cyan">
+              <span class="w-6 h-6 rounded-full shadow-md" style="background-color: #00E5FF;"></span>
+              <span class="text-[11px] font-semibold text-zinc-300">Cyan</span>
+            </button>
+            <button class="js-color-dot p-3 rounded-2xl bg-surface-100 border border-zinc-800 hover:border-zinc-600 flex flex-col items-center gap-1.5 transition-all" data-color="blue">
+              <span class="w-6 h-6 rounded-full shadow-md" style="background-color: #3B82F6;"></span>
+              <span class="text-[11px] font-semibold text-zinc-300">Blue</span>
+            </button>
+            <button class="js-color-dot p-3 rounded-2xl bg-surface-100 border border-zinc-800 hover:border-zinc-600 flex flex-col items-center gap-1.5 transition-all" data-color="purple">
+              <span class="w-6 h-6 rounded-full shadow-md" style="background-color: #A855F7;"></span>
+              <span class="text-[11px] font-semibold text-zinc-300">Purple</span>
+            </button>
+            <button class="js-color-dot p-3 rounded-2xl bg-surface-100 border border-zinc-800 hover:border-zinc-600 flex flex-col items-center gap-1.5 transition-all" data-color="pink">
+              <span class="w-6 h-6 rounded-full shadow-md" style="background-color: #FF007F;"></span>
+              <span class="text-[11px] font-semibold text-zinc-300">Pink</span>
+            </button>
+            <button class="js-color-dot p-3 rounded-2xl bg-surface-100 border border-zinc-800 hover:border-zinc-600 flex flex-col items-center gap-1.5 transition-all" data-color="amber">
+              <span class="w-6 h-6 rounded-full shadow-md" style="background-color: #FFB800;"></span>
+              <span class="text-[11px] font-semibold text-zinc-300">Amber</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= STEP 9 CLOUDFLARE TURNSTILE MOCK SCAN MODAL ================= -->
+  <div id="turnstile-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
+    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-emerald-500/50 max-w-md w-full text-center shadow-2xl relative">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <svg class="w-8 h-8 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.8 11.2c-.3-2.7-2.6-4.8-5.4-4.8-2.2 0-4.1 1.3-4.9 3.2C8 9.2 7.5 9 7 9c-2.2 0-4 1.8-4 4 0 2.2 1.8 4 4 4h11.5c1.9 0 3.5-1.6 3.5-3.5 0-1.8-1.4-3.3-3.2-3.3z"/>
+        </svg>
+        <span class="text-lg font-black text-white tracking-wide">CLOUDFLARE</span>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-surface-100 border border-zinc-700 text-zinc-400 font-mono">Turnstile</span>
+      </div>
+
+      <h3 class="text-base sm:text-lg font-bold text-white mb-2">Verifying You Are Human</h3>
+      <p class="text-xs text-zinc-400 mb-6">Running security challenge to prevent automated bot node exhaustion.</p>
+
+      <div id="turnstile-box" class="p-4 rounded-2xl bg-surface-100 border border-zinc-800 flex items-center justify-between gap-3 cursor-pointer hover:border-neon transition-all">
+        <div class="flex items-center gap-3">
+          <div id="turnstile-checkbox" class="w-6 h-6 rounded-lg border-2 border-zinc-500 flex items-center justify-center bg-surface-300">
+            <div id="turnstile-spinner" class="w-4 h-4 border-2 border-neon border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <span id="turnstile-status-text" class="text-xs font-semibold text-zinc-200">Verifying security token...</span>
+        </div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Cloudflare_Logo.svg" alt="Cloudflare" class="h-4 opacity-70">
+      </div>
+
+      <p class="text-[11px] text-zinc-500 mt-4">
+        Step 9 verification unlocks your final Cloudflare Worker Trojan credentials.
+      </p>
+    </div>
+  </div>
+
+  <!-- 1. ADBLOCKER / PRIVATE DNS WARNING MODAL -->
+  <div id="adblock-modal" class="fixed inset-0 z-[9999999] hidden modal-glass items-center justify-center p-3 sm:p-4 modal-security-critical">
+    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-red-500/70 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-950/40 border border-red-500/50 text-red-400 mx-auto flex items-center justify-center mb-4">
+        <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl sm:text-2xl font-black text-white flex flex-col items-center gap-1">
+        <span class="text-red-400">Ad Blocker or Private DNS Detected</span>
+      </h2>
+      <div class="space-y-3 mt-3 text-left bg-surface-100 p-4 rounded-2xl border border-red-950/80">
+        <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+          Our Singapore VPS servers are funded purely through sponsored advertisements. Free VPN access is blocked while an AdBlocker, NextDNS, or AdGuard Private DNS is active.
+        </p>
+      </div>
+      <p class="text-xs text-emerald-400 font-semibold mt-3 p-2.5 bg-emerald-950/40 rounded-xl border border-emerald-900/60 text-center">
+        Please disable your AdBlocker or Private DNS and click Reload.
+      </p>
+      <button onclick="window.LegionSecurity.recheckAdBlock()" class="w-full mt-5 py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm m3-btn">
+        I Have Disabled AdBlocker - Reload
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. BRAVE BROWSER DETECTED MODAL -->
+  <div id="brave-blocker-modal" class="fixed inset-0 z-[9999999] hidden modal-glass items-center justify-center p-3 sm:p-4 modal-security-critical">
+    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-orange-500/70 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-orange-950/40 border border-orange-500/50 text-orange-400 mx-auto flex items-center justify-center mb-4">
+        <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl sm:text-2xl font-black text-white flex flex-col items-center gap-1">
+        <span class="text-orange-400">Brave Browser Not Supported</span>
+      </h2>
+      <div class="space-y-3 mt-3 text-left bg-surface-100 p-4 rounded-2xl border border-orange-950/80">
+        <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+          Brave Browser automatically activates built-in Shields that block the sponsored advertisements required to fund and maintain our free Singapore VPN servers.
+        </p>
+      </div>
+      <p class="text-xs text-orange-400 font-semibold mt-3 p-2.5 bg-orange-950/40 rounded-xl border border-orange-900/60 text-center">
+        Please switch to <strong>Google Chrome, Microsoft Edge, Firefox, or Safari</strong> to continue.
+      </p>
+    </div>
+  </div>
+
+  <!-- 3. DEVTOOLS / INSPECT ELEMENT WARNING MODAL -->
+  <div id="devtools-blocker-modal" class="fixed inset-0 z-[9999999] hidden modal-glass items-center justify-center p-3 sm:p-4 modal-security-critical">
+    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-red-500/70 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-950/40 border border-red-500/50 text-red-400 mx-auto flex items-center justify-center mb-4">
+        <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+      </div>
+      <h2 class="text-xl sm:text-2xl font-black text-white flex flex-col items-center gap-1">
+        <span class="text-red-500">⚠️ Developer Options Strictly Blocked</span>
+      </h2>
+      <div class="space-y-3 mt-3 text-left bg-surface-100 p-4 rounded-2xl border border-red-950/80">
+        <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+          <strong>Warning:</strong> Developer Tools, Inspect Element, and DOM tampering are strictly prohibited on this portal to prevent service abuse.
+        </p>
+      </div>
+      <p class="text-xs text-red-400 font-semibold mt-3 p-2.5 bg-red-950/40 rounded-xl border border-red-900/60 text-center">
+        Please close Developer Tools and reload the page.
+      </p>
+      <button onclick="window.location.reload()" class="w-full mt-5 py-3.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs sm:text-sm m3-btn">
+        Reload Page
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. BANNED USER MODAL -->
+  <div id="banned-user-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-4">
+    <div class="m3-surface-2 p-8 sm:p-10 rounded-3xl border border-red-500/80 max-w-md w-full text-center shadow-2xl">
+      <div class="w-16 h-16 rounded-full bg-red-950/50 border border-red-500 text-red-400 mx-auto flex items-center justify-center mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+      </div>
+      <h2 class="text-2xl font-black text-white">Account Suspended</h2>
+      <p class="text-xs sm:text-sm text-zinc-300 mt-3 leading-relaxed">
+        Your Google account has been banned by the Administrator due to abuse or violation of our fair-use server policy.
+      </p>
+      <p class="text-xs text-zinc-400 mt-4 p-3 bg-red-950/20 rounded-2xl border border-red-900/40">
+        If you believe this is a mistake, contact support via WhatsApp or Website.
+      </p>
+    </div>
+  </div>
+
+  <!-- 5. GOOGLE AUTH MODAL -->
+  <div id="google-login-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
+    <div class="m3-surface-2 p-6 sm:p-10 rounded-3xl border border-emerald-500/40 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button id="close-google-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 p-2.5 rounded-2xl bg-surface-300 border border-emerald-500/30 mx-auto flex items-center justify-center mb-3">
+          <svg class="w-6 h-6" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold text-white" data-i18n="modal_auth_title">Sign in with Google</h2>
+        <p class="text-xs text-zinc-400 mt-1" data-i18n="modal_auth_desc">Authenticate to assign your dedicated Singapore VPS slot</p>
+      </div>
+
+      <div class="space-y-3.5 sm:space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Your Name</label>
+          <input type="text" id="google-auth-name" placeholder="E.g. Alex" value="Legion Member" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Google Email</label>
+          <input type="email" id="google-auth-email" placeholder="name@gmail.com" value="legion.user@gmail.com" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+        </div>
+
+        <button id="btn-confirm-google-auth" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn flex items-center justify-center gap-2 mt-4 sm:mt-5">
+          <span data-i18n="modal_auth_btn">Authorize Google Session</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. FINAL TROJAN VPN CREDENTIALS MODAL (Clean Trojan & VLESS - WireGuard REMOVED!) -->
+  <div id="vpn-config-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
+    <div class="m3-surface-2 p-5 sm:p-8 rounded-3xl border border-neon/50 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      
+      <button id="close-config-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
+
+      <div class="text-center mb-5 sm:mb-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon/10 border border-neon/30 text-neon text-[11px] sm:text-xs font-semibold mb-2">
+          <span data-i18n="modal_config_tag">✓ Handshake Completed & Verified</span>
+        </div>
+        <h2 class="text-xl sm:text-3xl font-black text-white" data-i18n="modal_config_title">Your Singapore Node Credentials</h2>
+        <div id="vpn-modal-pkg-name" class="text-xs sm:text-sm text-neon font-bold mt-1">Singapore Trojan Node</div>
+      </div>
+
+      <!-- Node Stats Bar -->
+      <div class="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-surface-100 border border-emerald-950 mb-5 sm:mb-6 text-center text-xs">
+        <div>
+          <span class="text-zinc-500 block text-[10px]">Location</span>
+          <span class="text-white font-bold">Singapore 🇸🇬</span>
+        </div>
+        <div>
+          <span class="text-zinc-500 block text-[10px]">Latency</span>
+          <span id="vpn-ping-stat" class="text-neon font-bold font-mono">45 ms</span>
+        </div>
+        <div>
+          <span class="text-zinc-500 block text-[10px]">Protocol</span>
+          <span class="text-emerald-400 font-bold font-mono">Trojan / TLS</span>
+        </div>
+      </div>
+
+      <!-- Session Token -->
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-zinc-400 mb-1" data-i18n="token_label">Session Token / Connection Code</label>
+        <div class="flex items-center gap-2">
+          <div id="vpn-access-code" class="flex-1 px-3.5 py-3 rounded-2xl bg-surface-100 border border-emerald-950 text-neon font-mono text-xs sm:text-sm font-bold tracking-wider truncate">
+            LEGION-SG-2026-TROJAN
+          </div>
+          <button class="js-copy-btn px-4 sm:px-5 py-3 rounded-2xl bg-neon text-black font-bold text-xs m3-btn flex-shrink-0" data-target="vpn-access-code">
+            <span data-i18n="copy_btn">Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Trojan Protocol Configuration Link -->
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-zinc-400 mb-1">Trojan Configuration URL (ISP Bypass)</label>
+        <div class="flex items-center gap-2">
+          <input type="text" readonly id="vpn-trojan-link" value="" class="flex-1 px-3.5 py-3 rounded-2xl bg-surface-100 border border-emerald-950 text-zinc-200 font-mono text-xs focus:outline-none truncate">
+          <button class="js-copy-btn px-3.5 sm:px-5 py-3 rounded-2xl bg-neon text-black font-bold text-xs m3-btn flex-shrink-0" data-target="vpn-trojan-link">
+            <span>Copy Trojan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- V2Ray / VLESS Link -->
+      <div class="mb-6">
+        <label class="block text-xs font-semibold text-zinc-400 mb-1" data-i18n="v2ray_label">V2Ray / VLESS Configuration Link</label>
+        <div class="flex items-center gap-2">
+          <input type="text" readonly id="vpn-v2ray-link" value="" class="flex-1 px-3.5 py-3 rounded-2xl bg-surface-100 border border-emerald-950 text-zinc-300 font-mono text-xs focus:outline-none truncate">
+          <button class="js-copy-btn px-3.5 sm:px-4 py-3 rounded-2xl bg-surface-300 hover:bg-neon hover:text-black border border-emerald-500/40 text-white font-bold text-xs m3-btn flex-shrink-0" data-target="vpn-v2ray-link">
+            <span data-i18n="copy_vless_btn">Copy VLESS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Download Config File Action -->
+      <div class="flex flex-col sm:flex-row gap-3 mb-5">
+        <button id="btn-download-trojan" class="flex-1 py-3 rounded-2xl bg-surface-300 hover:bg-surface-200 border border-emerald-500/40 text-neon font-bold text-xs m3-btn flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download Trojan File (.txt)</span>
+        </button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-surface-100 border border-emerald-950 text-center">
+        <p class="text-xs text-zinc-400">
+          Paste the copied Trojan configuration link into <strong>v2rayNG, Nekobox, v2rayN, or Clash Meta</strong> apps to start browsing!
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Shared Data Store (Packages, User Registry, Ban Controller) -->
+  <script src="js/store.js"></script>
+
+  <!-- Application Configuration -->
+  <script src="config.js"></script>
+
+  <!-- Internationalization (Sinhala & English) -->
+  <script src="js/i18n.js"></script>
+
+  <!-- Security Module -->
+  <script src="js/security.js"></script>
+
+  <!-- Authentication Module -->
+  <script src="js/auth.js"></script>
+
+  <!-- Core App Controller -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>

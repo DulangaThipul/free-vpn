@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEGION VPN - Admin Control Center</title>
+  
+  <meta name="theme-color" content="#000000">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            amoled: '#000000',
+            surface: {
+              100: '#060907',
+              200: '#0b110e',
+              300: '#121d17'
+            },
+            neon: {
+              DEFAULT: '#00FF66',
+              hover: '#00df59',
+              dim: 'rgba(0, 255, 102, 0.12)',
+              glow: 'rgba(0, 255, 102, 0.28)'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="css/custom.css">
+</head>
+<body class="bg-black text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-[#00FF66] selection:text-black">
+
+  <!-- ================= ADMIN LOGIN SCREEN ================= -->
+  <div id="admin-login-view" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-4">
+    <div class="m3-surface-2 p-8 sm:p-10 rounded-3xl border border-emerald-900/60 max-w-md w-full shadow-2xl text-center">
+      <div class="w-14 h-14 rounded-2xl bg-surface-300 border border-neon/40 text-neon mx-auto flex items-center justify-center mb-4">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-black text-white">LEGION Admin Panel</h1>
+      <p class="text-xs text-zinc-400 mt-1 mb-6">Enter your security key to manage packages & users</p>
+
+      <form id="admin-login-form" class="space-y-4">
+        <div>
+          <input type="password" id="admin-pass-input" placeholder="Security PIN / Password (Default: admin123)" class="w-full px-4 py-3.5 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white text-center">
+        </div>
+        <button type="submit" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
+          Unlock Admin Dashboard
+        </button>
+      </form>
+      <div class="mt-4">
+        <a href="index.html" class="text-xs text-zinc-500 hover:text-neon">← Return to Main Portal</a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MAIN ADMIN DASHBOARD ================= -->
+  <div id="admin-dashboard-view" class="hidden flex-col min-h-screen">
+    
+    <!-- Top Header -->
+    <header class="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-emerald-950/70">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-surface-200 border border-neon/40 text-neon flex items-center justify-center font-bold">
+            ⚡
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-extrabold text-white">LEGION ADMIN</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neon/10 border border-neon/30 text-neon">SECURE</span>
+            </div>
+            <span class="text-[11px] text-zinc-500 font-mono">Control Center & Trojan Nodes</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <a href="index.html" target="_blank" class="px-4 py-2 rounded-xl bg-surface-200 hover:bg-surface-300 border border-emerald-800/40 text-zinc-300 text-xs font-semibold flex items-center gap-1.5">
+            <span>Live Site</span> ↗
+          </a>
+          <button id="admin-logout-btn" class="px-4 py-2 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 hover:text-white text-xs font-semibold">
+            Lock & Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 space-y-10">
+      
+      <!-- Metrics Overview -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div class="m3-surface-2 p-5 rounded-3xl border border-emerald-950">
+          <span class="text-xs text-zinc-400">Total Registered Users</span>
+          <div id="stat-total-users" class="text-3xl font-black text-white font-mono mt-1">0</div>
+        </div>
+        <div class="m3-surface-2 p-5 rounded-3xl border border-emerald-950">
+          <span class="text-xs text-zinc-400">Banned Accounts</span>
+          <div id="stat-banned-users" class="text-3xl font-black text-red-400 font-mono mt-1">0</div>
+        </div>
+        <div class="m3-surface-2 p-5 rounded-3xl border border-emerald-950">
+          <span class="text-xs text-zinc-400">Available Packages</span>
+          <div id="stat-available-pkgs" class="text-3xl font-black text-neon font-mono mt-1">0</div>
+        </div>
+        <div class="m3-surface-2 p-5 rounded-3xl border border-emerald-950">
+          <span class="text-xs text-zinc-400">Out of Stock</span>
+          <div id="stat-outofstock-pkgs" class="text-3xl font-black text-amber-400 font-mono mt-1">0</div>
+        </div>
+      </section>
+
+      <!-- SECTION 1: ISP Packages & Trojan Configurations Management -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">ISP Packages & Trojan Configurations</h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Toggle stock status ("Click Here" vs "Out of Stock") and customize Trojan keys</p>
+          </div>
+          <button id="btn-add-pkg-modal" class="px-5 py-2.5 rounded-2xl bg-neon text-black font-bold text-xs m3-btn flex items-center gap-2 self-start sm:self-auto">
+            <span>+ Add New Package</span>
+          </button>
+        </div>
+
+        <!-- Packages Table / Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="admin-packages-list">
+          <!-- Dynamically Populated by admin.js -->
+        </div>
+      </section>
+
+      <!-- SECTION 2: User Logs & Ban Management -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-white">User Activity Logs & Ban Controller</h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Track every user who signed in with Google, login timestamps, and ban abuse accounts</p>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-surface-200 text-zinc-400 uppercase font-mono text-[11px] border-b border-emerald-950">
+              <tr>
+                <th class="py-3.5 px-4">User</th>
+                <th class="py-3.5 px-4">Email</th>
+                <th class="py-3.5 px-4">First Sign-In</th>
+                <th class="py-3.5 px-4">Last Activity</th>
+                <th class="py-3.5 px-4">Logins</th>
+                <th class="py-3.5 px-4">Status</th>
+                <th class="py-3.5 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-table" class="divide-y divide-emerald-950/60 font-sans">
+              <!-- Dynamically Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+
+  <!-- ================= MODAL: EDIT / ADD PACKAGE ================= -->
+  <div id="package-edit-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-4">
+    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-emerald-500/50 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button id="close-pkg-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
+      
+      <h3 class="text-xl font-bold text-white mb-1" id="pkg-modal-title">Edit Package</h3>
+      <p class="text-xs text-zinc-400 mb-6">Update ISP pricing, Trojan protocol URL and stock state.</p>
+
+      <form id="package-edit-form" class="space-y-4">
+        <input type="hidden" id="edit-pkg-id">
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Package Title</label>
+          <input type="text" id="edit-pkg-title" required class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Badge Tag</label>
+            <input type="text" id="edit-pkg-badge" placeholder="Normal Package / Best Choice" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">ISP Price Display</label>
+            <input type="text" id="edit-pkg-price" placeholder="Rs. 348 (20 GB)" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Description / Notes</label>
+          <input type="text" id="edit-pkg-desc" placeholder="Dialog 20GB Social work plan tunnel..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Trojan Configuration URL (trojan://...)</label>
+          <textarea id="edit-pkg-trojan" rows="3" required placeholder="trojan://password@sg01.legionvpn.net:443?security=tls&sni=m.facebook.com#LEGION-SG" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none font-mono text-xs text-zinc-300"></textarea>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+          <input type="checkbox" id="edit-pkg-stock" class="w-4 h-4 rounded text-neon focus:ring-0 bg-surface-100 border-emerald-950">
+          <label for="edit-pkg-stock" class="text-xs font-semibold text-zinc-300">In Stock (Available for Users with "Click Here" button)</label>
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-3 rounded-xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
+          Save Package & Update Users
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Shared Data Store & Admin Controller -->
+  <script src="js/store.js"></script>
+  <script src="js/admin.js"></script>
+
+</body>
+</html>
