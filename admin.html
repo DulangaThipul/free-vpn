@@ -50,7 +50,7 @@
 
       <form id="admin-login-form" class="space-y-4">
         <div>
-          <input type="password" id="admin-pass-input" placeholder="Security PIN / Password (Default: admin123)" class="w-full px-4 py-3.5 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white text-center">
+          <input type="password" id="admin-pass-input" placeholder="Enter Admin Password" class="w-full px-4 py-3.5 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white text-center">
         </div>
         <button type="submit" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
           Unlock Admin Dashboard
@@ -134,7 +134,102 @@
         </div>
       </section>
 
-      <!-- SECTION 2: User Logs & Ban Management -->
+      <!-- SECTION 2: Global Public Servers (10-Ads) Manager -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Global Public Servers Manager (10 Ads)</h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Manage the 8 country nodes, edit direct IPs, adjust Ping and SNI, and toggle Online/Maintenance</p>
+          </div>
+          <button id="btn-add-public-server" class="px-5 py-2.5 rounded-2xl bg-surface-300 border border-emerald-500/40 text-neon font-bold text-xs m3-btn flex items-center gap-2 self-start sm:self-auto hover:bg-neon hover:text-black">
+            <span>+ Add Custom Server</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-surface-200 text-zinc-400 uppercase font-mono text-[11px] border-b border-emerald-950">
+              <tr>
+                <th class="py-3.5 px-4">Flag & Country</th>
+                <th class="py-3.5 px-4">Server IP</th>
+                <th class="py-3.5 px-4">Ping (ms)</th>
+                <th class="py-3.5 px-4">Default SNI</th>
+                <th class="py-3.5 px-4">Status</th>
+                <th class="py-3.5 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-public-servers-table" class="divide-y divide-emerald-950/60 font-sans">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 3: Final Credentials Modal & Delivery Settings -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-white">Final Credentials Modal & Delivery Settings</h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Customize all text, instructions, and notices displayed on completion screens (100-Ad & 10-Ad Modals)</p>
+        </div>
+
+        <form id="admin-modal-settings-form" class="space-y-6">
+          
+          <div class="p-5 rounded-2xl bg-surface-200 border border-emerald-900/40 space-y-4">
+            <h3 class="text-sm font-bold text-neon mb-2">Singapore 100-Ad Modal (Claim Page)</h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-zinc-400 mb-1">Modal Heading</label>
+                <input type="text" id="ms-sgHeading" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-zinc-400 mb-1">Status Tag / Badge</label>
+                <input type="text" id="ms-sgStatusTag" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-zinc-400 mb-1">Protocol Display Label</label>
+                <input type="text" id="ms-sgProtocolLabel" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-zinc-400 mb-1">Server Validity / Quota Notice</label>
+                <input type="text" id="ms-sgValidityNotice" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Support & Troubleshooting Policy Banner Text</label>
+              <textarea id="ms-sgSupportBanner" rows="2" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Instructions Footer Text (App Recommendations)</label>
+              <input type="text" id="ms-sgFooter" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+            </div>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-surface-200 border border-amber-900/30 space-y-4">
+            <h3 class="text-sm font-bold text-amber-400 mb-2">Global Public Servers 10-Ad Modal (Index Page)</h3>
+            
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">High-Latency Speed Advisory Warning Banner Text</label>
+              <textarea id="ms-pubAdvisoryBanner" rows="3" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-amber-400 focus:outline-none text-sm text-white"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Upsell Pitch (Free Singapore 5-day / 50GB)</label>
+              <input type="text" id="ms-pubUpsellPitch" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-amber-400 focus:outline-none text-sm text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Upsell Pitch (VIP LKR 250 Unlimited)</label>
+              <input type="text" id="ms-pubVipPitch" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-amber-400 focus:outline-none text-sm text-white">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
+            Save Modal Settings & Push to Clients
+          </button>
+        </form>
+      </section>
+
+      <!-- SECTION 4: User Logs & Ban Management -->
       <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
         <div>
           <h2 class="text-xl font-bold text-white">User Activity Logs & Ban Controller</h2>
@@ -165,13 +260,62 @@
   </div>
 
 
+  <!-- ================= MODAL: EDIT PUBLIC SERVER CONFIGS ================= -->
+  <div id="public-server-edit-modal" class="fixed inset-0 z-[60] hidden modal-glass items-center justify-center p-4">
+    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-emerald-500/50 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button id="close-public-srv-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
+      
+      <h3 class="text-xl font-bold text-white mb-1" id="pub-srv-modal-title">Edit Public Server</h3>
+      <p class="text-xs text-zinc-400 mb-4">Paste the complete VLESS/Trojan/VMess config container for each ISP package.</p>
+
+      <form id="public-server-edit-form" class="space-y-4">
+        <input type="hidden" id="edit-pub-srv-id">
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Server IP</label>
+            <input type="text" id="edit-pub-srv-ip" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Ping</label>
+            <input type="text" id="edit-pub-srv-ping" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Social Media Package Config</label>
+          <input type="text" id="edit-pub-srv-social" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">TikTok Package Config</label>
+          <input type="text" id="edit-pub-srv-tiktok" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">YouTube Package Config</label>
+          <input type="text" id="edit-pub-srv-youtube" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Zoom Package Config</label>
+          <input type="text" id="edit-pub-srv-zoom" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <button type="submit" class="w-full py-3.5 mt-2 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
+          Save Public Server Configurations
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- ================= MODAL: EDIT / ADD PACKAGE ================= -->
   <div id="package-edit-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-4">
     <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-emerald-500/50 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
       <button id="close-pkg-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
       
       <h3 class="text-xl font-bold text-white mb-1" id="pkg-modal-title">Edit Package</h3>
-      <p class="text-xs text-zinc-400 mb-6">Update ISP pricing, Trojan protocol URL and stock state.</p>
+      <p class="text-xs text-zinc-400 mb-6">Update ISP pricing, VPN protocol, configuration URL and stock state.</p>
 
       <form id="package-edit-form" class="space-y-4">
         <input type="hidden" id="edit-pkg-id">
@@ -187,8 +331,23 @@
             <input type="text" id="edit-pkg-badge" placeholder="Normal Package / Best Choice" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
           </div>
           <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Badge Style</label>
+            <select id="edit-pkg-badge-style" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white appearance-none">
+              <option value="normal">Normal</option>
+              <option value="best">Best Choice</option>
+              <option value="warning">Warning</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">ISP Price Display</label>
             <input type="text" id="edit-pkg-price" placeholder="Rs. 348 (20 GB)" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Max Logins</label>
+            <input type="text" id="edit-pkg-logins" placeholder="Up to 2 Logins" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
           </div>
         </div>
 
@@ -198,7 +357,14 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-zinc-400 mb-1">Trojan Configuration URL (trojan://...)</label>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">VPN Protocol</label>
+          <select id="edit-pkg-protocol" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white appearance-none mb-4">
+            <option value="trojan">Trojan (trojan://)</option>
+            <option value="vless">VLESS (vless://)</option>
+            <option value="vmess">VMess (vmess://)</option>
+          </select>
+
+          <label id="label-pkg-config" class="block text-xs font-semibold text-zinc-400 mb-1">Active Connection / Config URL</label>
           <textarea id="edit-pkg-trojan" rows="3" required placeholder="trojan://password@sg01.legionvpn.net:443?security=tls&sni=m.facebook.com#LEGION-SG" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none font-mono text-xs text-zinc-300"></textarea>
         </div>
 

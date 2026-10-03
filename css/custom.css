@@ -411,10 +411,65 @@ body.security-locked footer {
 }
 
 .modal-security-critical {
-  z-index: 9999999 !important;
+  z-index: 999999999 !important;
   position: fixed !important;
   inset: 0 !important;
   background: rgba(0, 0, 0, 0.95) !important;
   backdrop-filter: blur(25px) !important;
   -webkit-backdrop-filter: blur(25px) !important;
 }
+
+/* ================= IMMUNE MODALS & ANTI-CLICKJACKING ================= */
+#language-picker-modal {
+  z-index: 10000000 !important;
+}
+
+#ad-rules-modal {
+  z-index: 9999999 !important;
+}
+
+#google-login-modal,
+#public-server-modal,
+#vpn-config-modal,
+#theme-customizer-modal,
+#halfway-interstitial-modal,
+#turnstile-modal,
+#package-edit-modal,
+#public-server-edit-modal {
+  z-index: 999999 !important;
+}
+
+#adblock-modal,
+#brave-blocker-modal,
+#devtools-blocker-modal,
+#banned-user-modal {
+  z-index: 999999999 !important;
+}
+
+/* Ensure all buttons, links, inputs, and clickable cards are always clickable on first tap */
+button,
+a,
+input,
+select,
+.m3-btn,
+.lang-card,
+.js-open-public-btn,
+.js-select-package,
+.js-copy-btn,
+[id^="step-btn-"],
+[id^="public-"] {
+  position: relative !important;
+  z-index: 20 !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#language-picker-modal button,
+#language-picker-modal .lang-card,
+#ad-rules-modal button {
+  position: relative !important;
+  z-index: 30 !important;
+  pointer-events: auto !important;
+}
+

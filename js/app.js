@@ -127,102 +127,24 @@
   }
 
   // --- ANTI-TAB-SKIPPING & DWELL TIME ENFORCEMENT ---
-  // Listens to window focus and document visibility to detect if user closed the ad too quickly (< 4 seconds)
+  // Cleanly restores button readiness when user returns from ad tab
   function initTabVisibilityTracker() {
     function handleReturn() {
-      if (state.pendingAd && !state.pendingAd.failed) {
-        setTimeout(() => {
-          if (!state.pendingAd || state.pendingAd.failed) return;
-
-          const dwellTime = Date.now() - state.pendingAd.adOpenedAt;
-          const stepNumber = state.pendingAd.stepNumber;
-          const quota = STEP_QUOTAS[stepNumber] || 10;
-          const currentClicksBefore = state.stepClicks[stepNumber] || 0;
-          const btn = dom[`stepBtn${stepNumber}`];
-          const statusEl = dom[`stepStatus${stepNumber}`];
+      if (state.isCooldown) {
+        state.isCooldown = false;
+        const stepNum = state.currentStep;
+        const quota = STEP_QUOTAS[stepNum] || 10;
+        const currentClicks = state.stepClicks[stepNum] || 0;
+        const btn = dom[`stepBtn${stepNum}`];
+        if (btn && state.stepsCompleted < stepNum) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-85', 'cursor-not-allowed');
           const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
-
-          if (dwellTime < 4000) {
-            // User returned in under 4 seconds! Reject verification
-            state.pendingAd.failed = true;
-            const warningMsg = lang === 'si'
-              ? "⚠️ Verification අසම්පූර්ණයි: ඔබ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි. කරුණාකර Ad එක තත්පර 4ක් වත් load වීමට ඉඩ දෙන්න."
-              : "⚠️ Verification Failed: You closed the ad too quickly! Please allow the sponsored page to load for at least 4 seconds.";
-            showToast(warningMsg, "error");
-            triggerMobileHaptic();
-
-            // Reset button
-            if (btn) {
-              btn.disabled = false;
-              btn.classList.remove('opacity-85', 'cursor-not-allowed');
-              const btnText = lang === 'si'
-                ? `Ad එක Verify කරන්න (${currentClicksBefore}/${quota})`
-                : `Click to Verify Ad (${currentClicksBefore}/${quota})`;
-              btn.innerHTML = `<span>${btnText}</span>`;
-            }
-            if (statusEl) {
-              const statusText = lang === 'si'
-                ? `<span class="text-red-400 font-medium">⚠️ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි (${currentClicksBefore}/${quota})</span>`
-                : `<span class="text-red-400 font-medium">⚠️ Ad closed too fast - Not counted (${currentClicksBefore}/${quota})</span>`;
-              statusEl.innerHTML = statusText;
-            }
-            
-            state.isCooldown = false;
-            state.pendingAd = null;
-          } else {
-            // Valid Click! >= 4000ms dwell time
-            state.pendingAd.verified = true;
-            state.stepClicks[stepNumber] = currentClicksBefore + 1;
-            const currentClicks = state.stepClicks[stepNumber];
-            state.isCooldown = false;
-            state.pendingAd = null;
-
-            triggerMobileHaptic();
-            updateOverallProgress();
-
-            if (currentClicks < quota) {
-              // Check if Halfway
-              const halfway = Math.floor(quota / 2);
-              if (currentClicks === halfway) {
-                showHalfwayInterstitialModal(stepNumber);
-              }
-
-              if (btn) {
-                btn.disabled = false;
-                btn.classList.remove('opacity-85', 'cursor-not-allowed');
-                const btnText = lang === 'si'
-                  ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
-                  : `Click to Verify Ad (${currentClicks}/${quota})`;
-                btn.innerHTML = `<span>${btnText}</span>`;
-              }
-              if (statusEl) {
-                const statusText = lang === 'si'
-                  ? `<span class="text-neon font-medium">${currentClicks}/${quota} Ads බලා ඇත. ඉදිරියට ක්ලික් කරන්න...</span>`
-                  : `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. Keep clicking...</span>`;
-                statusEl.innerHTML = statusText;
-              }
-            } else {
-              // Quota reached
-              state.stepsCompleted = stepNumber;
-              updateStepUI(stepNumber, true);
-              updateOverallProgress();
-
-              if (stepNumber < 9) {
-                unlockStep(stepNumber + 1);
-                const toastMsg = lang === 'si'
-                  ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
-                  : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
-                showToast(toastMsg, "success");
-              } else {
-                const finalToastMsg = lang === 'si'
-                  ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
-                  : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
-                showToast(finalToastMsg, "success");
-                fetchSecureVPNConfig();
-              }
-            }
-          }
-        }, 100);
+          const btnText = lang === 'si'
+            ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
+            : `Click to Verify Ad (${currentClicks}/${quota})`;
+          btn.innerHTML = `<span>${btnText}</span>`;
+        }
       }
     }
 
@@ -408,7 +330,7 @@
   }
 
   // --- AGGRESSIVE GLOBAL POPUNDER SYSTEM ---
-  // Fires popunders on 1st and 2nd clicks anywhere on the page, with a 35s cooldown
+  // Fires popunders on 1st and 2nd clicks anywhere on blank page areas, with a 35s cooldown
   function triggerPopunder(customUrl) {
     const config = window.LEGION_CONFIG || {};
     const ads = config.ADS || {};
@@ -416,11 +338,7 @@
 
     if (url && url !== "#") {
       try {
-        const adWin = window.open(url, '_blank');
-        if (adWin) {
-          adWin.blur();
-          window.focus();
-        }
+        window.open(url, '_blank', 'noopener');
       } catch (err) {
         console.warn("Popunder window open blocked:", err);
       }
@@ -432,6 +350,25 @@
     const cooldownSec = (config.ADS && config.ADS.POPUNDER_COOLDOWN_SECONDS) || 35;
 
     document.addEventListener('click', (e) => {
+      // NEVER intercept or consume clicks on any interactive button, link, card, or modal
+      if (
+        e.target.closest('button') ||
+        e.target.closest('a') ||
+        e.target.closest('input') ||
+        e.target.closest('select') ||
+        e.target.closest('.m3-btn') ||
+        e.target.closest('.js-open-public-btn') ||
+        e.target.closest('.js-select-package') ||
+        e.target.closest('.lang-card') ||
+        e.target.closest('[id^="step-btn-"]') ||
+        e.target.closest('[id^="public-"]') ||
+        e.target.closest('#btn-accept-ad-rules') ||
+        e.target.closest('#turnstile-box') ||
+        e.target.closest('#public-turnstile-box')
+      ) {
+        return;
+      }
+
       const now = Date.now();
       // Reset quota when cooldown expires
       if (now - lastPopunderResetTime > cooldownSec * 1000) {
@@ -441,28 +378,64 @@
 
       if (popunderClickCount < 2) {
         popunderClickCount++;
-        // If clicking a step button or the accept rules button, that button triggers its own direct link synchronously.
-        const isStepBtn = e.target.closest('[id^="step-btn-"]');
-        const isRulesBtn = e.target.closest('#btn-accept-ad-rules');
-        const isTurnstileBox = e.target.closest('#turnstile-box');
-
-        if (!isStepBtn && !isRulesBtn && !isTurnstileBox) {
-          triggerPopunder();
-        }
+        triggerPopunder();
       }
-    }, true);
+    }, false);
+  }
+
+  // --- ANTI-CLICKJACKING SENTINEL ---
+  // Neutralizes rogue transparent full-screen overlay layers injected by ad networks
+  // ensuring user clicks penetrate immediately to underlying buttons on click #1
+  function initAntiClickjackingSentinel() {
+    const neutralizer = () => {
+      const overlays = document.querySelectorAll('body > a, body > div');
+      overlays.forEach(el => {
+        if (!el || (el.id && (el.id.includes('modal') || el.id.includes('toast') || el.id.includes('packages'))) || el.classList.contains('modal-glass') || el.tagName === 'HEADER' || el.tagName === 'MAIN' || el.tagName === 'FOOTER' || el.tagName === 'SECTION') {
+          return;
+        }
+        const s = window.getComputedStyle(el);
+        if ((s.position === 'fixed' || s.position === 'absolute') &&
+            el.offsetWidth >= window.innerWidth * 0.8 &&
+            el.offsetHeight >= window.innerHeight * 0.8) {
+          // If it's a full-page layer without visible text
+          if (s.opacity === '0' || s.backgroundColor === 'transparent' || s.backgroundColor === 'rgba(0, 0, 0, 0)' || (el.innerText && el.innerText.trim().length === 0)) {
+            el.style.setProperty('pointer-events', 'none', 'important');
+          }
+        }
+      });
+    };
+
+    const observer = new MutationObserver(neutralizer);
+    if (document.body) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+    setInterval(neutralizer, 350);
   }
 
   // --- MANDATORY SERVER NOTICE & RULES MODAL (#ad-rules-modal) ---
-  function initAdRulesModal() {
+  function checkAndShowRulesModal() {
     const accepted = sessionStorage.getItem('legion_rules_accepted');
     if (!accepted && dom.adRulesModal) {
       dom.adRulesModal.classList.remove('hidden');
       dom.adRulesModal.classList.add('flex');
     }
+  }
+
+  function initAdRulesModal() {
+    // Only show on load if language picker modal is NOT open (prevent modal backdrop collisions)
+    const langModal = document.getElementById('language-picker-modal');
+    const isLangModalActive = langModal && !langModal.classList.contains('hidden');
+
+    if (!isLangModalActive) {
+      checkAndShowRulesModal();
+    }
 
     if (dom.btnAcceptAdRules) {
-      dom.btnAcceptAdRules.addEventListener('click', () => {
+      const handleAccept = (e) => {
+        if (e) {
+          e.stopPropagation();
+          if (e.cancelable) e.preventDefault();
+        }
         // Synchronously open popunder on user click gesture
         triggerPopunder();
         sessionStorage.setItem('legion_rules_accepted', 'true');
@@ -478,9 +451,13 @@
           : "Portal rules accepted. Singapore VPS cluster unlocked!";
         showToast(msg, "success");
         triggerMobileHaptic();
-      });
+      };
+
+      dom.btnAcceptAdRules.addEventListener('click', handleAccept, { capture: true });
+      dom.btnAcceptAdRules.addEventListener('pointerdown', handleAccept, { capture: true });
     }
   }
+
 
   // --- Render Packages on Home Screen ---
   function renderPackages() {
@@ -582,9 +559,21 @@
     const link = getDirectLink(stepNumber);
     if (link && link !== "#") {
       try {
-        window.open(link, '_blank');
+        const a = document.createElement('a');
+        a.href = link;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (a.parentNode) a.parentNode.removeChild(a);
+        }, 100);
       } catch (err) {
-        console.warn("Direct link opener error:", err);
+        try {
+          window.open(link, '_blank');
+        } catch (e) {
+          console.warn("Direct link opener error:", e);
+        }
       }
     }
   }
@@ -613,7 +602,7 @@
     }
   }
 
-  // --- Unified 9-Step 100-Ad Action Handler with 4s Dwell Time Enforcement ---
+  // --- Unified 9-Step 100-Ad Action Handler with Real-Time Click Engine ---
   function handleStepClick(stepNumber) {
     // 1. Enforce Google Sign-In Gate
     if (!requireAuth()) return;
@@ -628,55 +617,85 @@
       return;
     }
 
-    // 3. Strict Rate-Limit Check
+    // 3. Short click debounce check
     if (state.isCooldown) {
-      const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
-      const waitNotice = lang === 'si'
-        ? "⏳ කරුණාකර Ad verification එක අවසන් වන තෙක් රැඳී සිටින්න..."
-        : "⏳ Please allow the current ad verification to complete...";
-      showToast(waitNotice, "info");
       return;
     }
 
     const quota = STEP_QUOTAS[stepNumber] || 10;
     state.currentStep = stepNumber;
 
-    // 4. Record timestamp and start pending verification for Dwell Time Enforcement
-    state.pendingAd = {
-      stepNumber: stepNumber,
-      adOpenedAt: Date.now(),
-      failed: false,
-      verified: false
-    };
-
-    // 5. SYNCHRONOUSLY TRIGGER THE ADSTERRA SMARTLINK DIRECTLY ON USER GESTURE!
+    // 4. Open Adsterra Smartlink Synchronously on User Gesture!
     triggerAdLink(stepNumber);
 
-    // 6. Enter UI Waiting State (Wait for focus to return)
-    state.isCooldown = true;
+    // 5. Increment Click Count Immediately on Click!
+    state.stepClicks[stepNumber] = (state.stepClicks[stepNumber] || 0) + 1;
+    const currentClicks = state.stepClicks[stepNumber];
+
+    triggerMobileHaptic();
+    updateOverallProgress();
+
     const btn = dom[`stepBtn${stepNumber}`];
     const statusEl = dom[`stepStatus${stepNumber}`];
     const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
-    const currentClicksBefore = state.stepClicks[stepNumber] || 0;
 
+    // 6. Check if Step Quota Reached
+    if (currentClicks >= quota) {
+      state.stepsCompleted = stepNumber;
+      updateStepUI(stepNumber, true);
+      updateOverallProgress();
+
+      if (stepNumber < 9) {
+        unlockStep(stepNumber + 1);
+        const toastMsg = lang === 'si'
+          ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
+          : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
+        showToast(toastMsg, "success");
+      } else {
+        const finalToastMsg = lang === 'si'
+          ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
+          : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
+        showToast(finalToastMsg, "success");
+        fetchSecureVPNConfig();
+      }
+      return;
+    }
+
+    // 7. Check if Halfway Milestone
+    const halfway = Math.floor(quota / 2);
+    if (currentClicks === halfway) {
+      showHalfwayInterstitialModal(stepNumber);
+    }
+
+    // 8. Visual Confirmation & 1.2-Second Debounce Cooldown
+    state.isCooldown = true;
     if (btn) {
       btn.disabled = true;
       btn.classList.add('opacity-85', 'cursor-not-allowed');
-      const cooldownText = lang === 'si'
-        ? `⏳ Ad එක Verify වෙමින්... Ad tab එකේ රැඳී සිටින්න.`
-        : `⏳ Verifying Ad... Please stay on ad tab.`;
-      btn.innerHTML = `<span>${cooldownText}</span>`;
+      btn.innerHTML = `<span>✓ Verified! (${currentClicks}/${quota})</span>`;
     }
 
     if (statusEl) {
-      const inspectingText = lang === 'si'
-        ? `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Ad එක පරීක්ෂා කරමින්... තත්පර 4ක් රැඳී සිටින්න.</span>`
-        : `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Checking Ad... Stay for 4s.</span>`;
-      statusEl.innerHTML = inspectingText;
+      const statusText = lang === 'si'
+        ? `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. ඉදිරියට යන්න...</span>`
+        : `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. Keep clicking...</span>`;
+      statusEl.innerHTML = statusText;
     }
 
+    setTimeout(() => {
+      state.isCooldown = false;
+      if (btn && state.stepsCompleted < stepNumber) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-85', 'cursor-not-allowed');
+        const nextText = lang === 'si'
+          ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
+          : `Click to Verify Ad (${currentClicks}/${quota})`;
+        btn.innerHTML = `<span>${nextText}</span>`;
+      }
+    }, 1200);
+
     // Trigger Turnstile modal during Step 9 interaction
-    if (stepNumber === 9 && !state.turnstileCompleted && currentClicksBefore === 0) {
+    if (stepNumber === 9 && !state.turnstileCompleted && currentClicks === 1) {
       showTurnstileModal();
     }
   }
@@ -946,7 +965,29 @@
     if (trojanEl) trojanEl.value = data.trojan_link || "";
     if (v2rayEl) v2rayEl.value = data.v2ray_link || "";
     if (pingEl) pingEl.textContent = `${state.currentPing} ms`;
-    if (pkgTitleEl) pkgTitleEl.textContent = data.package_title || "Singapore Trojan Node";
+    if (pkgTitleEl) pkgTitleEl.textContent = data.package_title || "Singapore Node";
+
+    // Apply Dynamic Modal Settings if store exists
+    if (window.LegionStore && window.LegionStore.getModalSettings) {
+      const ms = window.LegionStore.getModalSettings();
+      const h = document.getElementById('sg-modal-heading');
+      if (h && ms.sgHeading) h.textContent = ms.sgHeading;
+      
+      const tag = document.getElementById('sg-modal-tag');
+      if (tag && ms.sgStatusTag) tag.textContent = ms.sgStatusTag;
+      
+      const pLabel = document.getElementById('sg-modal-protocol-label');
+      if (pLabel && ms.sgProtocolLabel) pLabel.textContent = ms.sgProtocolLabel;
+      
+      const v = document.getElementById('sg-modal-validity');
+      if (v && ms.sgValidityNotice) v.textContent = ms.sgValidityNotice;
+      
+      const s = document.getElementById('sg-modal-support-banner');
+      if (s && ms.sgSupportBanner) s.textContent = ms.sgSupportBanner;
+      
+      const f = document.getElementById('sg-modal-footer');
+      if (f && ms.sgFooter) f.textContent = ms.sgFooter;
+    }
 
     dom.configModal.classList.remove('hidden');
     dom.configModal.classList.add('flex');
@@ -1043,6 +1084,239 @@ INSTRUCTIONS:
     }
   }
 
+  // --- Dynamic Render of Public Servers (index.html only) ---
+  function renderPublicServersGrid() {
+    const grid = document.getElementById('public-servers-grid');
+    if (!grid) return;
+    
+    // Check if store exists, otherwise use fallback
+    const servers = (window.LegionStore && window.LegionStore.getPublicServers) 
+      ? window.LegionStore.getPublicServers() 
+      : [];
+      
+    grid.innerHTML = '';
+    
+    servers.forEach(srv => {
+      const isOnline = srv.status === 'Online';
+      const card = document.createElement('div');
+      card.className = `m3-surface-2 p-5 rounded-3xl border transition-all flex flex-col justify-between ${isOnline ? 'border-emerald-900/40 hover:border-emerald-500/60' : 'border-red-950/40 opacity-80'}`;
+      
+      card.innerHTML = `
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2.5">
+              <img src="https://flagcdn.com/w80/${srv.flag}.png" srcset="https://flagcdn.com/w160/${srv.flag}.png 2x" width="36" height="24" alt="${srv.country} Flag" class="w-9 h-6 object-cover rounded-md shadow-md border border-white/15">
+              <span class="text-xs font-bold text-zinc-400 font-mono uppercase tracking-wider">${srv.flag}</span>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-300 border border-zinc-700 ${isOnline ? 'text-amber-400' : 'text-red-400'} flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-amber-400 animate-pulse' : 'bg-red-500'}"></span> ${isOnline ? srv.ping : 'Maintenance'}
+            </span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">${srv.country}</h3>
+          <div class="text-xs font-mono text-neon mb-4">IP: ${srv.ip}</div>
+        </div>
+        <button class="js-open-public-btn w-full py-3 rounded-2xl ${isOnline ? 'bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white' : 'bg-red-950/20 border-red-900/40 text-red-500 cursor-not-allowed'} font-bold text-xs transition-colors flex items-center justify-center gap-2" ${isOnline ? '' : 'disabled'} data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
+          <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm ${isOnline ? '' : 'opacity-50'}">
+          <span>${isOnline ? '10 Ads Quick Unlock →' : 'Offline'}</span>
+        </button>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // --- Global Public Servers (10 Ads Quick Access) ---
+  function initPublicServerModal() {
+    const modal = document.getElementById('public-server-modal');
+    const closeBtn = document.getElementById('close-public-modal');
+    const titleEl = document.getElementById('public-modal-title');
+    const ipEl = document.getElementById('public-modal-ip');
+    
+    const stepPkg = document.getElementById('public-step-pkg');
+    const stepVerify = document.getElementById('public-step-verify');
+    const stepResult = document.getElementById('public-step-result');
+    const pkgSelect = document.getElementById('public-pkg-select');
+    const btnStart = document.getElementById('public-btn-start');
+    
+    const turnstileBox = document.getElementById('public-turnstile-box');
+    const turnstileCheckbox = document.getElementById('public-turnstile-checkbox');
+    const turnstileText = document.getElementById('public-turnstile-text');
+    const btnAd = document.getElementById('public-btn-ad');
+    const adStatus = document.getElementById('public-ad-status');
+    const vlessOutput = document.getElementById('public-vless-output');
+
+    let currentPublicState = {
+      country: '',
+      flag: '',
+      ip: '',
+      adClicks: 0,
+      turnstilePassed: false,
+      isCooldown: false,
+      pendingAd: null
+    };
+
+    if (!modal) return; // Only execute if on page with the modal
+
+    // Apply Dynamic Modal Settings if store exists
+    if (window.LegionStore && window.LegionStore.getModalSettings) {
+      const ms = window.LegionStore.getModalSettings();
+      const adv = document.getElementById('pub-modal-advisory');
+      if (adv && ms.pubAdvisoryBanner) adv.textContent = ms.pubAdvisoryBanner;
+      
+      const upFree = document.getElementById('pub-modal-upsell-free');
+      if (upFree && ms.pubUpsellPitch) upFree.textContent = ms.pubUpsellPitch;
+      
+      const upVip = document.getElementById('pub-modal-upsell-vip');
+      if (upVip && ms.pubVipPitch) upVip.textContent = ms.pubVipPitch;
+    }
+
+    // Open Modal Handlers
+    document.querySelectorAll('.js-open-public-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget;
+        currentPublicState.country = target.getAttribute('data-country');
+        currentPublicState.flag = target.getAttribute('data-flag');
+        currentPublicState.code = (target.getAttribute('data-code') || 'fr').toLowerCase();
+        currentPublicState.ip = target.getAttribute('data-ip');
+        currentPublicState.adClicks = 0;
+        currentPublicState.turnstilePassed = false;
+        currentPublicState.isCooldown = false;
+        currentPublicState.pendingAd = null;
+
+        const flagEl = document.getElementById('public-modal-flag');
+        if (flagEl) {
+          flagEl.src = `https://flagcdn.com/w80/${currentPublicState.code}.png`;
+          flagEl.srcset = `https://flagcdn.com/w160/${currentPublicState.code}.png 2x`;
+          flagEl.alt = `${currentPublicState.country} Flag`;
+        }
+
+        if (titleEl) titleEl.textContent = `${currentPublicState.country} Public Server`;
+        if (ipEl) ipEl.textContent = currentPublicState.ip;
+        
+        if (stepPkg) stepPkg.classList.remove('hidden');
+        if (stepVerify) stepVerify.classList.add('hidden');
+        if (stepResult) stepResult.classList.add('hidden');
+        
+        if (turnstileCheckbox) turnstileCheckbox.innerHTML = '';
+        if (turnstileText) turnstileText.textContent = "Verify you are human";
+        if (btnAd) {
+          btnAd.disabled = true;
+          btnAd.classList.add('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'text-zinc-400', 'transition-all');
+          btnAd.classList.remove('bg-neon', 'text-black', 'hover:bg-emerald-400');
+          btnAd.innerHTML = '<span>Complete Turnstile First</span>';
+        }
+        if (adStatus) adStatus.textContent = "Requires 10 Sponsored Impressions";
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      });
+    }
+
+    // Step A -> Step B
+    if (btnStart) {
+      btnStart.addEventListener('click', () => {
+        if (stepPkg) stepPkg.classList.add('hidden');
+        if (stepVerify) stepVerify.classList.remove('hidden');
+      });
+    }
+
+    // Step B: Turnstile
+    if (turnstileBox) {
+      turnstileBox.addEventListener('click', () => {
+        if (currentPublicState.turnstilePassed) return;
+        if (turnstileCheckbox) turnstileCheckbox.innerHTML = '<div class="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>';
+        if (turnstileText) turnstileText.textContent = "Verifying...";
+        
+        // Auto-resolve in 1.8s
+        setTimeout(() => {
+          currentPublicState.turnstilePassed = true;
+          if (turnstileCheckbox) turnstileCheckbox.innerHTML = '<span class="text-emerald-400 font-bold text-sm">✓</span>';
+          if (turnstileText) turnstileText.textContent = "Success";
+          triggerMobileHaptic();
+          
+          if (btnAd) {
+            btnAd.disabled = false;
+            btnAd.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'text-zinc-400');
+            btnAd.classList.add('bg-neon', 'text-black', 'hover:bg-emerald-400');
+            btnAd.innerHTML = `<span>Click to Verify Ad (0/10)</span>`;
+          }
+          if (adStatus) adStatus.textContent = "Click button to open sponsor (0/10 ads verified)";
+        }, 1800);
+      });
+    }
+
+    // Step B: 10 Ad Multi-Click logic with Instant 1-Click Verification
+    if (btnAd) {
+      btnAd.addEventListener('click', () => {
+        if (!currentPublicState.turnstilePassed || currentPublicState.isCooldown) return;
+
+        // Trigger smartlink synchronously
+        triggerAdLink(1);
+
+        currentPublicState.adClicks++;
+        const clicks = currentPublicState.adClicks;
+        triggerMobileHaptic();
+
+        if (clicks >= 10) {
+          // 10 Ads Completed -> Output Custom Config
+          if (stepVerify) stepVerify.classList.add('hidden');
+          if (stepResult) stepResult.classList.remove('hidden');
+          showToast("🎉 Verification Complete! Releasing configuration...", "success");
+
+          const pkgKey = pkgSelect ? pkgSelect.value : 'social';
+          let customStr = '';
+
+          // Fetch saved configuration for this server & package
+          if (window.LegionStore && window.LegionStore.getPublicServers) {
+            const servers = window.LegionStore.getPublicServers();
+            const srv = servers.find(s => s.country === currentPublicState.country);
+            if (srv && srv.configs && srv.configs[pkgKey]) {
+              customStr = srv.configs[pkgKey];
+            }
+          }
+
+          // Fallback generator if empty
+          if (!customStr) {
+            const ip = currentPublicState.ip;
+            const country = currentPublicState.country.toUpperCase();
+            const sniMap = { social: 'm.facebook.com', tiktok: 'v16m-default.tiktokcdn.com', youtube: 'googlevideo.com', zoom: 'zoom.us' };
+            const sni = sniMap[pkgKey] || 'm.facebook.com';
+            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+            customStr = `vless://${uuid}@${ip}:443?encryption=none&security=tls&sni=${sni}&type=ws&host=${ip}&path=%2F#LEGION-${country}-PUBLIC`;
+          }
+
+          if (vlessOutput) vlessOutput.value = customStr;
+          return;
+        }
+
+        // Brief 1.2-Second Debounce Cooldown
+        currentPublicState.isCooldown = true;
+        btnAd.disabled = true;
+        btnAd.classList.add('opacity-85', 'cursor-not-allowed');
+        btnAd.innerHTML = `<span>✓ Verified! (${clicks}/10)</span>`;
+        if (adStatus) adStatus.innerHTML = `<span class="text-neon font-medium">${clicks}/10 Ads Verified.</span>`;
+
+        setTimeout(() => {
+          currentPublicState.isCooldown = false;
+          if (btnAd && currentPublicState.adClicks < 10) {
+            btnAd.disabled = false;
+            btnAd.classList.remove('opacity-85', 'cursor-not-allowed');
+            btnAd.innerHTML = `<span>Click to Verify Ad (${clicks}/10)</span>`;
+          }
+        }, 1200);
+      });
+    }
+  }
+
   // --- Copy to Clipboard helper ---
   function setupCopyButtons() {
     document.querySelectorAll('.js-copy-btn').forEach(btn => {
@@ -1081,6 +1355,8 @@ INSTRUCTIONS:
     initGlobalPopunder();
     initAdRulesModal();
     initTurnstileBoxClick();
+    renderPublicServersGrid();
+    initPublicServerModal();
     renderPackages();
     setupCopyButtons();
     updateOverallProgress();

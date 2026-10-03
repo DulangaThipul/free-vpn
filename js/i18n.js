@@ -102,6 +102,8 @@
       btn_whatsapp: "Order via WhatsApp",
       footer_desc: "100% Free High-Speed Singapore VPS Nodes funded by user-supported ad impressions.",
       footer_copy: "© 2026 LEGION VPN Project. All Rights Reserved.",
+      strict_notice_title: "⚠️ STRICT NOTICE: NO INBOX SUPPORT FOR FREE VPN",
+      strict_notice_desc: "Please DO NOT send messages or inquiries to our WhatsApp or Telegram inbox regarding Free VPN issues. We provide ABSOLUTELY ZERO troubleshooting or maintenance for free servers. Direct personal support is strictly reserved for paid Premium Package users.",
       
       // Modals
       modal_adblock_title: "Ad Blocker / Private DNS Detected",
@@ -223,6 +225,8 @@
       btn_whatsapp: "WhatsApp මගින් ඇනවුම් කරන්න",
       footer_desc: "පරිශීලක සහයෝගී දැන්වීම් මගින් 100% නොමිලේ ක්‍රියාත්මක වන සිංගප්පූරු VPS සේවාව.",
       footer_copy: "© 2026 LEGION VPN Project. සියලු හිමිකම් ඇවිරිණි.",
+      strict_notice_title: "⚠️ දැඩි නිවේදනයයි: නොමිලේ VPN සඳහා INBOX සහායක් නොමැත",
+      strict_notice_desc: "කරුණාකර Free VPN සම්බන්ධ ගැටළු පිළිබඳව අපගේ WhatsApp හෝ Telegram inbox වෙත පණිවිඩ එවන්න එපා. නොමිලේ ලබාදෙන servers සඳහා කිසිදු ආකාරයක දෝශ නිරාකරණයක් හෝ නඩත්තුවක් අප විසින් සිදු නොකරයි. සෘජු පුද්ගලික සහාය ලබාදෙන්නේ මුදල් ගෙවා Premium Package මිලදී ගත් පරිශීලකයින්ට පමණි.",
       
       // Modals
       modal_adblock_title: "Ad Blocker or Private DNS Detected",
@@ -322,27 +326,57 @@
       modal.classList.add('hidden');
       modal.classList.remove('flex');
     }
+    // Smoothly sequence Rules Modal in the user's chosen language if not accepted yet
+    if (window.LegionApp && typeof window.LegionApp.checkAndShowRulesModal === 'function') {
+      window.LegionApp.checkAndShowRulesModal();
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     showLanguagePickerOnRefresh();
 
-    const selectSiBtn = document.getElementById('choose-lang-si');
-    const selectEnBtn = document.getElementById('choose-lang-en');
+    const bindLangBtn = (id, lang) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
 
-    if (selectSiBtn) selectSiBtn.addEventListener('click', () => selectLanguageAndClose('si'));
-    if (selectEnBtn) selectEnBtn.addEventListener('click', () => selectLanguageAndClose('en'));
+      const triggerHandler = (e) => {
+        if (e) {
+          e.stopPropagation();
+          if (e.cancelable) e.preventDefault();
+        }
+        selectLanguageAndClose(lang);
+      };
+
+      // Listen on capture phase on multiple touch/click events for instantaneous response
+      btn.addEventListener('click', triggerHandler, { capture: true });
+      btn.addEventListener('pointerdown', triggerHandler, { capture: true });
+      btn.addEventListener('touchend', triggerHandler, { capture: true });
+    };
+
+    bindLangBtn('choose-lang-si', 'si');
+    bindLangBtn('choose-lang-en', 'en');
 
     const navBtnSi = document.getElementById('lang-btn-si');
     const navBtnEn = document.getElementById('lang-btn-en');
 
-    if (navBtnSi) navBtnSi.addEventListener('click', () => setLanguage('si'));
-    if (navBtnEn) navBtnEn.addEventListener('click', () => setLanguage('en'));
+    if (navBtnSi) {
+      navBtnSi.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setLanguage('si');
+      }, { capture: true });
+    }
+    if (navBtnEn) {
+      navBtnEn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setLanguage('en');
+      }, { capture: true });
+    }
   });
 
   window.LegionI18n = {
     getLanguage: getLanguage,
     setLanguage: setLanguage,
+    selectLanguageAndClose: selectLanguageAndClose,
     translate: (key) => {
       const lang = getLanguage() || 'en';
       return (translations[lang] && translations[lang][key]) || translations.en[key] || key;

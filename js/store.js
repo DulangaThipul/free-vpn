@@ -213,6 +213,61 @@
     return !isCurrentlyBanned;
   }
 
+  const PUBLIC_SERVERS_KEY = 'legion_vpn_public_servers';
+  const MODAL_SETTINGS_KEY = 'legion_vpn_modal_settings';
+
+  const DEFAULT_PUBLIC_SERVERS = [
+    { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Online" },
+    { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Online" },
+    { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online" },
+    { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Online" },
+    { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Online" },
+    { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Online" },
+  ];
+
+  const DEFAULT_MODAL_SETTINGS = {
+    sgHeading: "Your Singapore Node Credentials",
+    sgStatusTag: "✓ Handshake Completed & Verified",
+    sgProtocolLabel: "Trojan / TLS Stealth",
+    sgValidityNotice: "Valid: 5 Days (50GB High-Speed Limit)",
+    sgSupportBanner: "Need help? Join our Telegram support group for troubleshooting.",
+    sgFooter: "Recommended Apps: v2rayNG (Android), Nekobox (PC), Shadowrocket (iOS)",
+    pubAdvisoryBanner: "⚠️ High Latency / Speed Advisory: ශ්‍රී ලංකාවේ සිට මෙම රටවලට ඇති භෞතික දුර අධික වීම (Intercontinental Distance) සහ International Routing Hops වැඩිවීම නිසා Latency / Ping අගය 250ms - 380ms දක්වා ඉහළ යයි. මේවා සාමාන්‍ය Web Browsing සඳහා ප්‍රමාණවත් වේ.",
+    pubUpsellPitch: "Ads 100 ක් බලා 1Gbps Dedicated Port එකක් ලබාගන්න (Valid: Days 5 | Quota: 50GB).",
+    pubVipPitch: "රු. 250 කට >1Gbps Ultra-Speed, Zero Ads, Unlimited Data (Valid: 30 Days / 1 Month)."
+  };
+
+  function getPublicServers() {
+    try {
+      const data = localStorage.getItem(PUBLIC_SERVERS_KEY);
+      if (data) {
+        let parsed = JSON.parse(data);
+        // Force remove Spain and Singapore
+        parsed = parsed.filter(s => s.id !== 'pub_es' && s.id !== 'pub_sg');
+        return parsed;
+      }
+    } catch (e) {}
+    localStorage.setItem(PUBLIC_SERVERS_KEY, JSON.stringify(DEFAULT_PUBLIC_SERVERS));
+    return DEFAULT_PUBLIC_SERVERS;
+  }
+
+  function savePublicServers(servers) {
+    localStorage.setItem(PUBLIC_SERVERS_KEY, JSON.stringify(servers));
+  }
+
+  function getModalSettings() {
+    try {
+      const data = localStorage.getItem(MODAL_SETTINGS_KEY);
+      if (data) return JSON.parse(data);
+    } catch (e) {}
+    localStorage.setItem(MODAL_SETTINGS_KEY, JSON.stringify(DEFAULT_MODAL_SETTINGS));
+    return DEFAULT_MODAL_SETTINGS;
+  }
+
+  function saveModalSettings(settings) {
+    localStorage.setItem(MODAL_SETTINGS_KEY, JSON.stringify(settings));
+  }
+
   // Global store export
   window.LegionStore = {
     getPackages: getPackages,
@@ -223,6 +278,10 @@
     getUsers: getUsers,
     recordUserLogin: recordUserLogin,
     isUserBanned: isUserBanned,
-    toggleBanUser: toggleBanUser
+    toggleBanUser: toggleBanUser,
+    getPublicServers: getPublicServers,
+    savePublicServers: savePublicServers,
+    getModalSettings: getModalSettings,
+    saveModalSettings: saveModalSettings
   };
 })();

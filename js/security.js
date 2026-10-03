@@ -114,17 +114,17 @@
             </svg>
           </div>
           <h2 class="text-xl sm:text-2xl font-black text-white flex flex-col items-center gap-1">
-            <span class="text-red-400">Ad Blocker or Private DNS Detected</span>
+            <span class="text-red-400" data-i18n="modal_adblock_title">Ad Blocker or Private DNS Detected</span>
           </h2>
           <div class="space-y-3 mt-3 text-left bg-surface-100 p-4 rounded-2xl border border-red-950/80">
-            <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+            <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans" data-i18n="modal_adblock_desc">
               Our Singapore VPS servers are funded purely through sponsored advertisements. Free VPN access is blocked while an AdBlocker, NextDNS, or AdGuard Private DNS is active.
             </p>
           </div>
-          <p class="text-xs text-emerald-400 font-semibold mt-3 p-2.5 bg-emerald-950/40 rounded-xl border border-emerald-900/60 text-center">
+          <p class="text-xs text-emerald-400 font-semibold mt-3 p-2.5 bg-emerald-950/40 rounded-xl border border-emerald-900/60 text-center" data-i18n="modal_adblock_tip">
             Please disable your AdBlocker or Private DNS and click Reload.
           </p>
-          <button onclick="window.LegionSecurity.recheckAdBlock()" class="w-full mt-5 py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm m3-btn">
+          <button onclick="window.LegionSecurity.recheckAdBlock()" class="w-full mt-5 py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm m3-btn" data-i18n="modal_adblock_btn">
             I Have Disabled AdBlocker - Reload
           </button>
         </div>
@@ -299,86 +299,135 @@
     return false;
   }
 
-  // --- 4. MULTI-VECTOR ADBLOCKER & PRIVATE DNS DETECTION ---
-  async function checkAdBlocker() {
-    if (securityState.braveDetected || securityState.devtoolsDetected) return;
+  // --- 4. ULTIMATE MULTI-VECTOR ADBLOCKER & PRIVATE DNS DETECTION ---
+  function triggerAdBlock() {
+    if (securityState.devtoolsDetected || securityState.braveDetected) return;
+    securityState.adblockDetected = true;
+    lockInterface('adblock-modal');
+  }
 
-    let blocked = false;
+  // Vector 1: DOM Cosmetic Bait
+  function checkDomBait() {
+    try {
+      const bait = document.createElement('div');
+      bait.id = 'banner-ad-sponsor';
+      bait.className = 'ad ads adsbox ad-placement doubleclick ad-placeholder BannerAd text-ad pub_300x250 pub_728x90 sponsor-post ad-slot';
+      bait.innerHTML = '&nbsp;';
+      bait.style.setProperty('position', 'absolute', 'important');
+      bait.style.setProperty('top', '-9999px', 'important');
+      bait.style.setProperty('left', '-9999px', 'important');
+      bait.style.setProperty('width', '10px', 'important');
+      bait.style.setProperty('height', '10px', 'important');
+      bait.style.setProperty('pointer-events', 'none', 'important');
+      document.body.appendChild(bait);
 
-    // Vector A: Direct Network Probe to Google Ad Services (mode: 'no-cors')
-    // AdBlockers (uBlock, AdGuard, Brave Shields, Pi-Hole, DNS blockers) reject this with TypeError
+      const styles = window.getComputedStyle(bait);
+      const isBlocked = (
+        bait.offsetHeight === 0 ||
+        bait.offsetWidth === 0 ||
+        bait.clientHeight === 0 ||
+        styles.display === 'none' ||
+        styles.visibility === 'hidden' ||
+        styles.opacity === '0'
+      );
+      if (bait.parentNode) {
+        document.body.removeChild(bait);
+      }
+      return isBlocked;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Vector 2: Local Bait Files (advertisement.js / ads.js)
+  function checkBaitFiles() {
+    if (window.__adblock_detector_passed !== true && window.__legion_ads_js_loaded !== true) {
+      return true;
+    }
+    return false;
+  }
+
+  // Vector 3: Real Ad Domain Network Probes (Catches NextDNS, AdGuard DNS, Pi-hole, ControlD)
+  async function checkNetworkAdBlock() {
     const probeUrls = [
       'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
-      'https://securepubads.g.doubleclick.net/tag/js/gpt.js'
+      'https://securepubads.g.doubleclick.net/tag/js/gpt.js',
+      'https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f',
+      'https://adservice.google.com/adsid/integrator.js'
     ];
 
-    async function probeUrl(url) {
+    for (const url of probeUrls) {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2000);
-        const req = new Request(url, {
+        await fetch(url, {
           method: 'HEAD',
           mode: 'no-cors',
           cache: 'no-store',
           signal: controller.signal
         });
-        await fetch(req);
         clearTimeout(timeoutId);
-        return false; // Successful connection -> Not blocked
       } catch (err) {
-        // Failed to fetch or aborted by client extension -> Blocked!
         return true;
       }
     }
+    return false;
+  }
 
-    const [probe1Blocked, probe2Blocked] = await Promise.all([
-      probeUrl(probeUrls[0]),
-      probeUrl(probeUrls[1])
-    ]);
+  // Vector 4: Live Ad Slot Container Verification (Empty Container Detection)
+  function checkLiveAdSlots() {
+    const adBoxes = document.querySelectorAll('.ad-slot-box');
+    if (!adBoxes || adBoxes.length === 0) return false;
+    
+    let hasRenderedAd = false;
+    adBoxes.forEach(function (box) {
+      const iframes = box.querySelectorAll('iframe');
+      if (iframes.length > 0) {
+        iframes.forEach(function (ifr) {
+          if (ifr.offsetHeight > 0 || ifr.offsetWidth > 0) {
+            hasRenderedAd = true;
+          }
+        });
+      }
+    });
+    return !hasRenderedAd;
+  }
 
-    if (probe1Blocked || probe2Blocked) {
-      blocked = true;
+  async function checkAdBlocker() {
+    if (securityState.braveDetected || securityState.devtoolsDetected) return;
+
+    // Check pre-triggered flag
+    if (window.__ad_blocked_detected === true) {
+      triggerAdBlock();
+      return;
     }
 
-    // Vector B: DOM Element Bait with standard ad network classes
-    const baitEl = document.createElement('div');
-    baitEl.id = 'banner-ad-top';
-    baitEl.className = 'pub_300x250 pub_728x90 text-ad textAd text_ad text_ads banner-ad adsbox ad-placement sponsor-post';
-    baitEl.style.width = '300px';
-    baitEl.style.height = '250px';
-    baitEl.style.position = 'fixed';
-    baitEl.style.left = '-9999px';
-    baitEl.style.top = '-9999px';
-    baitEl.style.pointerEvents = 'none';
-    baitEl.style.opacity = '0.01';
-    baitEl.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(baitEl);
-
-    await new Promise(r => setTimeout(r, 200));
-
-    const computed = window.getComputedStyle(baitEl);
-    if (
-      baitEl.offsetHeight === 0 ||
-      baitEl.offsetWidth === 0 ||
-      computed.display === 'none' ||
-      computed.visibility === 'hidden'
-    ) {
-      blocked = true;
-    }
-    if (baitEl.parentNode) {
-      document.body.removeChild(baitEl);
+    // 1. Check DOM bait
+    if (checkDomBait()) {
+      triggerAdBlock();
+      return;
     }
 
-    // Vector C: Local ads-bait.js verification
-    if (window.__legion_ad_bait_loaded !== true) {
-      blocked = true;
+    // 2. Check Bait files
+    if (checkBaitFiles()) {
+      triggerAdBlock();
+      return;
     }
 
-    if (blocked && navigator.onLine) {
-      securityState.adblockDetected = true;
-      lockInterface('adblock-modal');
+    // 3. Check Network (DNS & Network level blocks)
+    const netBlocked = await checkNetworkAdBlock();
+    if (netBlocked) {
+      triggerAdBlock();
+      return;
     }
   }
+
+  // Set an aggressive interval to catch adblockers toggled on late
+  setInterval(() => {
+    if (!securityState.adblockDetected && !securityState.devtoolsDetected && !securityState.braveDetected) {
+      checkAdBlocker();
+    }
+  }, 2500);
 
   // --- INITIALIZATION ---
   function initSuite() {
@@ -391,6 +440,15 @@
         checkAdBlocker();
       }
     });
+
+    // Verification check after 2 seconds for live ad slots
+    setTimeout(function () {
+      if (!securityState.isLocked && !securityState.braveDetected && !securityState.devtoolsDetected) {
+        if (checkLiveAdSlots()) {
+          triggerAdBlock();
+        }
+      }
+    }, 2500);
   }
 
   if (document.readyState === 'loading') {
@@ -401,6 +459,7 @@
 
   // Public Interface
   window.LegionSecurity = {
+    triggerAdBlock: triggerAdBlock,
     recheckAdBlock: function () {
       window.location.reload();
     },

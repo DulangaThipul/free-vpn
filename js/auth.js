@@ -64,11 +64,11 @@
       if (userAvatarEl) userAvatarEl.src = user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80';
       if (authGateNotice) authGateNotice.classList.add('hidden');
       if (funnelContainer) {
-        funnelContainer.classList.remove('opacity-50', 'pointer-events-none');
+        funnelContainer.classList.remove('opacity-90');
       }
       if (packagesSection) packagesSection.classList.remove('hidden');
     } else {
-      // Guest - Lock claim funnel until Google Sign-in
+      // Guest - Prompt Google Sign-in on action
       if (guestNav) guestNav.classList.remove('hidden');
       if (userNav) {
         userNav.classList.add('hidden');
@@ -76,7 +76,7 @@
       }
       if (authGateNotice) authGateNotice.classList.remove('hidden');
       if (funnelContainer) {
-        funnelContainer.classList.add('opacity-50', 'pointer-events-none');
+        funnelContainer.classList.remove('pointer-events-none');
       }
       if (packagesSection) packagesSection.classList.remove('hidden');
     }
@@ -205,8 +205,27 @@
       confirmGoogleBtn.addEventListener('click', () => {
         const emailInput = document.getElementById('google-auth-email');
         const nameInput = document.getElementById('google-auth-name');
-        const email = emailInput && emailInput.value ? emailInput.value.trim() : 'legion.user@gmail.com';
-        const name = nameInput && nameInput.value ? nameInput.value.trim() : 'Legion Member';
+        const email = emailInput && emailInput.value ? emailInput.value.trim().toLowerCase() : '';
+        const name = nameInput && nameInput.value ? nameInput.value.trim() : '';
+
+        if (!name || !email) {
+          if (window.LegionApp && window.LegionApp.showToast) {
+            window.LegionApp.showToast("Please enter your Name and Google Email.", "error");
+          } else {
+            alert("Please enter your Name and Google Email.");
+          }
+          return;
+        }
+
+        if (!email.endsWith('@gmail.com')) {
+          if (window.LegionApp && window.LegionApp.showToast) {
+            window.LegionApp.showToast("Invalid Email! You must use a valid @gmail.com address.", "error");
+          } else {
+            alert("Invalid Email! You must use a valid @gmail.com address.");
+          }
+          return;
+        }
+
         simulateGoogleSignIn(email, name);
       });
     }

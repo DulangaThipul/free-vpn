@@ -45,12 +45,14 @@
   <!-- Canvas Confetti CDN -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-  <!-- Ad Detection Bait Script -->
+  <!-- Anti-AdBlock Detection Bait Scripts (Auto-blocked by EasyList & Extensions) -->
   <script src="ads-bait.js"></script>
+  <script src="advertisement.js" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
+  <script src="js/ads.js" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
 
   <!-- Social Bar & Popunder Scripts -->
-  <script data-cfasync="false" src="https://accountut.com/1/640b77b911d151a0b818931ab492cd4f"></script>
-  <script data-cfasync="false" src="https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411"></script>
+  <script data-cfasync="false" src="https://accountut.com/1/640b77b911d151a0b818931ab492cd4f" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
+  <script data-cfasync="false" src="https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
 </head>
 <body class="bg-black text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-[#00FF66] selection:text-black">
 
@@ -77,6 +79,7 @@
           <span class="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-neon opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-neon"></span>
         </span>
+        <img src="https://flagcdn.com/w40/sg.png" srcset="https://flagcdn.com/w80/sg.png 2x" alt="Singapore" class="w-4 h-2.5 object-cover rounded-sm inline-block shadow-sm">
         <span class="text-zinc-400" data-i18n="server_online">SG VPS:</span>
         <span id="nav-live-ping-val" class="font-mono font-bold text-neon">45 ms</span>
       </div>
@@ -101,7 +104,7 @@
         <!-- Language Switcher Pill -->
         <div class="flex items-center p-0.5 rounded-xl bg-surface-200 border border-emerald-900/60 text-xs flex-shrink-0">
           <button id="lang-btn-si" class="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg transition-all font-semibold flex items-center gap-1 text-zinc-400 hover:text-white text-[10px] sm:text-xs">
-            <span>🇱🇰</span> <span class="hidden lg:inline">සිංහල</span>
+            <img src="https://flagcdn.com/w40/lk.png" srcset="https://flagcdn.com/w80/lk.png 2x" alt="Sri Lanka" class="w-3.5 h-2.5 object-cover rounded-sm inline-block shadow-sm"> <span class="hidden lg:inline">සිංහල</span>
           </button>
           <button id="lang-btn-en" class="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg transition-all font-bold bg-neon text-black flex items-center gap-1 text-[10px] sm:text-xs">
             <span>🌐</span> <span class="hidden lg:inline">EN</span>
@@ -217,7 +220,7 @@
             'params' : {}
           };
         </script>
-        <script type="text/javascript" src="https://bellnewyork.org/22/2599cc924a898c0a880a45e1ebdd01fb"></script>
+        <script type="text/javascript" src="https://bellnewyork.org/22/2599cc924a898c0a880a45e1ebdd01fb" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
       </div>
     </div>
 
@@ -225,6 +228,23 @@
     <!-- 4. 6-STEP CLAIM FUNNEL FOR THIS PACKAGE -->
     <section id="claim-section" class="w-full">
       
+      <!-- INJECTED AGGRESSIVE SPONSORED BANNER -->
+      <div class="ad-slot-box w-full max-w-lg mx-auto mb-8 p-3 text-center overflow-hidden">
+        <span class="ad-slot-badge">Sponsored Verification Ad</span>
+        <div class="flex justify-center items-center py-2">
+          <script type="text/javascript">
+            atOptions = {
+              'key' : '08fcf6f647e8306da74abc152fa8f88f',
+              'format' : 'iframe',
+              'height' : 250,
+              'width' : 300,
+              'params' : {}
+            };
+          </script>
+          <script type="text/javascript" src="https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
+        </div>
+      </div>
+
       <!-- Auth Gate Notice -->
       <div id="auth-gate-notice" class="mb-8 p-5 sm:p-7 rounded-3xl bg-amber-950/20 border border-amber-500/40 text-center">
         <p class="text-xs sm:text-base font-bold text-amber-200" data-i18n="auth_gate_title">
@@ -324,15 +344,6 @@
             </button>
           </div>
 
-          <!-- MIDDLE NATIVE ADSTERRA BANNER CONTAINER -->
-          <div class="col-span-1 sm:col-span-2 lg:col-span-3 my-2">
-            <div class="p-4 sm:p-5 rounded-3xl bg-surface-200/90 border border-emerald-900/60 shadow-xl text-center">
-              <span class="ad-slot-badge mb-2 inline-block">Recommended Sponsored Content</span>
-              <div id="container-9a473b9de62958c724e520a2456b51da"></div>
-              <script async="async" data-cfasync="false" src="https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da"></script>
-            </div>
-          </div>
-
           <!-- STEP 5 CARD (MID-BOSS MILESTONE - 15 ADS) -->
           <div id="step-card-5" class="m3-surface-2 p-5 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all">
             <div>
@@ -424,6 +435,15 @@
             </button>
           </div>
 
+        </div> <!-- End of 9-Step Grid -->
+
+        <!-- MIDDLE NATIVE ADSTERRA BANNER CONTAINER (Moved out of grid) -->
+        <div class="w-full max-w-4xl mx-auto my-6">
+          <div class="p-4 sm:p-5 rounded-3xl bg-surface-200/90 border border-emerald-900/60 shadow-xl text-center">
+            <span class="ad-slot-badge mb-2 inline-block">Recommended Sponsored Content</span>
+            <div id="container-9a473b9de62958c724e520a2456b51da"></div>
+            <script async="async" data-cfasync="false" src="https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
+          </div>
         </div>
 
       </div>
@@ -441,13 +461,22 @@
               'params' : {}
             };
           </script>
-          <script type="text/javascript" src="https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f"></script>
+          <script type="text/javascript" src="https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
         </div>
       </div>
     </section>
 
   </main>
 
+
+  <!-- INJECTED AGGRESSIVE SPONSORED NATIVE AD -->
+  <section class="max-w-7xl mx-auto px-4 my-6 sm:my-8 w-full">
+    <div class="p-4 sm:p-5 rounded-3xl bg-surface-200/90 border border-emerald-900/60 shadow-xl text-center max-w-4xl mx-auto">
+      <span class="ad-slot-badge mb-2 inline-block">Recommended Sponsored Content</span>
+      <div id="container-9a473b9de62958c724e520a2456b51da"></div>
+      <script async="async" data-cfasync="false" src="https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
+    </div>
+  </section>
 
   <!-- ================= FOOTER ================= -->
   <footer class="mt-auto border-t border-emerald-950/60 bg-black py-8">
@@ -495,7 +524,7 @@
             'params' : {}
           };
         </script>
-        <script type="text/javascript" src="https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f"></script>
+        <script type="text/javascript" src="https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
       </div>
       <button id="btn-halfway-continue" class="w-full py-3.5 rounded-2xl bg-neon text-black font-extrabold text-sm m3-btn flex items-center justify-center gap-2 shadow-xl">
         Continue Verification
@@ -513,9 +542,9 @@
 
       <div class="text-center mb-5 sm:mb-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon/10 border border-neon/30 text-neon text-[11px] sm:text-xs font-semibold mb-2">
-          <span data-i18n="modal_config_tag">✓ Handshake Completed & Verified</span>
+          <span id="sg-modal-tag" data-i18n="modal_config_tag">✓ Handshake Completed & Verified</span>
         </div>
-        <h2 class="text-xl sm:text-3xl font-black text-white" data-i18n="modal_config_title">Your Singapore Node Credentials</h2>
+        <h2 id="sg-modal-heading" class="text-xl sm:text-3xl font-black text-white" data-i18n="modal_config_title">Your Singapore Node Credentials</h2>
         <div id="vpn-modal-pkg-name" class="text-xs sm:text-sm text-neon font-bold mt-1">Singapore Trojan Node</div>
       </div>
 
@@ -523,7 +552,10 @@
       <div class="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-surface-100 border border-emerald-950 mb-5 text-center text-xs">
         <div>
           <span class="text-zinc-500 block text-[10px]">Location</span>
-          <span class="text-white font-bold">Singapore 🇸🇬</span>
+          <span class="text-white font-bold flex items-center justify-center gap-1.5">
+            <img src="https://flagcdn.com/w40/sg.png" srcset="https://flagcdn.com/w80/sg.png 2x" alt="Singapore" class="w-4 h-2.5 object-cover rounded-sm inline-block">
+            <span>Singapore</span>
+          </span>
         </div>
         <div>
           <span class="text-zinc-500 block text-[10px]">Latency</span>
@@ -531,8 +563,13 @@
         </div>
         <div>
           <span class="text-zinc-500 block text-[10px]">Protocol</span>
-          <span class="text-emerald-400 font-bold font-mono">Trojan / TLS</span>
+          <span id="sg-modal-protocol-label" class="text-emerald-400 font-bold font-mono">Trojan / TLS</span>
         </div>
+      </div>
+
+      <!-- Notice Banner -->
+      <div class="mb-4 p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 text-[11px] text-amber-200/80 leading-relaxed text-center" id="sg-modal-validity">
+        Valid: 5 Days (50GB High-Speed Limit)
       </div>
 
       <!-- Session Token -->
@@ -568,6 +605,11 @@
             <span data-i18n="copy_vless_btn">Copy VLESS</span>
           </button>
         </div>
+      </div>
+
+      <!-- Support Banner -->
+      <div id="sg-modal-support-banner" class="mb-5 p-3 rounded-xl bg-surface-300 border border-emerald-900/40 text-[11px] text-zinc-300 leading-relaxed text-center">
+        Support & Troubleshooting Policy Banner Text
       </div>
 
       <!-- Download Config File Action -->
@@ -640,7 +682,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
         <button id="choose-lang-si" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
           <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
-            <span class="text-2xl sm:text-3xl">🇱🇰</span>
+            <img src="https://flagcdn.com/w80/lk.png" alt="Sri Lanka" class="w-8 h-5 object-cover rounded-sm border border-emerald-900/50">
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neon/10 border border-neon/30 text-neon">RECOMMENDED</span>
           </div>
           <div>
@@ -651,7 +693,7 @@
 
         <button id="choose-lang-en" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
           <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
-            <span class="text-2xl sm:text-3xl">🌐</span>
+            <img src="https://flagcdn.com/w80/gb.png" alt="UK" class="w-8 h-5 object-cover rounded-sm border border-emerald-900/50">
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-100 border border-zinc-700 text-zinc-400">GLOBAL</span>
           </div>
           <div>
@@ -767,17 +809,17 @@
         </svg>
       </div>
       <h2 class="text-xl sm:text-2xl font-black text-white flex flex-col items-center gap-1">
-        <span class="text-red-400">Ad Blocker or Private DNS Detected</span>
+        <span class="text-red-400" data-i18n="modal_adblock_title">Ad Blocker or Private DNS Detected</span>
       </h2>
       <div class="space-y-3 mt-3 text-left bg-surface-100 p-4 rounded-2xl border border-red-950/80">
-        <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+        <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans" data-i18n="modal_adblock_desc">
           Our Singapore VPS servers are funded purely through sponsored advertisements. Free VPN access is blocked while an AdBlocker, NextDNS, or AdGuard Private DNS is active.
         </p>
       </div>
-      <p class="text-xs text-emerald-400 font-semibold mt-3 p-2.5 bg-emerald-950/40 rounded-xl border border-emerald-900/60 text-center">
+      <p class="text-xs text-emerald-400 font-semibold mt-3 p-2.5 bg-emerald-950/40 rounded-xl border border-emerald-900/60 text-center" data-i18n="modal_adblock_tip">
         Please disable your AdBlocker or Private DNS and click Reload.
       </p>
-      <button onclick="window.LegionSecurity.recheckAdBlock()" class="w-full mt-5 py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm m3-btn">
+      <button onclick="window.LegionSecurity.recheckAdBlock()" class="w-full mt-5 py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm m3-btn" data-i18n="modal_adblock_btn">
         I Have Disabled AdBlocker - Reload
       </button>
     </div>
@@ -851,11 +893,11 @@
       <div class="space-y-3.5">
         <div>
           <label class="block text-xs font-semibold text-zinc-400 mb-1">Your Name</label>
-          <input type="text" id="google-auth-name" placeholder="E.g. Alex" value="Legion Member" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+          <input type="text" id="google-auth-name" placeholder="E.g. Alex" value="" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
         </div>
         <div>
           <label class="block text-xs font-semibold text-zinc-400 mb-1">Google Email</label>
-          <input type="email" id="google-auth-email" placeholder="name@gmail.com" value="legion.user@gmail.com" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
+          <input type="email" id="google-auth-email" placeholder="name@gmail.com" value="" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
         </div>
 
         <button id="btn-confirm-google-auth" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn flex items-center justify-center gap-2 mt-4">
