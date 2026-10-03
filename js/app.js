@@ -127,21 +127,102 @@
   }
 
   // --- ANTI-TAB-SKIPPING & DWELL TIME ENFORCEMENT ---
-  // Listens to window focus and document visibility to detect if user closed the ad too quickly (< 3 seconds)
+  // Listens to window focus and document visibility to detect if user closed the ad too quickly (< 4 seconds)
   function initTabVisibilityTracker() {
     function handleReturn() {
       if (state.pendingAd && !state.pendingAd.failed) {
-        const dwellTime = Date.now() - state.pendingAd.adOpenedAt;
-        if (dwellTime < 3000) {
-          // User returned in under 3 seconds! Reject verification
-          state.pendingAd.failed = true;
+        setTimeout(() => {
+          if (!state.pendingAd || state.pendingAd.failed) return;
+
+          const dwellTime = Date.now() - state.pendingAd.adOpenedAt;
+          const stepNumber = state.pendingAd.stepNumber;
+          const quota = STEP_QUOTAS[stepNumber] || 10;
+          const currentClicksBefore = state.stepClicks[stepNumber] || 0;
+          const btn = dom[`stepBtn${stepNumber}`];
+          const statusEl = dom[`stepStatus${stepNumber}`];
           const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
-          const warningMsg = lang === 'si'
-            ? "⚠️ Verification අසම්පූර්ණයි: ඔබ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි. කරුණාකර Ad එක තත්පර 3-4ක් වත් load වීමට ඉඩ දෙන්න."
-            : "⚠️ Verification Incomplete: You closed the ad too quickly. Please allow the sponsored page to load for at least 3-4 seconds.";
-          showToast(warningMsg, "error");
-          triggerMobileHaptic();
-        }
+
+          if (dwellTime < 4000) {
+            // User returned in under 4 seconds! Reject verification
+            state.pendingAd.failed = true;
+            const warningMsg = lang === 'si'
+              ? "⚠️ Verification අසම්පූර්ණයි: ඔබ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි. කරුණාකර Ad එක තත්පර 4ක් වත් load වීමට ඉඩ දෙන්න."
+              : "⚠️ Verification Failed: You closed the ad too quickly! Please allow the sponsored page to load for at least 4 seconds.";
+            showToast(warningMsg, "error");
+            triggerMobileHaptic();
+
+            // Reset button
+            if (btn) {
+              btn.disabled = false;
+              btn.classList.remove('opacity-85', 'cursor-not-allowed');
+              const btnText = lang === 'si'
+                ? `Ad එක Verify කරන්න (${currentClicksBefore}/${quota})`
+                : `Click to Verify Ad (${currentClicksBefore}/${quota})`;
+              btn.innerHTML = `<span>${btnText}</span>`;
+            }
+            if (statusEl) {
+              const statusText = lang === 'si'
+                ? `<span class="text-red-400 font-medium">⚠️ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි (${currentClicksBefore}/${quota})</span>`
+                : `<span class="text-red-400 font-medium">⚠️ Ad closed too fast - Not counted (${currentClicksBefore}/${quota})</span>`;
+              statusEl.innerHTML = statusText;
+            }
+            
+            state.isCooldown = false;
+            state.pendingAd = null;
+          } else {
+            // Valid Click! >= 4000ms dwell time
+            state.pendingAd.verified = true;
+            state.stepClicks[stepNumber] = currentClicksBefore + 1;
+            const currentClicks = state.stepClicks[stepNumber];
+            state.isCooldown = false;
+            state.pendingAd = null;
+
+            triggerMobileHaptic();
+            updateOverallProgress();
+
+            if (currentClicks < quota) {
+              // Check if Halfway
+              const halfway = Math.floor(quota / 2);
+              if (currentClicks === halfway) {
+                showHalfwayInterstitialModal(stepNumber);
+              }
+
+              if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-85', 'cursor-not-allowed');
+                const btnText = lang === 'si'
+                  ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
+                  : `Click to Verify Ad (${currentClicks}/${quota})`;
+                btn.innerHTML = `<span>${btnText}</span>`;
+              }
+              if (statusEl) {
+                const statusText = lang === 'si'
+                  ? `<span class="text-neon font-medium">${currentClicks}/${quota} Ads බලා ඇත. ඉදිරියට ක්ලික් කරන්න...</span>`
+                  : `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. Keep clicking...</span>`;
+                statusEl.innerHTML = statusText;
+              }
+            } else {
+              // Quota reached
+              state.stepsCompleted = stepNumber;
+              updateStepUI(stepNumber, true);
+              updateOverallProgress();
+
+              if (stepNumber < 9) {
+                unlockStep(stepNumber + 1);
+                const toastMsg = lang === 'si'
+                  ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
+                  : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
+                showToast(toastMsg, "success");
+              } else {
+                const finalToastMsg = lang === 'si'
+                  ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
+                  : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
+                showToast(finalToastMsg, "success");
+                fetchSecureVPNConfig();
+              }
+            }
+          }
+        }, 100);
       }
     }
 
@@ -151,6 +232,24 @@
         handleReturn();
       }
     });
+  }
+
+  function showHalfwayInterstitialModal(stepNum) {
+    const modal = document.getElementById('halfway-interstitial-modal');
+    const btn = document.getElementById('btn-halfway-continue');
+    if (modal && btn) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      const clickHandler = () => {
+        triggerPopunder();
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        btn.removeEventListener('click', clickHandler);
+      };
+      
+      btn.addEventListener('click', clickHandler);
+    }
   }
 
   // --- MOBILE BROWSER BACK NAVIGATION HISTORY TRAP ---
@@ -483,11 +582,7 @@
     const link = getDirectLink(stepNumber);
     if (link && link !== "#") {
       try {
-        const adWindow = window.open(link, '_blank');
-        if (adWindow) {
-          adWindow.blur();
-          window.focus();
-        }
+        window.open(link, '_blank');
       } catch (err) {
         console.warn("Direct link opener error:", err);
       }
@@ -518,7 +613,7 @@
     }
   }
 
-  // --- Unified 9-Step 100-Ad Action Handler with 3s Dwell Time Enforcement & Rate Limit ---
+  // --- Unified 9-Step 100-Ad Action Handler with 4s Dwell Time Enforcement ---
   function handleStepClick(stepNumber) {
     // 1. Enforce Google Sign-In Gate
     if (!requireAuth()) return;
@@ -533,7 +628,7 @@
       return;
     }
 
-    // 3. Strict 3-Second Rate-Limit Check
+    // 3. Strict Rate-Limit Check
     if (state.isCooldown) {
       const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
       const waitNotice = lang === 'si'
@@ -557,128 +652,33 @@
     // 5. SYNCHRONOUSLY TRIGGER THE ADSTERRA SMARTLINK DIRECTLY ON USER GESTURE!
     triggerAdLink(stepNumber);
 
-    // 6. Enter 3-Second Rate-Limit Cooldown
+    // 6. Enter UI Waiting State (Wait for focus to return)
     state.isCooldown = true;
-    let remainingCooldown = 3;
     const btn = dom[`stepBtn${stepNumber}`];
     const statusEl = dom[`stepStatus${stepNumber}`];
     const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
     const currentClicksBefore = state.stepClicks[stepNumber] || 0;
 
-    // Disable button visually during 3s cooldown
     if (btn) {
       btn.disabled = true;
       btn.classList.add('opacity-85', 'cursor-not-allowed');
       const cooldownText = lang === 'si'
-        ? `⏳ Ad එක Verify වෙමින් (${remainingCooldown}s)...`
-        : `⏳ Verifying Ad (${remainingCooldown}s)...`;
+        ? `⏳ Ad එක Verify වෙමින්... Ad tab එකේ රැඳී සිටින්න.`
+        : `⏳ Verifying Ad... Please stay on ad tab.`;
       btn.innerHTML = `<span>${cooldownText}</span>`;
     }
 
     if (statusEl) {
       const inspectingText = lang === 'si'
-        ? `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Ad එක පරීක්ෂා කරමින් (${remainingCooldown}s)...</span>`
-        : `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Checking Ad Dwell Time (${remainingCooldown}s)...</span>`;
+        ? `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Ad එක පරීක්ෂා කරමින්... තත්පර 4ක් රැඳී සිටින්න.</span>`
+        : `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Checking Ad... Stay for 4s.</span>`;
       statusEl.innerHTML = inspectingText;
     }
 
     // Trigger Turnstile modal during Step 9 interaction
-    if (stepNumber === 9 && !state.turnstileCompleted) {
+    if (stepNumber === 9 && !state.turnstileCompleted && currentClicksBefore === 0) {
       showTurnstileModal();
     }
-
-    // Cooldown Ticker (3 Seconds)
-    state.cooldownInterval = setInterval(() => {
-      remainingCooldown--;
-
-      if (remainingCooldown > 0) {
-        if (btn) {
-          const cooldownText = lang === 'si'
-            ? `⏳ Ad එක Verify වෙමින් (${remainingCooldown}s)...`
-            : `⏳ Verifying Ad (${remainingCooldown}s)...`;
-          btn.innerHTML = `<span>${cooldownText}</span>`;
-        }
-        if (statusEl) {
-          const inspectingText = lang === 'si'
-            ? `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Ad එක පරීක්ෂා කරමින් (${remainingCooldown}s)...</span>`
-            : `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Checking Ad Dwell Time (${remainingCooldown}s)...</span>`;
-          statusEl.innerHTML = inspectingText;
-        }
-      } else {
-        // Cooldown finished after 3 seconds
-        clearInterval(state.cooldownInterval);
-        state.isCooldown = false;
-
-        const pending = state.pendingAd;
-        state.pendingAd = null;
-
-        if (btn) {
-          btn.disabled = false;
-          btn.classList.remove('opacity-85', 'cursor-not-allowed');
-        }
-
-        // Check Anti-Tab-Skipping Dwell Time Result
-        if (pending && pending.failed) {
-          // USER CLOSED AD TOO QUICKLY (< 3000ms): DO NOT INCREMENT COUNTER!
-          if (btn) {
-            const btnText = lang === 'si'
-              ? `Ad එක Verify කරන්න (${currentClicksBefore}/${quota})`
-              : `Click to Verify Ad (${currentClicksBefore}/${quota})`;
-            btn.innerHTML = `<span>${btnText}</span>`;
-          }
-          if (statusEl) {
-            const statusText = lang === 'si'
-              ? `<span class="text-red-400 font-medium">⚠️ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි (${currentClicksBefore}/${quota})</span>`
-              : `<span class="text-red-400 font-medium">⚠️ Ad closed too fast - Not counted (${currentClicksBefore}/${quota})</span>`;
-            statusEl.innerHTML = statusText;
-          }
-          return;
-        }
-
-        // VALID AD IMPRESSION (>= 3 Seconds Dwell Time): Increment Counter!
-        state.stepClicks[stepNumber] = currentClicksBefore + 1;
-        const currentClicks = state.stepClicks[stepNumber];
-
-        triggerMobileHaptic();
-        updateOverallProgress();
-
-        if (currentClicks < quota) {
-          // Step In Progress
-          if (btn) {
-            const btnText = lang === 'si'
-              ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
-              : `Click to Verify Ad (${currentClicks}/${quota})`;
-            btn.innerHTML = `<span>${btnText}</span>`;
-          }
-          if (statusEl) {
-            const statusText = lang === 'si'
-              ? `<span class="text-neon font-medium">${currentClicks}/${quota} Ads බලා ඇත. ඉදිරියට ක්ලික් කරන්න...</span>`
-              : `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. Keep clicking...</span>`;
-            statusEl.innerHTML = statusText;
-          }
-        } else {
-          // Step Quota Reached! Mark step complete
-          state.stepsCompleted = stepNumber;
-          updateStepUI(stepNumber, true);
-          updateOverallProgress();
-
-          if (stepNumber < 9) {
-            unlockStep(stepNumber + 1);
-            const toastMsg = lang === 'si'
-              ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
-              : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
-            showToast(toastMsg, "success");
-          } else {
-            // Step 9 (100th Ad) Complete -> Handshake with Cloudflare Worker API
-            const finalToastMsg = lang === 'si'
-              ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
-              : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
-            showToast(finalToastMsg, "success");
-            fetchSecureVPNConfig();
-          }
-        }
-      }
-    }, 1000);
   }
 
   // --- Step 9 Cloudflare Turnstile Modal Interstitial ---

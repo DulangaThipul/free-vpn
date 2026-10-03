@@ -466,6 +466,43 @@
   </footer>
 
 
+  <!-- ================= FLOATING NOTIFICATION WIDGET ================= -->
+  <div id="floating-notification-widget" class="fixed bottom-4 left-4 z-[9999] pointer-events-none">
+    <div class="bg-surface-200/90 border border-emerald-900/60 p-3 rounded-2xl shadow-2xl flex items-center gap-3 w-64 backdrop-blur-md">
+      <div class="w-8 h-8 rounded-full bg-neon/20 border border-neon/50 flex items-center justify-center shrink-0">
+        <span class="w-2 h-2 rounded-full bg-neon animate-ping"></span>
+      </div>
+      <div class="text-xs">
+        <div class="font-bold text-white mb-0.5">Live Connection</div>
+        <div id="floating-widget-text" class="text-zinc-400 text-[10px]">Verifying Ad Sponsors...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HALFWAY INTERSTITIAL OVERLAY ================= -->
+  <div id="halfway-interstitial-modal" class="fixed inset-0 z-[999999] hidden modal-glass items-center justify-center p-4">
+    <div class="m3-surface-2 p-6 rounded-3xl border border-neon/50 max-w-md w-full text-center shadow-2xl relative neon-glow">
+      <h2 class="text-xl font-black text-white mb-2">Ad Verification Halfway!</h2>
+      <p class="text-xs text-zinc-300 mb-4">You are halfway there. Click below to continue your verification process.</p>
+      <div class="ad-slot-box w-full mb-4">
+        <span class="ad-slot-badge">Sponsored</span>
+        <script type="text/javascript">
+          atOptions = {
+            'key' : '08fcf6f647e8306da74abc152fa8f88f',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+          };
+        </script>
+        <script type="text/javascript" src="https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f"></script>
+      </div>
+      <button id="btn-halfway-continue" class="w-full py-3.5 rounded-2xl bg-neon text-black font-extrabold text-sm m3-btn flex items-center justify-center gap-2 shadow-xl">
+        Continue Verification
+      </button>
+    </div>
+  </div>
+
   <!-- ================= MODALS ================= -->
 
   <!-- 1. FINAL TROJAN VPN CREDENTIALS MODAL -->
