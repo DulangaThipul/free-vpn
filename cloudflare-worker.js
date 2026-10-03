@@ -168,12 +168,12 @@ export default {
           });
         }
 
-        // Verification 3: Enforce Completion of All 10 Sponsored Ad Steps
-        const requiredSteps = parseInt(env.REQUIRED_STEPS, 10) || 10;
+        // Verification 3: Enforce Completion of All 9 Sponsored Ad Steps (100 Total Ads)
+        const requiredSteps = parseInt(env.REQUIRED_STEPS, 10) || 9;
         if (stepsCompleted < requiredSteps) {
           return new Response(JSON.stringify({
             success: false,
-            message: `Verification Incomplete: You have completed ${stepsCompleted}/${requiredSteps} steps. All ${requiredSteps} sponsored ad steps must be verified to release server credentials.`
+            message: `Verification Incomplete: You have completed ${stepsCompleted}/${requiredSteps} steps. All ${requiredSteps} sponsored ad steps (100 total ads) must be verified to release server credentials.`
           }), {
             status: 403,
             headers: { ...corsHeaders, "Content-Type": "application/json" }

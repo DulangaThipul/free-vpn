@@ -1,14 +1,16 @@
 /**
  * LEGION Free VPN - Core Application Logic
- * Refactored for MAXIMUM AD REVENUE MONETIZATION, ABUSE PREVENTION, and ROBUST BACKEND DELIVERIES.
+ * Refactored for EXTREME 100-AD MONETIZATION ENGINE, 9-STEP FUNNEL, ANTI-TAB-SKIPPING, and MOBILE BACK-BUTTON NAVIGATION TRAP.
  * 
  * Implements:
- * - Aggressive Global Popunder Interceptor (1st & 2nd clicks anywhere with 35s cooldown)
- * - Mandatory Server Notice & Rules Gate Modal (#ad-rules-modal) with Popunder Opener
- * - High-Yield 10-Step Claim Funnel with Synchronous Adsterra/Monetag Smartlink Openers
+ * - Anti-Tab-Skipping & Active Ad View Dwell Time Enforcement (window 'focus' & 'visibilitychange' validation < 3s rejection)
+ * - Strict 3-Second Button Click Rate-Limit & Cooldown
+ * - Mobile Browser Back-Button History Trap (history.pushState keeps user on portal & triggers fallback smartlink)
+ * - 9-Step 100-Ad Extreme Funnel (Steps 1-4, 6-8: 10 ads each; Steps 5 & 9 Boss Milestones: 15 ads each = 100 ads total)
+ * - Real-Time Dynamic In-Button Click Counters ("Click to Verify Ad (X/Y)")
+ * - Synchronous Adsterra/Monetag Smartlink Openers on click (Zero Popup Blocker Interception)
  * - Step 9 Mock Cloudflare Turnstile Challenge Modal with Interstitial Verification
- * - 5-Second Visible Countdown Ticker on Both Button & Status Container
- * - Strict Cloudflare Worker API Handshake (10 Steps Required, Rate Limiting & Ban Defense)
+ * - Real Cloudflare Worker API Connection (Strict 9-Step Handshake, Rate Limiting & Ban Defense)
  * - Dynamic ISP Trojan Node Provisioning (Dialog Social, TikTok, Airtel YouTube, Zoom, etc.)
  * - Pure Trojan & VLESS Protocol Delivery (WireGuard Excluded)
  * - Lenis Smooth Scrolling Integration & Mobile Haptics
@@ -17,16 +19,44 @@
 (function () {
   'use strict';
 
+  // Step Quotas configuration (Grand Total: exactly 100 Ad Interactions)
+  const STEP_QUOTAS = {
+    1: 10,
+    2: 10,
+    3: 10,
+    4: 10,
+    5: 15, // Mid-Boss Milestone
+    6: 10,
+    7: 10,
+    8: 10,
+    9: 15  // Final Boss Milestone
+  };
+  const TOTAL_ADS_REQUIRED = 100;
+
   // Application State
   const state = {
     currentStep: 1,
     stepsCompleted: 0,
-    isCountingDown: false,
-    timerInterval: null,
+    isCooldown: false,
+    cooldownInterval: null,
     vpnConfig: null,
     currentPing: 45,
     selectedPackage: null,
-    turnstileCompleted: false
+    turnstileCompleted: false,
+    // Active Ad Tracking for Anti-Tab-Skipping & Dwell Time Enforcement
+    pendingAd: null, // { stepNumber, adOpenedAt, failed: false }
+    // Real-time click counter for each of the 9 steps
+    stepClicks: {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+      6: 0,
+      7: 0,
+      8: 0,
+      9: 0
+    }
   };
 
   // Popunder Tracking State
@@ -43,7 +73,7 @@
       progressBar: document.getElementById('funnel-progress-bar'),
       progressText: document.getElementById('funnel-progress-text'),
       
-      // Step cards, buttons, and status labels for all 10 steps
+      // Step cards, buttons, and status labels for all 9 steps
       stepCard1: document.getElementById('step-card-1'),
       stepCard2: document.getElementById('step-card-2'),
       stepCard3: document.getElementById('step-card-3'),
@@ -53,7 +83,6 @@
       stepCard7: document.getElementById('step-card-7'),
       stepCard8: document.getElementById('step-card-8'),
       stepCard9: document.getElementById('step-card-9'),
-      stepCard10: document.getElementById('step-card-10'),
       
       stepBtn1: document.getElementById('step-btn-1'),
       stepBtn2: document.getElementById('step-btn-2'),
@@ -64,7 +93,6 @@
       stepBtn7: document.getElementById('step-btn-7'),
       stepBtn8: document.getElementById('step-btn-8'),
       stepBtn9: document.getElementById('step-btn-9'),
-      stepBtn10: document.getElementById('step-btn-10'),
       
       stepStatus1: document.getElementById('step-status-1'),
       stepStatus2: document.getElementById('step-status-2'),
@@ -75,7 +103,6 @@
       stepStatus7: document.getElementById('step-status-7'),
       stepStatus8: document.getElementById('step-status-8'),
       stepStatus9: document.getElementById('step-status-9'),
-      stepStatus10: document.getElementById('step-status-10'),
 
       // Modals
       adRulesModal: document.getElementById('ad-rules-modal'),
@@ -97,6 +124,70 @@
       // Packages Container
       packagesContainer: document.getElementById('home-packages-grid')
     };
+  }
+
+  // --- ANTI-TAB-SKIPPING & DWELL TIME ENFORCEMENT ---
+  // Listens to window focus and document visibility to detect if user closed the ad too quickly (< 3 seconds)
+  function initTabVisibilityTracker() {
+    function handleReturn() {
+      if (state.pendingAd && !state.pendingAd.failed) {
+        const dwellTime = Date.now() - state.pendingAd.adOpenedAt;
+        if (dwellTime < 3000) {
+          // User returned in under 3 seconds! Reject verification
+          state.pendingAd.failed = true;
+          const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+          const warningMsg = lang === 'si'
+            ? "⚠️ Verification අසම්පූර්ණයි: ඔබ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි. කරුණාකර Ad එක තත්පර 3-4ක් වත් load වීමට ඉඩ දෙන්න."
+            : "⚠️ Verification Incomplete: You closed the ad too quickly. Please allow the sponsored page to load for at least 3-4 seconds.";
+          showToast(warningMsg, "error");
+          triggerMobileHaptic();
+        }
+      }
+    }
+
+    window.addEventListener('focus', handleReturn);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        handleReturn();
+      }
+    });
+  }
+
+  // --- MOBILE BROWSER BACK NAVIGATION HISTORY TRAP ---
+  // Traps back-button navigation to prevent users from exiting to browser homepage,
+  // keeping them on the portal while triggering the sponsored fallback smartlink in a new tab.
+  function initBackNavigationTrap() {
+    try {
+      // Push an extra dummy state to browser history
+      window.history.pushState({ page: 'legion_stay' }, '', window.location.href);
+
+      window.addEventListener('popstate', () => {
+        // Re-push state so user cannot escape the portal via back button
+        window.history.pushState({ page: 'legion_stay' }, '', window.location.href);
+
+        // Synchronously open fallback smartlink in a new tab without altering window.location
+        const config = window.LEGION_CONFIG || {};
+        const fallbackUrl = (config.ADS && (config.ADS.SMARTLINK_URL || config.ADS.POPUNDER_URL)) || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
+        try {
+          const adWin = window.open(fallbackUrl, '_blank');
+          if (adWin) {
+            adWin.blur();
+            window.focus();
+          }
+        } catch (err) {
+          console.warn("Back trap popunder blocked:", err);
+        }
+
+        const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+        const trapNotice = lang === 'si'
+          ? "⚠️ සර්වර් සැසිය සක්‍රියයි! කරුණාකර Trojan VPN එක ලබාගැනීමට පියවර සම්පූර්ණ කරන්න."
+          : "⚠️ Server session active! Complete verification steps to claim your node.";
+        showToast(trapNotice, "info");
+        triggerMobileHaptic();
+      });
+    } catch (e) {
+      console.warn("Back trap setup note:", e.message);
+    }
   }
 
   // --- Lenis Smooth Scrolling ---
@@ -252,7 +343,6 @@
       if (popunderClickCount < 2) {
         popunderClickCount++;
         // If clicking a step button or the accept rules button, that button triggers its own direct link synchronously.
-        // For any other click anywhere on document, fire the global popunder!
         const isStepBtn = e.target.closest('[id^="step-btn-"]');
         const isRulesBtn = e.target.closest('#btn-accept-ad-rules');
         const isTurnstileBox = e.target.closest('#turnstile-box');
@@ -293,7 +383,7 @@
     }
   }
 
-  // --- Render Packages on Home Screen (With Available / Out of Stock status) ---
+  // --- Render Packages on Home Screen ---
   function renderPackages() {
     if (!dom.packagesContainer || !window.LegionStore) return;
     const pkgs = window.LegionStore.getPackages();
@@ -378,7 +468,7 @@
     });
   }
 
-  // --- SYNCHRONOUS AD TRIGGER & DIRECT LINK OPENER ---
+  // --- SYNCHRONOUS AD TRIGGER & DIRECT SMARTLINK OPENER ---
   // Mandatory: Must execute synchronously during the click event to avoid browser popup blockers!
   function getDirectLink(stepNumber) {
     const config = window.LEGION_CONFIG || {};
@@ -386,7 +476,7 @@
     if (ads.DIRECT_LINKS && ads.DIRECT_LINKS.length >= stepNumber) {
       return ads.DIRECT_LINKS[stepNumber - 1];
     }
-    return ads[`STEP_${stepNumber}_DIRECT_LINK`] || ads.POPUNDER_URL || "https://www.profitablecpmrate.com/direct_step";
+    return ads.SMARTLINK_URL || ads[`STEP_${stepNumber}_DIRECT_LINK`] || ads.POPUNDER_URL || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
   }
 
   function triggerAdLink(stepNumber) {
@@ -404,7 +494,31 @@
     }
   }
 
-  // --- Unified 10-Step Action Handler with Synchronous Gesture Ad Launch ---
+  // Calculate total ads verified across all steps for progress bar
+  function calculateTotalAdsDone() {
+    let total = 0;
+    for (let i = 1; i <= 9; i++) {
+      if (state.stepsCompleted >= i) {
+        total += (STEP_QUOTAS[i] || 10);
+      } else if (state.currentStep === i) {
+        total += (state.stepClicks[i] || 0);
+      }
+    }
+    return Math.min(TOTAL_ADS_REQUIRED, total);
+  }
+
+  function updateOverallProgress() {
+    const totalDone = calculateTotalAdsDone();
+    const percent = Math.min(100, Math.round((totalDone / TOTAL_ADS_REQUIRED) * 100));
+    if (dom.progressBar) {
+      dom.progressBar.style.width = `${percent}%`;
+    }
+    if (dom.progressText) {
+      dom.progressText.textContent = `${totalDone}/100 Ads (${percent}%)`;
+    }
+  }
+
+  // --- Unified 9-Step 100-Ad Action Handler with 3s Dwell Time Enforcement & Rate Limit ---
   function handleStepClick(stepNumber) {
     // 1. Enforce Google Sign-In Gate
     if (!requireAuth()) return;
@@ -415,60 +529,156 @@
       return;
     }
     if (state.stepsCompleted >= stepNumber) {
-      showToast(`Step ${stepNumber} is already verified and complete!`, "info");
-      return;
-    }
-    if (state.isCountingDown) {
-      showToast("Verification already in progress. Please wait...", "info");
+      showToast(`Step ${stepNumber} is already complete!`, "info");
       return;
     }
 
-    // 3. SYNCHRONOUSLY TRIGGER THE ADSTERRA / MONETAG SMARTLINK DIRECTLY ON USER GESTURE!
-    triggerAdLink(stepNumber);
+    // 3. Strict 3-Second Rate-Limit Check
+    if (state.isCooldown) {
+      const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+      const waitNotice = lang === 'si'
+        ? "⏳ කරුණාකර Ad verification එක අවසන් වන තෙක් රැඳී සිටින්න..."
+        : "⏳ Please allow the current ad verification to complete...";
+      showToast(waitNotice, "info");
+      return;
+    }
 
-    const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+    const quota = STEP_QUOTAS[stepNumber] || 10;
+    state.currentStep = stepNumber;
 
-    // Step Status Messages for all 10 steps
-    const stepMessages = {
-      1: { si: "Singapore IP එක වෙන් කරමින් පවතී...", en: "Allocating Singapore IP & Tunnel..." },
-      2: { si: "1Gbps Uplink Bandwidth වෙන් කරමින් පවතී...", en: "Allocating 1Gbps Dedicated Uplink..." },
-      3: { si: "Trojan Encryption Keys සාදමින් පවතී...", en: "Generating 256-bit Trojan Encryption Keys..." },
-      4: { si: "Singapore DNS Leak Shield සක්‍රිය කරමින්...", en: "Activating Singapore DNS Leak Shield..." },
-      5: { si: "TLS Obfuscation Camouflage සක්‍රිය කරමින්...", en: "Establishing TLS Obfuscation Camouflage..." },
-      6: { si: "Cloudflare Edge Routing සකස් කරමින්...", en: "Optimizing Routing via Cloudflare Edge..." },
-      7: { si: "Dedicated VPS Bandwidth පරීක්ෂා කරමින්...", en: "Verifying Dedicated VPS Bandwidth Allocation..." },
-      8: { si: "Anti-Censorship SNI Headers සාදමින්...", en: "Generating Secure Anti-Censorship SNI Headers..." },
-      9: { si: "Cloudflare Turnstile ආරක්ෂණ පරීක්ෂාව...", en: "Cloudflare Turnstile Human Verification Challenge..." },
-      10: { si: "Cloudflare Worker API මගින් Trojan Credentials ලබා ගනිමින්...", en: "Finalizing Trojan Handshake via Cloudflare API..." }
+    // 4. Record timestamp and start pending verification for Dwell Time Enforcement
+    state.pendingAd = {
+      stepNumber: stepNumber,
+      adOpenedAt: Date.now(),
+      failed: false,
+      verified: false
     };
 
-    const currentMsg = stepMessages[stepNumber] ? (stepMessages[stepNumber][lang] || stepMessages[stepNumber].en) : "Verifying step...";
+    // 5. SYNCHRONOUSLY TRIGGER THE ADSTERRA SMARTLINK DIRECTLY ON USER GESTURE!
+    triggerAdLink(stepNumber);
 
-    // 4. STEP 9 SPECIAL HANDLING: Cloudflare Turnstile Challenge Modal
-    if (stepNumber === 9) {
+    // 6. Enter 3-Second Rate-Limit Cooldown
+    state.isCooldown = true;
+    let remainingCooldown = 3;
+    const btn = dom[`stepBtn${stepNumber}`];
+    const statusEl = dom[`stepStatus${stepNumber}`];
+    const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+    const currentClicksBefore = state.stepClicks[stepNumber] || 0;
+
+    // Disable button visually during 3s cooldown
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('opacity-85', 'cursor-not-allowed');
+      const cooldownText = lang === 'si'
+        ? `⏳ Ad එක Verify වෙමින් (${remainingCooldown}s)...`
+        : `⏳ Verifying Ad (${remainingCooldown}s)...`;
+      btn.innerHTML = `<span>${cooldownText}</span>`;
+    }
+
+    if (statusEl) {
+      const inspectingText = lang === 'si'
+        ? `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Ad එක පරීක්ෂා කරමින් (${remainingCooldown}s)...</span>`
+        : `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Checking Ad Dwell Time (${remainingCooldown}s)...</span>`;
+      statusEl.innerHTML = inspectingText;
+    }
+
+    // Trigger Turnstile modal during Step 9 interaction
+    if (stepNumber === 9 && !state.turnstileCompleted) {
       showTurnstileModal();
     }
 
-    // 5. Start Visible 5-Second Countdown Ticker on Both Button and Status
-    startStepCountdown(stepNumber, currentMsg, async () => {
-      state.stepsCompleted = stepNumber;
-      updateStepUI(stepNumber, true);
-      
-      const percent = Math.min(100, Math.round((stepNumber / 10) * 100));
-      updateProgressBar(percent);
-      triggerMobileHaptic();
+    // Cooldown Ticker (3 Seconds)
+    state.cooldownInterval = setInterval(() => {
+      remainingCooldown--;
 
-      if (stepNumber < 10) {
-        unlockStep(stepNumber + 1);
-        const toastMsg = lang === 'si'
-          ? `${stepNumber} වන පියවර සාර්ථකයි! ඊළඟ පියවර Unlock විය.`
-          : `Step ${stepNumber} Complete! Next step unlocked.`;
-        showToast(toastMsg, "success");
+      if (remainingCooldown > 0) {
+        if (btn) {
+          const cooldownText = lang === 'si'
+            ? `⏳ Ad එක Verify වෙමින් (${remainingCooldown}s)...`
+            : `⏳ Verifying Ad (${remainingCooldown}s)...`;
+          btn.innerHTML = `<span>${cooldownText}</span>`;
+        }
+        if (statusEl) {
+          const inspectingText = lang === 'si'
+            ? `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Ad එක පරීක්ෂා කරමින් (${remainingCooldown}s)...</span>`
+            : `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> Checking Ad Dwell Time (${remainingCooldown}s)...</span>`;
+          statusEl.innerHTML = inspectingText;
+        }
       } else {
-        // Step 10 Finished -> Connect to Cloudflare Worker API
-        await fetchSecureVPNConfig();
+        // Cooldown finished after 3 seconds
+        clearInterval(state.cooldownInterval);
+        state.isCooldown = false;
+
+        const pending = state.pendingAd;
+        state.pendingAd = null;
+
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-85', 'cursor-not-allowed');
+        }
+
+        // Check Anti-Tab-Skipping Dwell Time Result
+        if (pending && pending.failed) {
+          // USER CLOSED AD TOO QUICKLY (< 3000ms): DO NOT INCREMENT COUNTER!
+          if (btn) {
+            const btnText = lang === 'si'
+              ? `Ad එක Verify කරන්න (${currentClicksBefore}/${quota})`
+              : `Click to Verify Ad (${currentClicksBefore}/${quota})`;
+            btn.innerHTML = `<span>${btnText}</span>`;
+          }
+          if (statusEl) {
+            const statusText = lang === 'si'
+              ? `<span class="text-red-400 font-medium">⚠️ Ad එක ඉක්මනින් වැසූ බැවින් count නොවුණි (${currentClicksBefore}/${quota})</span>`
+              : `<span class="text-red-400 font-medium">⚠️ Ad closed too fast - Not counted (${currentClicksBefore}/${quota})</span>`;
+            statusEl.innerHTML = statusText;
+          }
+          return;
+        }
+
+        // VALID AD IMPRESSION (>= 3 Seconds Dwell Time): Increment Counter!
+        state.stepClicks[stepNumber] = currentClicksBefore + 1;
+        const currentClicks = state.stepClicks[stepNumber];
+
+        triggerMobileHaptic();
+        updateOverallProgress();
+
+        if (currentClicks < quota) {
+          // Step In Progress
+          if (btn) {
+            const btnText = lang === 'si'
+              ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
+              : `Click to Verify Ad (${currentClicks}/${quota})`;
+            btn.innerHTML = `<span>${btnText}</span>`;
+          }
+          if (statusEl) {
+            const statusText = lang === 'si'
+              ? `<span class="text-neon font-medium">${currentClicks}/${quota} Ads බලා ඇත. ඉදිරියට ක්ලික් කරන්න...</span>`
+              : `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. Keep clicking...</span>`;
+            statusEl.innerHTML = statusText;
+          }
+        } else {
+          // Step Quota Reached! Mark step complete
+          state.stepsCompleted = stepNumber;
+          updateStepUI(stepNumber, true);
+          updateOverallProgress();
+
+          if (stepNumber < 9) {
+            unlockStep(stepNumber + 1);
+            const toastMsg = lang === 'si'
+              ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
+              : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
+            showToast(toastMsg, "success");
+          } else {
+            // Step 9 (100th Ad) Complete -> Handshake with Cloudflare Worker API
+            const finalToastMsg = lang === 'si'
+              ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
+              : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
+            showToast(finalToastMsg, "success");
+            fetchSecureVPNConfig();
+          }
+        }
       }
-    });
+    }, 1000);
   }
 
   // --- Step 9 Cloudflare Turnstile Modal Interstitial ---
@@ -486,10 +696,10 @@
       dom.turnstileStatusText.textContent = "Verifying security token with Cloudflare...";
     }
 
-    // Auto-resolve turnstile verification after 2.8s
+    // Auto-resolve turnstile verification after 2.5s
     setTimeout(() => {
       resolveTurnstileSuccess();
-    }, 2800);
+    }, 2500);
   }
 
   function resolveTurnstileSuccess() {
@@ -505,70 +715,22 @@
 
     triggerMobileHaptic();
 
-    // Close modal smoothly after verification
     setTimeout(() => {
       if (dom.turnstileModal) {
         dom.turnstileModal.classList.add('hidden');
         dom.turnstileModal.classList.remove('flex');
       }
-    }, 900);
+    }, 800);
   }
 
   function initTurnstileBoxClick() {
     if (dom.turnstileBox) {
       dom.turnstileBox.addEventListener('click', () => {
-        // Clicking the challenge box also triggers popunder on user gesture
+        // Clicking challenge box also triggers popunder on user gesture
         triggerPopunder();
         resolveTurnstileSuccess();
       });
     }
-  }
-
-  // --- Visible Countdown Ticker Controller per Step (5 Seconds Default) ---
-  function startStepCountdown(stepNum, statusText, onComplete) {
-    state.isCountingDown = true;
-    const config = window.LEGION_CONFIG || {};
-    const totalSeconds = (config.ADS && config.ADS.STEP_WAIT_SECONDS) || 5;
-    let remaining = totalSeconds;
-
-    const btn = dom[`stepBtn${stepNum}`];
-    const statusEl = dom[`stepStatus${stepNum}`];
-    const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
-
-    // Disable button during countdown
-    if (btn) {
-      btn.disabled = true;
-      btn.classList.add('opacity-85', 'cursor-not-allowed');
-      const btnTickText = lang === 'si' 
-        ? `⏳ Ad එක විවෘතයි - Verify වෙමින් (${remaining}s)...` 
-        : `⏳ Ad Open in Tab - Verifying (${remaining}s)...`;
-      btn.innerHTML = `<span>${btnTickText}</span>`;
-    }
-
-    if (statusEl) {
-      statusEl.innerHTML = `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> ${statusText} (<strong class="text-white">${remaining}s</strong>)</span>`;
-    }
-
-    state.timerInterval = setInterval(() => {
-      remaining--;
-
-      if (btn) {
-        const btnTickText = lang === 'si' 
-          ? `⏳ Ad එක විවෘතයි - Verify වෙමින් (${remaining}s)...` 
-          : `⏳ Ad Open in Tab - Verifying (${remaining}s)...`;
-        btn.innerHTML = `<span>${btnTickText}</span>`;
-      }
-
-      if (statusEl) {
-        statusEl.innerHTML = `<span class="text-neon flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neon animate-ping"></span> ${statusText} (<strong class="text-white">${remaining}s</strong>)</span>`;
-      }
-
-      if (remaining <= 0) {
-        clearInterval(state.timerInterval);
-        state.isCountingDown = false;
-        if (onComplete) onComplete();
-      }
-    }, 1000);
   }
 
   // --- Auth Verification Guard ---
@@ -595,6 +757,7 @@
     const btn = dom[`stepBtn${stepNum}`];
     const statusEl = dom[`stepStatus${stepNum}`];
     const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+    const quota = STEP_QUOTAS[stepNum] || 10;
 
     if (isComplete) {
       if (card) {
@@ -606,22 +769,25 @@
         btn.innerHTML = `
           <span class="flex items-center gap-1.5 text-black font-extrabold">
             <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-            ${lang === 'si' ? 'සාර්ථකයි (Done)' : 'Verified & Done'}
+            ${lang === 'si' ? `සාර්ථකයි (${quota}/${quota} Ads)` : `Verified (${quota}/${quota} Ads)`}
           </span>
         `;
         btn.className = "w-full py-3.5 rounded-2xl bg-emerald-400 text-black font-bold flex items-center justify-center cursor-default text-xs sm:text-sm";
       }
       if (statusEl) {
-        statusEl.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1">✓ Done</span>`;
+        statusEl.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1">✓ Complete (${quota} Ads)</span>`;
       }
     }
   }
 
   function unlockStep(stepNum) {
+    state.currentStep = stepNum;
     const card = dom[`stepCard${stepNum}`];
     const btn = dom[`stepBtn${stepNum}`];
     const statusEl = dom[`stepStatus${stepNum}`];
     const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+    const quota = STEP_QUOTAS[stepNum] || 10;
+    const clicks = state.stepClicks[stepNum] || 0;
 
     if (card) {
       card.classList.remove('opacity-40', 'pointer-events-none');
@@ -632,31 +798,18 @@
       btn.classList.remove('opacity-50', 'opacity-85', 'cursor-not-allowed', 'bg-zinc-800', 'text-zinc-400');
       btn.classList.add('bg-neon', 'hover:bg-emerald-400', 'text-black', 'm3-btn');
       
-      let stepBtnText = "";
-      if (stepNum === 10) {
-        stepBtnText = lang === 'si' ? '10 වන පියවර & Trojan Config (View Ad)' : 'Verify Step 10 & Get Trojan (View Ad)';
-      } else {
-        stepBtnText = lang === 'si' ? `${stepNum} වන පියවර Verify කරන්න (View Ad)` : `Verify Step ${stepNum} (View Ad)`;
-      }
-
-      btn.innerHTML = `<span>${stepBtnText}</span>`;
+      const btnText = lang === 'si'
+        ? `Ad එක Verify කරන්න (${clicks}/${quota})`
+        : `Click to Verify Ad (${clicks}/${quota})`;
+      btn.innerHTML = `<span>${btnText}</span>`;
     }
     if (statusEl) {
       statusEl.innerHTML = `<span class="text-neon font-semibold">${lang === 'si' ? 'Verify කිරීමට සූදානම්' : 'Ready to verify'}</span>`;
     }
   }
 
-  function updateProgressBar(percent) {
-    if (dom.progressBar) {
-      dom.progressBar.style.width = `${percent}%`;
-    }
-    if (dom.progressText) {
-      dom.progressText.textContent = `${percent}% Ready`;
-    }
-  }
-
   // --- Real Cloudflare Worker API Fetcher ---
-  // Mandatory: Releasing dedicated credentials requires 10 completed steps!
+  // Mandatory: Releasing dedicated credentials requires 9 completed steps (100 total ads)!
   async function fetchSecureVPNConfig() {
     const config = window.LEGION_CONFIG || {};
     const endpoint = config.API_ENDPOINT;
@@ -679,13 +832,13 @@
     const payload = {
       email: user.email,
       token: user.id || 'usr_session',
-      stepsCompleted: 10,
+      stepsCompleted: 9, // Exactly 9 verified steps completed
       packageId: state.selectedPackage ? state.selectedPackage.id : 'dialog_social',
       timestamp: Date.now()
     };
 
     try {
-      // If endpoint is not configured or in local developer preview mode without worker
+      // If endpoint is in local preview mode
       if (!endpoint || endpoint === "mock" || endpoint.includes("example.workers.dev")) {
         console.warn("API_ENDPOINT is not yet pointing to a deployed worker. Using local preview generator.");
         const fallbackData = generateTrojanFallbackConfig();
@@ -726,7 +879,7 @@
         } else {
           alert(`⚠️ Verification Notice:\n\n${errorMsg}`);
         }
-        return; // Strict abuse prevention: NEVER silently show fake success!
+        return;
       }
 
       // Success: Render dynamically delivered Trojan credentials from the worker
@@ -841,20 +994,28 @@ INSTRUCTIONS:
     triggerMobileHaptic();
   }
 
-  // --- Reset Funnel Helper (10 Steps) ---
+  // --- Reset Funnel Helper (9 Steps) ---
   function resetFunnel() {
     state.currentStep = 1;
     state.stepsCompleted = 0;
-    state.isCountingDown = false;
-    clearInterval(state.timerInterval);
+    state.isCooldown = false;
+    state.pendingAd = null;
+    if (state.cooldownInterval) {
+      clearInterval(state.cooldownInterval);
+      state.cooldownInterval = null;
+    }
 
-    updateProgressBar(0);
+    for (let k = 1; k <= 9; k++) {
+      state.stepClicks[k] = 0;
+    }
+    updateOverallProgress();
 
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 9; i++) {
       const card = dom[`stepCard${i}`];
       const btn = dom[`stepBtn${i}`];
       const statusEl = dom[`stepStatus${i}`];
       const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+      const quota = STEP_QUOTAS[i] || 10;
 
       if (i === 1) {
         if (card) {
@@ -864,7 +1025,7 @@ INSTRUCTIONS:
         if (btn) {
           btn.disabled = false;
           btn.className = "w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-extrabold text-xs sm:text-sm tracking-wide m3-btn flex items-center justify-center gap-2 neon-glow";
-          btn.innerHTML = `<span>${lang === 'si' ? '1 වන පියවර Verify කරන්න (View Ad)' : 'Verify Step 1 (View Ad)'}</span>`;
+          btn.innerHTML = `<span>${lang === 'si' ? `Ad එක Verify කරන්න (0/${quota})` : `Click to Verify Ad (0/${quota})`}</span>`;
         }
         if (statusEl) statusEl.innerHTML = `<span class="text-neon">${lang === 'si' ? 'Verify කිරීමට සූදානම්' : 'Ready to verify'}</span>`;
       } else {
@@ -912,6 +1073,8 @@ INSTRUCTIONS:
   // DOM Content Loaded Handler
   document.addEventListener('DOMContentLoaded', () => {
     initDOM();
+    initTabVisibilityTracker();
+    initBackNavigationTrap();
     initLenis();
     initVideoBackground();
     initLivePingTicker();
@@ -920,6 +1083,7 @@ INSTRUCTIONS:
     initTurnstileBoxClick();
     renderPackages();
     setupCopyButtons();
+    updateOverallProgress();
 
     // Parse ?pkg= from URL if present (e.g., on claim.html)
     const urlParams = new URLSearchParams(window.location.search);
@@ -952,8 +1116,8 @@ INSTRUCTIONS:
       }
     }
 
-    // Attach unified 10-step click handlers (Immediate synchronous direct link trigger!)
-    for (let i = 1; i <= 10; i++) {
+    // Attach unified 9-step click handlers (Immediate synchronous direct link trigger!)
+    for (let i = 1; i <= 9; i++) {
       const btn = dom[`stepBtn${i}`];
       if (btn) {
         btn.addEventListener('click', () => handleStepClick(i));

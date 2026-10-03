@@ -18,9 +18,9 @@
       hero_title_1: "Next-Gen Freedom with",
       hero_title_2: "LEGION Free Singapore VPN",
       why_free_title: "How is this 100% Free?",
-      why_free_desc: "High-speed Singapore VPS servers cost real money to host. We sustain all server infrastructure purely through ad revenue. By completing our quick 10-step sponsored verification, you generate the funding we need to keep buying and renewing fast servers for you.",
+      why_free_desc: "High-speed Singapore VPS servers cost real money to host. We sustain all server infrastructure purely through ad revenue. By completing our 9-step sponsored 100-ad verification, you generate the funding we need to keep buying and renewing fast servers for you.",
       why_free_sub: "Want zero ads and instant private connection? You can upgrade to our Premium Package (LKR 250) anytime!",
-      btn_claim_hero: "Claim Free VPN (10 Steps)",
+      btn_claim_hero: "Claim Free VPN (100 Ads / 9 Steps)",
       btn_premium_hero: "Get Premium (LKR 250)",
       metric_uplink: "Uplink Port",
       metric_ping: "SG Live Ping",
@@ -28,8 +28,8 @@
       ad_sponsored: "Sponsored Advertisement",
       ad_banner_note: "Insert your CPA Network ad code into this container",
       funnel_tag: "Zero Subscription Required",
-      funnel_title: "Unlock Singapore VPN Node",
-      funnel_desc: "Complete 10 quick sponsored verification steps (1 ad view per step) to claim your high-speed Singapore Trojan credentials.",
+      funnel_title: "Unlock Singapore VPN Node (100 Ads)",
+      funnel_desc: "Complete 9 sponsored verification steps (100 total ad interactions) to claim your high-speed Singapore Trojan credentials.",
       auth_gate_title: "🔐 Google Authentication Required to Prevent Node Abuse",
       auth_gate_desc: "Please sign in with your Google account so our Singapore VPS cluster can assign your unique session token.",
       auth_gate_btn: "Sign in to Start Verification",
@@ -39,46 +39,42 @@
       disclaimer_title: "⚠️ STRICT NOTICE: NO INBOX SUPPORT FOR FREE VPN",
       disclaimer_desc: "Please DO NOT send messages or inquiries to our WhatsApp or Telegram Inbox regarding Free VPN issues. We provide ABSOLUTELY ZERO troubleshooting or maintenance for free servers. Direct personal support is strictly reserved for paid Premium Package users.",
 
-      // 10 Steps High-Yield Reward Funnel
-      step1_title: "Singapore Routing",
+      // 9 Steps 100-Ad Reward Funnel
+      step1_title: "Singapore Routing (10 Ads)",
       step1_desc: "Connect to Singapore SG-01 VPS gateway and reserve session slot.",
-      step1_btn: "Verify Step 1 (View Ad)",
+      step1_btn: "Click to Verify Ad (0/10)",
       
-      step2_title: "Bandwidth Allocation",
+      step2_title: "Bandwidth Allocation (10 Ads)",
       step2_desc: "Allocate dedicated 1Gbps uplink speed for your session.",
       step2_btn: "Unlock in Step 1",
       
-      step3_title: "Trojan Key Pair",
+      step3_title: "Trojan Key Pair (10 Ads)",
       step3_desc: "Generate 256-bit Trojan encryption credentials for ISP bypass.",
       step3_btn: "Unlock in Step 2",
 
-      step4_title: "DNS Leak Protection",
+      step4_title: "DNS Leak Protection (10 Ads)",
       step4_desc: "Activate stealth tunneling & Singapore DNS resolver.",
       step4_btn: "Unlock in Step 3",
 
-      step5_title: "TLS Obfuscation",
+      step5_title: "★ Mid-Boss: TLS Obfuscation (15 Ads)",
       step5_desc: "Apply anti-censorship camouflage for bypass on strict ISPs.",
       step5_btn: "Unlock in Step 4",
 
-      step6_title: "Anti-DDoS Relay",
+      step6_title: "Anti-DDoS Relay (10 Ads)",
       step6_desc: "Route traffic through Singapore DDoS-shielded reverse proxies.",
       step6_btn: "Unlock in Step 5",
 
-      step7_title: "VLESS Transport",
+      step7_title: "VLESS Transport (10 Ads)",
       step7_desc: "Generate WebSocket & gRPC transport failover protocols.",
       step7_btn: "Unlock in Step 6",
 
-      step8_title: "Route Optimization",
+      step8_title: "Route Optimization (10 Ads)",
       step8_desc: "Calibrate low-latency routing and packet integrity filters.",
       step8_btn: "Unlock in Step 7",
 
-      step9_title: "Security Verification",
-      step9_desc: "Complete Cloudflare Turnstile security scan to authorize release.",
+      step9_title: "★ Final Boss: Security & Config (15 Ads)",
+      step9_desc: "Complete Cloudflare Turnstile challenge & unlock dedicated Trojan configs.",
       step9_btn: "Unlock in Step 8",
-
-      step10_title: "Fetch Trojan Credentials",
-      step10_desc: "Handshake with Cloudflare Worker API & unlock dedicated Trojan configs.",
-      step10_btn: "Unlock in Step 9",
 
       // Mandatory Rules Modal
       rules_modal_title: "⚠️ Server Funding Notice & Portal Rules",
@@ -143,9 +139,9 @@
       hero_title_1: "Next-Gen Freedom with",
       hero_title_2: "LEGION Free Singapore VPN",
       why_free_title: "මේක 100% නොමිලේ දෙන්නෙ කොහොමද?",
-      why_free_desc: "සිංගප්පූරු අධිවේගී VPS සර්වර් පවත්වාගෙන යන්න ලොකු මුදලක් වැය වෙනවා. අපි මේ සර්වර් වියදම් පියවගන්නේ ඔයාලා බලන Ads වලින් ලැබෙන මුදලින් පමණයි. අපේ පියවර 10 කින් යුත් පොඩි Ads බැලීමෙන්, ඔයාලට දිගටම වේගවත් සර්වර් අලුත් කරලා නොමිලේ දෙන්න අපිට සහයෝගය ලැබෙනවා.",
+      why_free_desc: "සිංගප්පූරු අධිවේගී VPS සර්වර් පවත්වාගෙන යන්න ලොකු මුදලක් වැය වෙනවා. අපි මේ සර්වර් වියදම් පියවගන්නේ ඔයාලා බලන Ads වලින් ලැබෙන මුදලින් පමණයි. අපේ පියවර 9 කින් යුත් Ads 100 ක් බැලීමෙන්, ඔයාලට දිගටම වේගවත් සර්වර් අලුත් කරලා නොමිලේ දෙන්න අපිට සහයෝගය ලැබෙනවා.",
       why_free_sub: "Ads බලන්නෙ නැතුව ක්ෂණිකව VPN එක ගන්න ඕනිද? රු. 250 කට අපේ Premium Package එකක් ලබාගන්න පුළුවන්!",
-      btn_claim_hero: "නොමිලේ VPN ගන්න (Steps 10)",
+      btn_claim_hero: "නොමිලේ VPN ගන්න (Ads 100 / පියවර 9)",
       btn_premium_hero: "Premium ගන්න (LKR 250)",
       metric_uplink: "Port වේගය",
       metric_ping: "සජීවී SG Ping එක",
@@ -153,8 +149,8 @@
       ad_sponsored: "අනුග්‍රාහක දැන්වීම",
       ad_banner_note: "ඔබගේ CPA / Adsterra දැන්වීම් කේතය මෙතැනට ඇතුළත් කරන්න",
       funnel_tag: "මුදල් අය කිරීමක් නොමැත",
-      funnel_title: "සිංගප්පූරු VPN එක ලබාගන්න",
-      funnel_desc: "පියවර 10 සම්පූර්ණ කර (එක් පියවරකට 1 ad එක බැගින්) ඔබගේ අධිවේගී Trojan VPN කේතය ක්ෂණිකව ලබාගන්න.",
+      funnel_title: "සිංගප්පූරු VPN එක ලබාගන්න (Ads 100)",
+      funnel_desc: "පියවර 9 (Ads 100 ක verification එකක්) සම්පූර්ණ කර ඔබගේ අධිවේගී Trojan VPN කේතය ක්ෂණිකව ලබාගන්න.",
       auth_gate_title: "🔐 සර්වර් ආරක්ෂාව සඳහා Google මගින් Log විය යුතුය",
       auth_gate_desc: "ඔබට වෙන්වූ සිංගප්පූරු සර්වර් Slot එක ලබාදීම සඳහා කරුණාකර ඔබගේ Google ගිණුමෙන් සම්බන්ධ වන්න.",
       auth_gate_btn: "Google මගින් Log වී ආරම්භ කරන්න",
@@ -164,46 +160,42 @@
       disclaimer_title: "⚠️ STRICT NOTICE: NO INBOX SUPPORT FOR FREE VPN",
       disclaimer_desc: "Please DO NOT send messages or inquiries to our WhatsApp or Telegram inbox regarding Free VPN issues. We provide ABSOLUTELY ZERO troubleshooting or maintenance for free servers. Direct personal support is strictly reserved for paid Premium Package users.",
 
-      // 10 Steps High-Yield Reward Funnel
-      step1_title: "සිංගප්පූරු Server Routing",
+      // 9 Steps 100-Ad Reward Funnel
+      step1_title: "සිංගප්පූරු Routing (Ads 10)",
       step1_desc: "Singapore SG-01 VPS එකට සම්බන්ධ වී ඔබගේ session slot එක වෙන් කරගන්න.",
-      step1_btn: "1 වන පියවර Verify කරන්න (Ad එක)",
+      step1_btn: "Ad එක Verify කරන්න (0/10)",
       
-      step2_title: "Bandwidth වෙන් කිරීම",
+      step2_title: "Bandwidth වෙන් කිරීම (Ads 10)",
       step2_desc: "ඔබගේ session එක සඳහා 1Gbps අධිවේගී Uplink Bandwidth වෙන් කරගන්න.",
       step2_btn: "පළමු පියවරෙන් Unlock වේ",
 
-      step3_title: "Trojan Key Pair",
+      step3_title: "Trojan Key Pair (Ads 10)",
       step3_desc: "256-bit ආරක්ෂිත Trojan Encryption Keys සාදා ගන්න.",
       step3_btn: "දෙවන පියවරෙන් Unlock වේ",
 
-      step4_title: "DNS Leak & Security Shield",
+      step4_title: "DNS Leak & Security Shield (Ads 10)",
       step4_desc: "Singapore DNS Leak Protection සහ Stealth Tunnel ආරක්ෂාව සක්‍රිය කරගන්න.",
       step4_btn: "තෙවන පියවරෙන් Unlock වේ",
 
-      step5_title: "TLS Obfuscation Tunnel",
+      step5_title: "★ Mid-Boss: TLS Obfuscation (Ads 15)",
       step5_desc: "ISP බාධා සහ Censorship මඟහැරීම සඳහා TLS Camouflage සක්‍රිය කරගන්න.",
       step5_btn: "සිව්වන පියවරෙන් Unlock වේ",
 
-      step6_title: "Anti-DDoS Relay Shield",
+      step6_title: "Anti-DDoS Relay Shield (Ads 10)",
       step6_desc: "Singapore DDoS-shielded reverse proxies හරහා සම්බන්ධතාවය ආරක්ෂා කරගන්න.",
       step6_btn: "පස්වන පියවරෙන් Unlock වේ",
 
-      step7_title: "VLESS Transport Layer",
+      step7_title: "VLESS Transport Layer (Ads 10)",
       step7_desc: "WebSocket සහ gRPC transport failover protocols සක්‍රිය කරගන්න.",
       step7_btn: "හයවන පියවරෙන් Unlock වේ",
 
-      step8_title: "Speed & Route Optimization",
+      step8_title: "Route Optimization (Ads 10)",
       step8_desc: "අඩු latency සහ packet integrity පරීක්ෂාව සම්පූර්ණ කරගන්න.",
       step8_btn: "හත්වන පියවරෙන් Unlock වේ",
 
-      step9_title: "Security Verification",
-      step9_desc: "Cloudflare Turnstile ආරක්ෂණ පරීක්ෂාව සම්පූර්ණ කරන්න.",
+      step9_title: "★ Final Boss: Security & Config (Ads 15)",
+      step9_desc: "Cloudflare Turnstile ආරක්ෂණ පරීක්ෂාව සම්පූර්ණ කර Trojan VPN එක Unlock කරගන්න.",
       step9_btn: "අටවන පියවරෙන් Unlock වේ",
-
-      step10_title: "Trojan Credentials ලබා ගැනීම",
-      step10_desc: "Cloudflare Worker API මගින් ආරක්ෂිතව ඔබගේ Trojan VPN Config එක Unlock කරගන්න.",
-      step10_btn: "නවවන පියවරෙන් Unlock වේ",
 
       // Mandatory Rules Modal
       rules_modal_title: "⚠️ Server Funding Notice & Portal Rules",
