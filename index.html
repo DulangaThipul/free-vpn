@@ -52,8 +52,9 @@
   <!-- Ad Detection Bait Script -->
   <script src="ads-bait.js"></script>
 
-  <script data-cfasync="false" src="[https://accountut.com/1/640b77b911d151a0b818931ab492cd4f](https://accountut.com/1/640b77b911d151a0b818931ab492cd4f)"></script>
-<script data-cfasync="false" src="[https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411](https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411)"></script>
+  <!-- Adsterra Popunder & Social Bar -->
+  <script data-cfasync="false" src="https://accountut.com/1/640b77b911d151a0b818931ab492cd4f"></script>
+  <script data-cfasync="false" src="https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411"></script>
   
 </head>
 <body class="bg-black text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-[#00FF66] selection:text-black">
@@ -85,10 +86,8 @@
         <span id="nav-live-ping-val" class="font-mono font-bold text-neon">45 ms</span>
       </div>
 
-      <!-- Right Controls: Theme Toggle + Palette + Language Selector + Auth (Never clipped!) -->
+      <!-- Right Controls: Theme Toggle + Palette + Language Selector + Auth -->
       <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-        <div id="container-9a473b9de62958c724e520a2456b51da"></div>
-<script async="async" data-cfasync="false" src="[https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da](https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da)"></script>
         
         <!-- Theme Mode Toggle Button (Sun/Moon) -->
         <button class="js-theme-toggle-btn p-1.5 sm:p-2 rounded-xl bg-surface-200 border border-emerald-900/60 text-zinc-300 hover:text-white transition-all flex items-center justify-center flex-shrink-0" title="Toggle Light/Dark Mode">
@@ -127,7 +126,7 @@
           </button>
         </div>
 
-        <!-- Logged-in State: User Profile (Never cut off!) -->
+        <!-- Logged-in State: User Profile -->
         <div id="nav-user-actions" class="hidden items-center gap-1 sm:gap-1.5 flex-shrink-0">
           <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-xl bg-surface-200 border border-emerald-800/40 flex-shrink-0">
             <img id="nav-user-avatar" src="" alt="Avatar" class="w-5 h-5 rounded-full bg-emerald-950 border border-neon/50 flex-shrink-0">
@@ -141,7 +140,6 @@
         </div>
 
       </div>
-
     </div>
   </header>
 
@@ -224,20 +222,31 @@
     </div>
   </section>
 
-
   <!-- ================= TOP RESPONSIVE ADSTERRA BANNER ================= -->
   <section class="max-w-7xl mx-auto px-4 my-6 sm:my-8 w-full">
-    <div class="ad-slot-box w-full max-w-4xl mx-auto p-3 sm:p-4">
+    <div class="ad-slot-box w-full max-w-4xl mx-auto p-3 sm:p-4 flex flex-col items-center justify-center overflow-hidden">
       <span class="ad-slot-badge" data-i18n="ad_sponsored">Sponsored Advertisement</span>
-      <div class="text-center py-3">
-        <p class="text-[11px] sm:text-xs text-zinc-400 font-mono">
-          [Adsterra / Monetag Responsive Banner Slot - 728x90 / 300x250]
-        </p>
-        <span class="text-[10px] sm:text-[11px] text-zinc-500 mt-1 block" data-i18n="ad_banner_note">Insert your CPA Network ad code into this container</span>
+      
+      <!-- Adsterra 728x90 Banner -->
+      <div class="my-1">
+        <script>
+          atOptions = {
+            'key' : '2599cc924a898c0a880a45e1ebdd01fb',
+            'format' : 'iframe',
+            'height' : 90,
+            'width' : 728,
+            'params' : {}
+          };
+        </script>
+        <script src="https://bellnewyork.org/22/2599cc924a898c0a880a45e1ebdd01fb"></script>
       </div>
+      
+      <!-- Native Banner -->
+      <div id="container-9a473b9de62958c724e520a2456b51da" class="mt-4"></div>
+      <script async="async" data-cfasync="false" src="https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da"></script>
+
     </div>
   </section>
-
 
   <!-- ================= PROMINENT SUPPORT DISCLAIMER BANNER ================= -->
   <section class="max-w-6xl mx-auto px-3 sm:px-4 my-4 sm:my-6 w-full">
@@ -267,7 +276,6 @@
     </div>
   </section>
 
-
   <!-- ================= SECTION: ISP PACKAGES SELECTION (DIALOG, AIRTEL, HUTCH) ================= -->
   <section id="packages-selection-section" class="max-w-6xl mx-auto px-4 py-12 sm:py-16 w-full">
     <div class="text-center mb-10">
@@ -285,233 +293,6 @@
       <!-- Cards rendered by js/app.js -->
     </div>
   </section>
-
-
-  <!-- ================= 6-STEP AD-REWARDED CLAIM FUNNEL ================= -->
-  <section id="claim-section" class="max-w-6xl mx-auto px-4 py-12 sm:py-16 w-full">
-    
-    <div class="text-center mb-8 sm:mb-12">
-      <span class="text-xs font-mono uppercase tracking-widest text-neon" data-i18n="funnel_tag">Zero Subscription Required</span>
-      <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white mt-2" data-i18n="funnel_title">Unlock Singapore VPN Node</h2>
-      <p class="text-xs sm:text-base text-zinc-400 max-w-2xl mx-auto mt-2.5 sm:mt-3 leading-relaxed" data-i18n="funnel_desc">
-        Complete 6 quick sponsored verification steps (1 ad view per step) to claim your high-speed Singapore Trojan credentials.
-      </p>
-    </div>
-
-    <!-- Auth Gate Notice -->
-    <div id="auth-gate-notice" class="mb-8 sm:mb-10 p-5 sm:p-7 rounded-3xl bg-amber-950/20 border border-amber-500/40 text-center max-w-3xl mx-auto">
-      <p class="text-xs sm:text-base font-bold text-amber-200" data-i18n="auth_gate_title">
-        🔐 Google Authentication Required to Prevent Node Abuse
-      </p>
-      <p class="text-[11px] sm:text-sm text-zinc-400 mt-1 mb-3.5 sm:mb-4 leading-relaxed" data-i18n="auth_gate_desc">
-        Please sign in with your Google account so our Singapore VPS cluster can assign your unique session token.
-      </p>
-      <button class="js-google-login-trigger px-6 sm:px-7 py-2.5 sm:py-3 rounded-2xl bg-white hover:bg-zinc-100 text-black font-bold text-xs sm:text-sm m3-btn inline-flex items-center gap-2">
-        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-        </svg>
-        <span data-i18n="auth_gate_btn">Sign in to Start Verification</span>
-      </button>
-    </div>
-
-    <!-- Main Funnel Card -->
-    <div id="claim-funnel-card" class="m3-surface-1 p-5 sm:p-10 rounded-3xl border border-emerald-950/80 transition-opacity duration-300">
-      
-      <!-- Progress Bar Header -->
-      <div class="mb-8 sm:mb-10 max-w-3xl mx-auto">
-        <div class="flex items-center justify-between text-xs sm:text-sm font-semibold mb-2">
-          <span class="text-zinc-400" data-i18n="status_label">Node Allocation Status</span>
-          <span id="funnel-progress-text" class="text-neon font-mono">0% Ready</span>
-        </div>
-        <div class="w-full h-3 sm:h-3.5 bg-surface-200 rounded-full overflow-hidden p-0.5 border border-emerald-950">
-          <div id="funnel-progress-bar" class="h-full bg-gradient-to-r from-[#00FF66] to-[#00df59] rounded-full transition-all duration-500 w-0"></div>
-        </div>
-      </div>
-
-      <!-- 10 Steps High-Yield Reward Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-        
-        <!-- STEP 1 CARD -->
-        <div id="step-card-1" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-900/40 relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-neon/10 border border-neon/30 text-neon font-bold flex items-center justify-center text-sm">1</span>
-              <div id="step-status-1" class="text-xs text-zinc-500" data-i18n="step_pending">Pending</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step1_title">Singapore Routing</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step1_desc">
-              Connect to Singapore SG-01 VPS gateway and reserve session slot.
-            </p>
-          </div>
-          <button id="step-btn-1" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-xs sm:text-sm tracking-wide m3-btn flex items-center justify-center gap-2">
-            <span data-i18n="step1_btn">Verify Step 1 (View Ad)</span>
-          </button>
-        </div>
-
-        <!-- STEP 2 CARD -->
-        <div id="step-card-2" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">2</span>
-              <div id="step-status-2" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step2_title">Bandwidth Allocation</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step2_desc">
-              Allocate dedicated 1Gbps uplink speed for your session.
-            </p>
-          </div>
-          <button id="step-btn-2" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step2_btn">Unlock in Step 1</span>
-          </button>
-        </div>
-
-        <!-- STEP 3 CARD -->
-        <div id="step-card-3" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">3</span>
-              <div id="step-status-3" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step3_title">Trojan Key Pair</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step3_desc">
-              Generate 256-bit Trojan encryption credentials for ISP bypass.
-            </p>
-          </div>
-          <button id="step-btn-3" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step3_btn">Unlock in Step 2</span>
-          </button>
-        </div>
-
-        <!-- STEP 4 CARD -->
-        <div id="step-card-4" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">4</span>
-              <div id="step-status-4" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step4_title">DNS Leak Protection</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step4_desc">
-              Activate stealth tunneling & Singapore DNS resolver.
-            </p>
-          </div>
-          <button id="step-btn-4" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step4_btn">Unlock in Step 3</span>
-          </button>
-        </div>
-
-        <!-- STEP 5 CARD -->
-        <div id="step-card-5" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">5</span>
-              <div id="step-status-5" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step5_title">TLS Obfuscation</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step5_desc">
-              Apply anti-censorship camouflage for bypass on strict ISPs.
-            </p>
-          </div>
-          <button id="step-btn-5" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step5_btn">Unlock in Step 4</span>
-          </button>
-        </div>
-
-        <!-- STEP 6 CARD -->
-        <div id="step-card-6" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">6</span>
-              <div id="step-status-6" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step6_title">Anti-DDoS Relay</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step6_desc">
-              Route traffic through Singapore DDoS-shielded reverse proxies.
-            </p>
-          </div>
-          <button id="step-btn-6" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step6_btn">Unlock in Step 5</span>
-          </button>
-        </div>
-
-        <!-- STEP 7 CARD -->
-        <div id="step-card-7" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">7</span>
-              <div id="step-status-7" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step7_title">VLESS Transport</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step7_desc">
-              Generate WebSocket & gRPC transport failover protocols.
-            </p>
-          </div>
-          <button id="step-btn-7" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step7_btn">Unlock in Step 6</span>
-          </button>
-        </div>
-
-        <!-- STEP 8 CARD -->
-        <div id="step-card-8" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">8</span>
-              <div id="step-status-8" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step8_title">Route Optimization</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step8_desc">
-              Calibrate low-latency routing and packet integrity filters.
-            </p>
-          </div>
-          <button id="step-btn-8" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step8_btn">Unlock in Step 7</span>
-          </button>
-        </div>
-
-        <!-- STEP 9 CARD (CLOUDFLARE TURNSTILE SCAN INTERSTITIAL) -->
-        <div id="step-card-9" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">9</span>
-              <div id="step-status-9" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <div class="flex items-center gap-1.5 mb-1">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300">CLOUDFLARE TURNSTILE</span>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step9_title">Security Verification</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step9_desc">
-              Complete Cloudflare Turnstile security scan to authorize release.
-            </p>
-          </div>
-          <button id="step-btn-9" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step9_btn">Unlock in Step 8</span>
-          </button>
-        </div>
-
-        <!-- STEP 10 CARD -->
-        <div id="step-card-10" class="m3-surface-2 p-5 sm:p-6 rounded-3xl border border-emerald-950 opacity-40 pointer-events-none relative flex flex-col justify-between transition-all duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-8 h-8 rounded-2xl bg-surface-300 border border-zinc-700 text-zinc-400 font-bold flex items-center justify-center text-sm">10</span>
-              <div id="step-status-10" class="text-xs text-zinc-600" data-i18n="step_locked">Locked</div>
-            </div>
-            <h3 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="step10_title">Fetch Trojan Credentials</h3>
-            <p class="text-xs sm:text-sm text-zinc-400 mb-6 leading-relaxed" data-i18n="step10_desc">
-              Handshake with Cloudflare Worker API & unlock dedicated Trojan configs.
-            </p>
-          </div>
-          <button id="step-btn-10" disabled class="w-full py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 cursor-not-allowed">
-            <span data-i18n="step10_btn">Unlock in Step 9</span>
-          </button>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
 
   <!-- ================= PREMIUM PACKAGE SECTION ================= -->
   <section id="premium-section" class="max-w-6xl mx-auto px-4 py-14 sm:py-20 w-full">
@@ -537,7 +318,7 @@
             </p>
           </div>
 
-          <!-- Feature Bullets (NO OVERLAPPING!) -->
+          <!-- Feature Bullets -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mt-8 pt-6 border-t border-emerald-950/60">
             <div class="feature-list-bullet">
               <span class="w-5 h-5 rounded-full bg-neon/15 border border-neon/40 text-neon flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -606,7 +387,6 @@
     </div>
   </section>
 
-
   <!-- ================= FOOTER ================= -->
   <footer class="mt-auto border-t border-emerald-950/60 bg-black py-8 sm:py-10">
     <div class="max-w-7xl mx-auto px-4 text-center">
@@ -628,7 +408,6 @@
       </div>
     </div>
   </footer>
-
 
   <!-- ================= MANDATORY SERVER NOTICE & RULES MODAL ================= -->
   <div id="ad-rules-modal" class="fixed inset-0 z-[999999] hidden modal-glass items-center justify-center p-3 sm:p-4">
@@ -771,36 +550,6 @@
     </div>
   </div>
 
-  <!-- ================= STEP 9 CLOUDFLARE TURNSTILE MOCK SCAN MODAL ================= -->
-  <div id="turnstile-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
-    <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-emerald-500/50 max-w-md w-full text-center shadow-2xl relative">
-      <div class="flex items-center justify-center gap-2 mb-4">
-        <svg class="w-8 h-8 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M18.8 11.2c-.3-2.7-2.6-4.8-5.4-4.8-2.2 0-4.1 1.3-4.9 3.2C8 9.2 7.5 9 7 9c-2.2 0-4 1.8-4 4 0 2.2 1.8 4 4 4h11.5c1.9 0 3.5-1.6 3.5-3.5 0-1.8-1.4-3.3-3.2-3.3z"/>
-        </svg>
-        <span class="text-lg font-black text-white tracking-wide">CLOUDFLARE</span>
-        <span class="text-xs px-2 py-0.5 rounded-full bg-surface-100 border border-zinc-700 text-zinc-400 font-mono">Turnstile</span>
-      </div>
-
-      <h3 class="text-base sm:text-lg font-bold text-white mb-2">Verifying You Are Human</h3>
-      <p class="text-xs text-zinc-400 mb-6">Running security challenge to prevent automated bot node exhaustion.</p>
-
-      <div id="turnstile-box" class="p-4 rounded-2xl bg-surface-100 border border-zinc-800 flex items-center justify-between gap-3 cursor-pointer hover:border-neon transition-all">
-        <div class="flex items-center gap-3">
-          <div id="turnstile-checkbox" class="w-6 h-6 rounded-lg border-2 border-zinc-500 flex items-center justify-center bg-surface-300">
-            <div id="turnstile-spinner" class="w-4 h-4 border-2 border-neon border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <span id="turnstile-status-text" class="text-xs font-semibold text-zinc-200">Verifying security token...</span>
-        </div>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Cloudflare_Logo.svg" alt="Cloudflare" class="h-4 opacity-70">
-      </div>
-
-      <p class="text-[11px] text-zinc-500 mt-4">
-        Step 9 verification unlocks your final Cloudflare Worker Trojan credentials.
-      </p>
-    </div>
-  </div>
-
   <!-- 1. ADBLOCKER / PRIVATE DNS WARNING MODAL -->
   <div id="adblock-modal" class="fixed inset-0 z-[9999999] hidden modal-glass items-center justify-center p-3 sm:p-4 modal-security-critical">
     <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-red-500/70 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -889,143 +638,23 @@
     </div>
   </div>
 
-  <!-- 5. GOOGLE AUTH MODAL -->
-  <div id="google-login-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
-    <div class="m3-surface-2 p-6 sm:p-10 rounded-3xl border border-emerald-500/40 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button id="close-google-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
-
-      <div class="text-center mb-6">
-        <div class="w-12 h-12 p-2.5 rounded-2xl bg-surface-300 border border-emerald-500/30 mx-auto flex items-center justify-center mb-3">
-          <svg class="w-6 h-6" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-        </div>
-        <h2 class="text-xl sm:text-2xl font-bold text-white" data-i18n="modal_auth_title">Sign in with Google</h2>
-        <p class="text-xs text-zinc-400 mt-1" data-i18n="modal_auth_desc">Authenticate to assign your dedicated Singapore VPS slot</p>
-      </div>
-
-      <div class="space-y-3.5 sm:space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-zinc-400 mb-1">Your Name</label>
-          <input type="text" id="google-auth-name" placeholder="E.g. Alex" value="Legion Member" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-zinc-400 mb-1">Google Email</label>
-          <input type="email" id="google-auth-email" placeholder="name@gmail.com" value="legion.user@gmail.com" class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-white">
-        </div>
-
-        <button id="btn-confirm-google-auth" class="w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn flex items-center justify-center gap-2 mt-4 sm:mt-5">
-          <span data-i18n="modal_auth_btn">Authorize Google Session</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 6. FINAL TROJAN VPN CREDENTIALS MODAL (Clean Trojan & VLESS - WireGuard REMOVED!) -->
-  <div id="vpn-config-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
-    <div class="m3-surface-2 p-5 sm:p-8 rounded-3xl border border-neon/50 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      
-      <button id="close-config-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
-
-      <div class="text-center mb-5 sm:mb-6">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon/10 border border-neon/30 text-neon text-[11px] sm:text-xs font-semibold mb-2">
-          <span data-i18n="modal_config_tag">✓ Handshake Completed & Verified</span>
-        </div>
-        <h2 class="text-xl sm:text-3xl font-black text-white" data-i18n="modal_config_title">Your Singapore Node Credentials</h2>
-        <div id="vpn-modal-pkg-name" class="text-xs sm:text-sm text-neon font-bold mt-1">Singapore Trojan Node</div>
-      </div>
-
-      <!-- Node Stats Bar -->
-      <div class="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-surface-100 border border-emerald-950 mb-5 sm:mb-6 text-center text-xs">
-        <div>
-          <span class="text-zinc-500 block text-[10px]">Location</span>
-          <span class="text-white font-bold">Singapore 🇸🇬</span>
-        </div>
-        <div>
-          <span class="text-zinc-500 block text-[10px]">Latency</span>
-          <span id="vpn-ping-stat" class="text-neon font-bold font-mono">45 ms</span>
-        </div>
-        <div>
-          <span class="text-zinc-500 block text-[10px]">Protocol</span>
-          <span class="text-emerald-400 font-bold font-mono">Trojan / TLS</span>
-        </div>
-      </div>
-
-      <!-- Session Token -->
-      <div class="mb-4">
-        <label class="block text-xs font-semibold text-zinc-400 mb-1" data-i18n="token_label">Session Token / Connection Code</label>
-        <div class="flex items-center gap-2">
-          <div id="vpn-access-code" class="flex-1 px-3.5 py-3 rounded-2xl bg-surface-100 border border-emerald-950 text-neon font-mono text-xs sm:text-sm font-bold tracking-wider truncate">
-            LEGION-SG-2026-TROJAN
-          </div>
-          <button class="js-copy-btn px-4 sm:px-5 py-3 rounded-2xl bg-neon text-black font-bold text-xs m3-btn flex-shrink-0" data-target="vpn-access-code">
-            <span data-i18n="copy_btn">Copy</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Trojan Protocol Configuration Link -->
-      <div class="mb-4">
-        <label class="block text-xs font-semibold text-zinc-400 mb-1">Trojan Configuration URL (ISP Bypass)</label>
-        <div class="flex items-center gap-2">
-          <input type="text" readonly id="vpn-trojan-link" value="" class="flex-1 px-3.5 py-3 rounded-2xl bg-surface-100 border border-emerald-950 text-zinc-200 font-mono text-xs focus:outline-none truncate">
-          <button class="js-copy-btn px-3.5 sm:px-5 py-3 rounded-2xl bg-neon text-black font-bold text-xs m3-btn flex-shrink-0" data-target="vpn-trojan-link">
-            <span>Copy Trojan</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- V2Ray / VLESS Link -->
-      <div class="mb-6">
-        <label class="block text-xs font-semibold text-zinc-400 mb-1" data-i18n="v2ray_label">V2Ray / VLESS Configuration Link</label>
-        <div class="flex items-center gap-2">
-          <input type="text" readonly id="vpn-v2ray-link" value="" class="flex-1 px-3.5 py-3 rounded-2xl bg-surface-100 border border-emerald-950 text-zinc-300 font-mono text-xs focus:outline-none truncate">
-          <button class="js-copy-btn px-3.5 sm:px-4 py-3 rounded-2xl bg-surface-300 hover:bg-neon hover:text-black border border-emerald-500/40 text-white font-bold text-xs m3-btn flex-shrink-0" data-target="vpn-v2ray-link">
-            <span data-i18n="copy_vless_btn">Copy VLESS</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Download Config File Action -->
-      <div class="flex flex-col sm:flex-row gap-3 mb-5">
-        <button id="btn-download-trojan" class="flex-1 py-3 rounded-2xl bg-surface-300 hover:bg-surface-200 border border-emerald-500/40 text-neon font-bold text-xs m3-btn flex items-center justify-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          <span>Download Trojan File (.txt)</span>
-        </button>
-      </div>
-
-      <div class="p-3.5 rounded-2xl bg-surface-100 border border-emerald-950 text-center">
-        <p class="text-xs text-zinc-400">
-          Paste the copied Trojan configuration link into <strong>v2rayNG, Nekobox, v2rayN, or Clash Meta</strong> apps to start browsing!
-        </p>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Toast Notification Container -->
-  <div id="toast-container" class="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-  <!-- Shared Data Store (Packages, User Registry, Ban Controller) -->
-  <script src="js/store.js"></script>
+  <!-- Shared Data Store -->
+  <script src="js/store.js?v=4"></script>
 
   <!-- Application Configuration -->
-  <script src="config.js"></script>
+  <script src="config.js?v=4"></script>
 
-  <!-- Internationalization (Sinhala & English) -->
-  <script src="js/i18n.js"></script>
+  <!-- Internationalization -->
+  <script src="js/i18n.js?v=4"></script>
 
   <!-- Security Module -->
-  <script src="js/security.js"></script>
+  <script src="js/security.js?v=4"></script>
 
   <!-- Authentication Module -->
-  <script src="js/auth.js"></script>
+  <script src="js/auth.js?v=4"></script>
 
   <!-- Core App Controller -->
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=4"></script>
 
 </body>
 </html>
