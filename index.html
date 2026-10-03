@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="dark scroll-smooth">
 <head>
-  <link rel="icon" type="image/png" href="favicon.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>LEGION Free VPN - High-Speed Singapore VPS Nodes</title>
@@ -56,12 +55,50 @@
   <script src="js/ads.js" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
 
   <!-- Social Bar & Popunder Scripts -->
-  <script data-cfasync="false" src="https://accountut.com/1/640b77b911d151a0b818931ab492cd4f" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
   <script data-cfasync="false" src="https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
 </head>
 <body class="bg-black text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-[#00FF66] selection:text-black">
 
-  <!-- ================= TOP NAVIGATION BAR (MOBILE HEAVILY OPTIMIZED & ZERO CLIPPING) ================= -->
+  <!-- ================= MINIMAL LEGION VPN PRELOADER ================= -->
+  <div id="m3-page-loader" class="fixed inset-0 z-[100000000] bg-black flex flex-col items-center justify-center select-none transition-opacity duration-500 ease-out">
+    <div class="relative flex flex-col items-center max-w-xs w-full text-center">
+      <div class="text-3xl font-black text-white tracking-widest uppercase mb-4 flex items-center gap-2">
+        LEGION <span class="px-2 py-0.5 rounded-lg bg-neon/10 border border-neon/30 text-neon text-lg">VPN</span>
+      </div>
+      <div class="w-48 bg-surface-200 h-1 rounded-full overflow-hidden border border-emerald-950 mx-auto">
+        <div id="m3-loader-progress-bar" class="h-full bg-neon rounded-full w-0 transition-all duration-300 shadow-[0_0_10px_#00FF66]"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const loader = document.getElementById('m3-page-loader');
+      const bar = document.getElementById('m3-loader-progress-bar');
+      if (!loader || !bar) return;
+      let progress = 10;
+      const timer = setInterval(() => {
+        progress += Math.random() * 20 + 5;
+        if (progress > 95) progress = 95;
+        bar.style.width = progress + '%';
+      }, 150);
+      window.addEventListener('load', () => {
+        clearInterval(timer);
+        bar.style.width = '100%';
+        setTimeout(() => {
+          loader.classList.add('opacity-0', 'pointer-events-none');
+          setTimeout(() => {
+            if (loader.parentNode) loader.parentNode.removeChild(loader);
+          }, 500);
+        }, 300);
+      });
+      setTimeout(() => {
+        clearInterval(timer);
+        bar.style.width = '100%';
+        loader.classList.add('opacity-0', 'pointer-events-none');
+      }, 2000);
+    })();
+  </script>
+<!-- ================= TOP NAVIGATION BAR (MOBILE HEAVILY OPTIMIZED & ZERO CLIPPING) ================= -->
   <header class="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-emerald-950/70 transition-all">
     <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1 sm:gap-2">
       
@@ -449,7 +486,7 @@
         <span>&copy; 2026 LEGION VPN Project. All Rights Reserved.</span>
         <span>•</span>
         <a href="admin.html" class="hover:text-neon transition-colors flex items-center gap-1 font-mono">
-          🔒 Admin Control Panel
+          🔒 Created by Dulanga
         </a>
       </div>
     </div>
@@ -459,7 +496,7 @@
   <!-- ================= MODALS ================= -->
 
   <!-- ================= PUBLIC SERVER QUICK ACCESS MODAL ================= -->
-  <div id="public-server-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
+  <div id="public-server-modal" class="fixed inset-0 z-[999999] hidden modal-glass items-center justify-center p-3 sm:p-4">
     <div class="m3-surface-2 p-5 sm:p-7 rounded-3xl border border-neon/50 max-w-2xl w-full shadow-2xl relative max-h-[95vh] overflow-y-auto">
       <button id="close-public-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2">✕</button>
 
@@ -469,6 +506,20 @@
           <h2 class="text-xl sm:text-2xl font-black text-white" id="public-modal-title">France Public Server</h2>
         </div>
         <div class="text-xs font-mono text-neon mt-1">IP: <span id="public-modal-ip">141.94.33.194</span></div>
+      </div>
+
+      <!-- Step A: Package Selection -->
+      <div id="public-step-pkg" class="mb-5">
+        <label class="block text-xs font-bold text-zinc-300 mb-2 uppercase tracking-wider text-left">Select ISP Package</label>
+        <select id="public-pkg-select" class="w-full bg-surface-300 border border-emerald-950 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-neon mb-3">
+          <option value="social">Social Media Package (Any ISP)</option>
+          <option value="tiktok">TikTok Package (Any ISP)</option>
+          <option value="youtube">YouTube Package (Any ISP)</option>
+          <option value="zoom">Zoom Package (Any ISP)</option>
+        </select>
+        <button id="public-btn-start" class="w-full py-3 rounded-xl bg-surface-100 hover:bg-surface-300 border border-emerald-500/40 text-neon font-bold text-sm m3-btn">
+          Confirm Package & Start Verification
+        </button>
       </div>
 
       <!-- Advisory Banner -->
@@ -497,20 +548,6 @@
             <span id="pub-modal-upsell-vip" class="text-zinc-400">රු. 250 කට >1Gbps Ultra-Speed, Zero Ads, Unlimited Data (Valid: 30 Days / 1 Month).</span>
           </div>
         </div>
-      </div>
-
-      <!-- Step A: Package Selection -->
-      <div id="public-step-pkg" class="mb-5">
-        <label class="block text-xs font-bold text-zinc-300 mb-2 uppercase tracking-wider text-left">Select ISP Package</label>
-        <select id="public-pkg-select" class="w-full bg-surface-300 border border-emerald-950 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-neon mb-3">
-          <option value="social">Social Media Package (Any ISP)</option>
-          <option value="tiktok">TikTok Package (Any ISP)</option>
-          <option value="youtube">YouTube Package (Any ISP)</option>
-          <option value="zoom">Zoom Package (Any ISP)</option>
-        </select>
-        <button id="public-btn-start" class="w-full py-3 rounded-xl bg-surface-100 hover:bg-surface-300 border border-emerald-500/40 text-neon font-bold text-sm m3-btn">
-          Confirm Package & Start Verification
-        </button>
       </div>
 
       <!-- Step B: Verification (Hidden initially) -->
@@ -581,7 +618,7 @@
   </div>
 
   <!-- 0. INITIAL LANGUAGE PICKER POPUP -->
-  <div id="language-picker-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
+  <div id="language-picker-modal" class="fixed inset-0 z-[10000000] hidden modal-glass items-center justify-center p-3 sm:p-4">
     <div class="m3-surface-2 p-6 sm:p-10 rounded-3xl border border-neon/50 max-w-lg w-full text-center shadow-2xl relative neon-glow max-h-[90vh] overflow-y-auto">
       <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-3xl bg-surface-300 border border-neon/40 text-neon mx-auto flex items-center justify-center mb-4 sm:mb-5 p-3">
         <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -596,23 +633,23 @@
       </p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-        <button id="choose-lang-si" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
-          <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
+        <button id="choose-lang-si" onclick="window.LegionI18n.selectLanguageAndClose('si')" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group cursor-pointer hover:border-neon transition-all">
+          <div class="flex items-center justify-between w-full mb-2 sm:mb-3 pointer-events-none">
             <img src="https://flagcdn.com/w80/lk.png" alt="Sri Lanka" class="w-8 h-5 object-cover rounded-sm border border-emerald-900/50">
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neon/10 border border-neon/30 text-neon">RECOMMENDED</span>
           </div>
-          <div>
+          <div class="pointer-events-none">
             <div class="text-sm sm:text-base font-extrabold text-white group-hover:text-neon">සිංහල (Sinhala)</div>
             <p class="text-[11px] sm:text-xs text-zinc-400 mt-1">නොමිලේ සිංගප්පූරු VPN ලබාගැනීමට</p>
           </div>
         </button>
 
-        <button id="choose-lang-en" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
-          <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
+        <button id="choose-lang-en" onclick="window.LegionI18n.selectLanguageAndClose('en')" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group cursor-pointer hover:border-neon transition-all">
+          <div class="flex items-center justify-between w-full mb-2 sm:mb-3 pointer-events-none">
             <img src="https://flagcdn.com/w80/gb.png" alt="UK" class="w-8 h-5 object-cover rounded-sm border border-emerald-900/50">
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-100 border border-zinc-700 text-zinc-400">GLOBAL</span>
           </div>
-          <div>
+          <div class="pointer-events-none">
             <div class="text-sm sm:text-base font-extrabold text-white group-hover:text-neon">English</div>
             <p class="text-[11px] sm:text-xs text-zinc-400 mt-1">Free Singapore High-Speed VPN</p>
           </div>

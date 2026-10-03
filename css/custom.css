@@ -320,6 +320,11 @@ input, textarea, select {
 
 /* Modal backdrop blur with mobile safe scrolling */
 .modal-glass {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   background: rgba(0, 0, 0, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -457,7 +462,10 @@ select,
 .js-select-package,
 .js-copy-btn,
 [id^="step-btn-"],
-[id^="public-"] {
+button[id^="public-"],
+a[id^="public-"],
+input[id^="public-"],
+select[id^="public-"] {
   position: relative !important;
   z-index: 20 !important;
   pointer-events: auto !important;
@@ -471,5 +479,63 @@ select,
   position: relative !important;
   z-index: 30 !important;
   pointer-events: auto !important;
+}
+
+/* ================= GUARANTEED FULLSCREEN POPUP WINDOWS ================= */
+#public-server-modal,
+#public-server-edit-modal,
+#package-edit-modal,
+#vpn-config-modal,
+#ad-rules-modal,
+#language-picker-modal,
+#theme-customizer-modal,
+#halfway-interstitial-modal,
+#turnstile-modal,
+#google-auth-modal,
+#admin-login-view,
+#banned-user-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999999 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#public-server-modal.hidden,
+#public-server-edit-modal.hidden,
+#package-edit-modal.hidden,
+#vpn-config-modal.hidden,
+#ad-rules-modal.hidden,
+#language-picker-modal.hidden,
+#theme-customizer-modal.hidden,
+#halfway-interstitial-modal.hidden,
+#turnstile-modal.hidden,
+#google-auth-modal.hidden,
+#admin-login-view.hidden,
+#banned-user-modal.hidden {
+  display: none !important;
+}
+
+#public-server-modal:not(.hidden),
+#public-server-edit-modal:not(.hidden),
+#package-edit-modal:not(.hidden),
+#vpn-config-modal:not(.hidden),
+#ad-rules-modal:not(.hidden),
+#language-picker-modal:not(.hidden),
+#theme-customizer-modal:not(.hidden),
+#halfway-interstitial-modal:not(.hidden),
+#turnstile-modal:not(.hidden),
+#google-auth-modal:not(.hidden),
+#admin-login-view:not(.hidden),
+#banned-user-modal:not(.hidden) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 

@@ -51,12 +51,11 @@
   <script src="js/ads.js" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
 
   <!-- Social Bar & Popunder Scripts -->
-  <script data-cfasync="false" src="https://accountut.com/1/640b77b911d151a0b818931ab492cd4f" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
   <script data-cfasync="false" src="https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411" onerror="window.__ad_blocked_detected=true;if(window.LegionSecurity)window.LegionSecurity.triggerAdBlock();"></script>
 </head>
 <body class="bg-black text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-[#00FF66] selection:text-black">
 
-  <!-- ================= TOP NAVIGATION BAR (MOBILE HEAVILY OPTIMIZED & ZERO CLIPPING) ================= -->
+<!-- ================= TOP NAVIGATION BAR (MOBILE HEAVILY OPTIMIZED & ZERO CLIPPING) ================= -->
   <header class="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-emerald-950/70 transition-all">
     <div class="max-w-6xl mx-auto px-2 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-1 sm:gap-2">
       
@@ -488,8 +487,12 @@
       <p class="text-xs text-zinc-500 max-w-md mx-auto" data-i18n="footer_desc">
         100% Free High-Speed Singapore VPS Nodes funded by user-supported ad impressions.
       </p>
-      <div class="text-[11px] text-zinc-600 mt-3">
-        &copy; 2026 LEGION VPN Project. All Rights Reserved.
+      <div class="mt-4 flex items-center justify-center gap-4 text-xs text-zinc-600">
+        <span>&copy; 2026 LEGION VPN Project. All Rights Reserved.</span>
+        <span>•</span>
+        <a href="admin.html" class="hover:text-neon transition-colors flex items-center gap-1 font-mono">
+          🔒 Created by Dulanga
+        </a>
       </div>
     </div>
   </footer>
@@ -664,46 +667,7 @@
     </div>
   </div>
 
-  <!-- LANGUAGE PICKER MODAL -->
-  <div id="language-picker-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">
-    <div class="m3-surface-2 p-6 sm:p-10 rounded-3xl border border-neon/50 max-w-lg w-full text-center shadow-2xl relative neon-glow max-h-[90vh] overflow-y-auto">
-      <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-3xl bg-surface-300 border border-neon/40 text-neon mx-auto flex items-center justify-center mb-4 sm:mb-5 p-3">
-        <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-        </svg>
-      </div>
 
-      <h2 class="text-xl sm:text-3xl font-black text-white">භාෂාව තෝරන්න / Select Language</h2>
-      <p class="text-xs sm:text-sm text-zinc-400 mt-1.5 mb-6 sm:mb-8 leading-relaxed">
-        කරුණාකර ඔබට පහසු භාෂාව තෝරා ඉදිරියට යන්න.<br>
-        Please choose your preferred language to continue.
-      </p>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-        <button id="choose-lang-si" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
-          <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
-            <img src="https://flagcdn.com/w80/lk.png" alt="Sri Lanka" class="w-8 h-5 object-cover rounded-sm border border-emerald-900/50">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neon/10 border border-neon/30 text-neon">RECOMMENDED</span>
-          </div>
-          <div>
-            <div class="text-sm sm:text-base font-extrabold text-white group-hover:text-neon">සිංහල (Sinhala)</div>
-            <p class="text-[11px] sm:text-xs text-zinc-400 mt-1">නොමිලේ සිංගප්පූරු VPN ලබාගැනීමට</p>
-          </div>
-        </button>
-
-        <button id="choose-lang-en" class="lang-card m3-surface-3 p-4 sm:p-5 rounded-2xl border border-emerald-900/60 text-left flex flex-col justify-between group">
-          <div class="flex items-center justify-between w-full mb-2 sm:mb-3">
-            <img src="https://flagcdn.com/w80/gb.png" alt="UK" class="w-8 h-5 object-cover rounded-sm border border-emerald-900/50">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-100 border border-zinc-700 text-zinc-400">GLOBAL</span>
-          </div>
-          <div>
-            <div class="text-sm sm:text-base font-extrabold text-white group-hover:text-neon">English</div>
-            <p class="text-[11px] sm:text-xs text-zinc-400 mt-1">Free Singapore High-Speed VPN</p>
-          </div>
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- ================= THEME & ACCENT CUSTOMIZER MODAL ================= -->
   <div id="theme-customizer-modal" class="fixed inset-0 z-50 hidden modal-glass items-center justify-center p-3 sm:p-4">

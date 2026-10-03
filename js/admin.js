@@ -59,7 +59,7 @@
       passInput.value = '';
       checkAuth();
     } else {
-      alert("Invalid Security PIN! Default PIN is: 80664227");
+      alert("Invalid Security PIN!");
     }
   }
 
@@ -75,6 +75,8 @@
     renderStats();
     renderPackages();
     renderUsers();
+    renderPublicServers();
+    loadModalSettings();
   }
 
   function renderStats() {

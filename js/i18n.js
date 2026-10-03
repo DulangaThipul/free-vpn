@@ -307,10 +307,15 @@
   }
 
   function showLanguagePickerOnRefresh() {
-    // Show modal on every page load/refresh as requested
     const lang = getLanguage();
     applyTranslations(lang);
     updateLanguageButtons(lang);
+
+    // If on claim.html, do NOT show the language picker popup; inherit language from index.html!
+    const isClaimPage = window.location.pathname.includes('claim.html') || !!document.getElementById('claim-funnel-section');
+    if (isClaimPage) {
+      return;
+    }
 
     const modal = document.getElementById('language-picker-modal');
     if (modal) {

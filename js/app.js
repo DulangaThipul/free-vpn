@@ -302,13 +302,15 @@
         ? 'bg-[#06180e] border-[#00FF66] text-[#00FF66]' 
         : type === 'error'
         ? 'bg-[#200808] border-red-500 text-red-300'
+        : type === 'warning'
+        ? 'bg-[#261505] border-amber-500 text-amber-300'
         : 'bg-[#0f1412] border-emerald-500/40 text-emerald-200'
     }`;
     
     toast.innerHTML = `
       <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${
-          type === 'error' 
+          type === 'error' || type === 'warning'
             ? 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
             : 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
         }"/>
@@ -532,7 +534,8 @@
 
     // Attach click handlers to "Click Here" links
     document.querySelectorAll('.js-select-package').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const pkgId = btn.getAttribute('data-id');
         const pkg = window.LegionStore.getPackageById(pkgId);
         if (pkg) {
@@ -540,7 +543,7 @@
           showToast(`Opening ${pkg.title} in new tab...`, "success");
         }
         triggerMobileHaptic();
-      });
+      }, { capture: true });
     });
   }
 
@@ -602,6 +605,70 @@
     }
   }
 
+  // --- STRICT 5-SECOND AD VIEWING ENFORCEMENT ENGINE ---
+  let activeAdSession = null;
+  let adCountdownInterval = null;
+
+  function cancelAdSessionIfEarly() {
+    if (!activeAdSession) return false;
+
+    const elapsed = (Date.now() - activeAdSession.startTime) / 1000;
+    if (elapsed < 4.8) {
+      // User switched back or closed ad before 5 seconds!
+      const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+      const warningMsg = lang === 'si'
+        ? "තප්පර 5ක් සයිට් එකේ ඉදල close කරලා ඊලග ad එක click කරන්න"
+        : "Watch the ad for 5 seconds to complete";
+
+      showToast(warningMsg, "warning");
+      triggerMobileHaptic();
+
+      if (adCountdownInterval) {
+        clearInterval(adCountdownInterval);
+        adCountdownInterval = null;
+      }
+
+      const session = activeAdSession;
+      activeAdSession = null;
+      if (session.onReset) {
+        session.onReset();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function completeAdSessionIfEligible() {
+    if (!activeAdSession) return;
+    const elapsed = (Date.now() - activeAdSession.startTime) / 1000;
+    if (elapsed >= 4.8) {
+      if (adCountdownInterval) {
+        clearInterval(adCountdownInterval);
+        adCountdownInterval = null;
+      }
+      const session = activeAdSession;
+      activeAdSession = null;
+      if (session.onSuccess) {
+        session.onSuccess();
+      }
+    }
+  }
+
+  // Listen for tab focus & visibility change for strict 5-second verification
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      if (!cancelAdSessionIfEarly()) {
+        completeAdSessionIfEligible();
+      }
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (!cancelAdSessionIfEarly()) {
+      completeAdSessionIfEligible();
+    }
+  });
+
   // --- Unified 9-Step 100-Ad Action Handler with Real-Time Click Engine ---
   function handleStepClick(stepNumber) {
     // 1. Enforce Google Sign-In Gate
@@ -617,87 +684,127 @@
       return;
     }
 
-    // 3. Short click debounce check
-    if (state.isCooldown) {
+    // 3. Prevent duplicate click while ad countdown is active
+    if (state.isCooldown || activeAdSession) {
       return;
     }
 
     const quota = STEP_QUOTAS[stepNumber] || 10;
+    const currentClicks = state.stepClicks[stepNumber] || 0;
     state.currentStep = stepNumber;
-
-    // 4. Open Adsterra Smartlink Synchronously on User Gesture!
-    triggerAdLink(stepNumber);
-
-    // 5. Increment Click Count Immediately on Click!
-    state.stepClicks[stepNumber] = (state.stepClicks[stepNumber] || 0) + 1;
-    const currentClicks = state.stepClicks[stepNumber];
-
-    triggerMobileHaptic();
-    updateOverallProgress();
 
     const btn = dom[`stepBtn${stepNumber}`];
     const statusEl = dom[`stepStatus${stepNumber}`];
     const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
 
-    // 6. Check if Step Quota Reached
-    if (currentClicks >= quota) {
-      state.stepsCompleted = stepNumber;
-      updateStepUI(stepNumber, true);
-      updateOverallProgress();
+    // 4. Open Adsterra Smartlink Synchronously on User Gesture!
+    triggerAdLink(stepNumber);
 
-      if (stepNumber < 9) {
-        unlockStep(stepNumber + 1);
-        const toastMsg = lang === 'si'
-          ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
-          : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
-        showToast(toastMsg, "success");
-      } else {
-        const finalToastMsg = lang === 'si'
-          ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
-          : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
-        showToast(finalToastMsg, "success");
-        fetchSecureVPNConfig();
-      }
-      return;
-    }
-
-    // 7. Check if Halfway Milestone
-    const halfway = Math.floor(quota / 2);
-    if (currentClicks === halfway) {
-      showHalfwayInterstitialModal(stepNumber);
-    }
-
-    // 8. Visual Confirmation & 1.2-Second Debounce Cooldown
-    state.isCooldown = true;
+    // 5. Start 5-second countdown on button UI
+    let countdown = 5;
     if (btn) {
       btn.disabled = true;
       btn.classList.add('opacity-85', 'cursor-not-allowed');
-      btn.innerHTML = `<span>✓ Verified! (${currentClicks}/${quota})</span>`;
+      const waitText = lang === 'si'
+        ? `Ad එක බලන්න (${countdown}s)...`
+        : `Watch Ad (${countdown}s)...`;
+      btn.innerHTML = `<span>⏳ ${waitText}</span>`;
     }
-
     if (statusEl) {
-      const statusText = lang === 'si'
-        ? `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. ඉදිරියට යන්න...</span>`
-        : `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified. Keep clicking...</span>`;
-      statusEl.innerHTML = statusText;
+      statusEl.innerHTML = `<span class="text-amber-400 font-medium">⏳ ${lang === 'si' ? 'තප්පර 5ක් ad එකේ රැඳෙන්න...' : 'Stay on sponsor site for 5s...'}</span>`;
     }
 
-    setTimeout(() => {
-      state.isCooldown = false;
-      if (btn && state.stepsCompleted < stepNumber) {
-        btn.disabled = false;
-        btn.classList.remove('opacity-85', 'cursor-not-allowed');
-        const nextText = lang === 'si'
-          ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
-          : `Click to Verify Ad (${currentClicks}/${quota})`;
-        btn.innerHTML = `<span>${nextText}</span>`;
+    if (adCountdownInterval) {
+      clearInterval(adCountdownInterval);
+      adCountdownInterval = null;
+    }
+
+    adCountdownInterval = setInterval(() => {
+      countdown--;
+      if (countdown > 0) {
+        if (btn) {
+          const waitText = lang === 'si'
+            ? `Ad එක බලන්න (${countdown}s)...`
+            : `Watch Ad (${countdown}s)...`;
+          btn.innerHTML = `<span>⏳ ${waitText}</span>`;
+        }
+      } else {
+        clearInterval(adCountdownInterval);
+        adCountdownInterval = null;
+        if (!document.hidden && activeAdSession) {
+          completeAdSessionIfEligible();
+        }
       }
-    }, 1200);
+    }, 1000);
 
-    // Trigger Turnstile modal during Step 9 interaction
-    if (stepNumber === 9 && !state.turnstileCompleted && currentClicks === 1) {
-      showTurnstileModal();
-    }
+    activeAdSession = {
+      startTime: Date.now(),
+      onReset: () => {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-85', 'cursor-not-allowed');
+          const nextText = lang === 'si'
+            ? `Ad එක Verify කරන්න (${currentClicks}/${quota})`
+            : `Click to Verify Ad (${currentClicks}/${quota})`;
+          btn.innerHTML = `<span>${nextText}</span>`;
+        }
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="text-neon font-medium">${currentClicks}/${quota} Ads Verified.</span>`;
+        }
+      },
+      onSuccess: () => {
+        state.stepClicks[stepNumber] = (state.stepClicks[stepNumber] || 0) + 1;
+        const newClicks = state.stepClicks[stepNumber];
+
+        triggerMobileHaptic();
+        updateOverallProgress();
+
+        if (newClicks >= quota) {
+          state.stepsCompleted = stepNumber;
+          updateStepUI(stepNumber, true);
+          updateOverallProgress();
+
+          if (stepNumber < 9) {
+            unlockStep(stepNumber + 1);
+            const toastMsg = lang === 'si'
+              ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
+              : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
+            showToast(toastMsg, "success");
+          } else {
+            const finalToastMsg = lang === 'si'
+              ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
+              : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
+            showToast(finalToastMsg, "success");
+            fetchSecureVPNConfig();
+          }
+          return;
+        }
+
+        const halfway = Math.floor(quota / 2);
+        if (newClicks === halfway) {
+          showHalfwayInterstitialModal(stepNumber);
+        }
+
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-85', 'cursor-not-allowed');
+          const nextText = lang === 'si'
+            ? `Ad එක Verify කරන්න (${newClicks}/${quota})`
+            : `Click to Verify Ad (${newClicks}/${quota})`;
+          btn.innerHTML = `<span>${nextText}</span>`;
+        }
+        if (statusEl) {
+          const statusText = lang === 'si'
+            ? `<span class="text-neon font-medium">${newClicks}/${quota} Ads Verified. ඉදිරියට යන්න...</span>`
+            : `<span class="text-neon font-medium">${newClicks}/${quota} Ads Verified. Keep clicking...</span>`;
+          statusEl.innerHTML = statusText;
+        }
+
+        if (stepNumber === 9 && !state.turnstileCompleted && newClicks === 1) {
+          showTurnstileModal();
+        }
+      }
+    };
   }
 
   // --- Step 9 Cloudflare Turnstile Modal Interstitial ---
@@ -1172,6 +1279,7 @@ INSTRUCTIONS:
     // Open Modal Handlers
     document.querySelectorAll('.js-open-public-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const target = e.currentTarget;
         currentPublicState.country = target.getAttribute('data-country');
         currentPublicState.flag = target.getAttribute('data-flag');
@@ -1208,22 +1316,24 @@ INSTRUCTIONS:
         
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-      });
+      }, { capture: true });
     });
 
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-      });
+      }, { capture: true });
     }
 
     // Step A -> Step B
     if (btnStart) {
-      btnStart.addEventListener('click', () => {
+      btnStart.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (stepPkg) stepPkg.classList.add('hidden');
         if (stepVerify) stepVerify.classList.remove('hidden');
-      });
+      }, { capture: true });
     }
 
     // Step B: Turnstile
@@ -1251,68 +1361,108 @@ INSTRUCTIONS:
       });
     }
 
-    // Step B: 10 Ad Multi-Click logic with Instant 1-Click Verification
+    // Step B: 10 Ad Multi-Click logic with Strict 5-Second Viewing Verification
     if (btnAd) {
-      btnAd.addEventListener('click', () => {
-        if (!currentPublicState.turnstilePassed || currentPublicState.isCooldown) return;
+      btnAd.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!currentPublicState.turnstilePassed || currentPublicState.isCooldown || activeAdSession) return;
 
-        // Trigger smartlink synchronously
+        // Trigger smartlink synchronously on user gesture
         triggerAdLink(1);
 
-        currentPublicState.adClicks++;
-        const clicks = currentPublicState.adClicks;
-        triggerMobileHaptic();
+        const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+        const currentClicks = currentPublicState.adClicks;
 
-        if (clicks >= 10) {
-          // 10 Ads Completed -> Output Custom Config
-          if (stepVerify) stepVerify.classList.add('hidden');
-          if (stepResult) stepResult.classList.remove('hidden');
-          showToast("🎉 Verification Complete! Releasing configuration...", "success");
-
-          const pkgKey = pkgSelect ? pkgSelect.value : 'social';
-          let customStr = '';
-
-          // Fetch saved configuration for this server & package
-          if (window.LegionStore && window.LegionStore.getPublicServers) {
-            const servers = window.LegionStore.getPublicServers();
-            const srv = servers.find(s => s.country === currentPublicState.country);
-            if (srv && srv.configs && srv.configs[pkgKey]) {
-              customStr = srv.configs[pkgKey];
-            }
-          }
-
-          // Fallback generator if empty
-          if (!customStr) {
-            const ip = currentPublicState.ip;
-            const country = currentPublicState.country.toUpperCase();
-            const sniMap = { social: 'm.facebook.com', tiktok: 'v16m-default.tiktokcdn.com', youtube: 'googlevideo.com', zoom: 'zoom.us' };
-            const sni = sniMap[pkgKey] || 'm.facebook.com';
-            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-              var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-              return v.toString(16);
-            });
-            customStr = `vless://${uuid}@${ip}:443?encryption=none&security=tls&sni=${sni}&type=ws&host=${ip}&path=%2F#LEGION-${country}-PUBLIC`;
-          }
-
-          if (vlessOutput) vlessOutput.value = customStr;
-          return;
-        }
-
-        // Brief 1.2-Second Debounce Cooldown
-        currentPublicState.isCooldown = true;
         btnAd.disabled = true;
         btnAd.classList.add('opacity-85', 'cursor-not-allowed');
-        btnAd.innerHTML = `<span>✓ Verified! (${clicks}/10)</span>`;
-        if (adStatus) adStatus.innerHTML = `<span class="text-neon font-medium">${clicks}/10 Ads Verified.</span>`;
 
-        setTimeout(() => {
-          currentPublicState.isCooldown = false;
-          if (btnAd && currentPublicState.adClicks < 10) {
+        let countdown = 5;
+        const updatePublicCountdown = () => {
+          const waitMsg = lang === 'si'
+            ? `Ad එක බලන්න (${countdown}s)...`
+            : `Watch Ad (${countdown}s)...`;
+          btnAd.innerHTML = `<span>⏳ ${waitMsg}</span>`;
+          if (adStatus) {
+            adStatus.innerHTML = `<span class="text-amber-400 font-medium">⏳ ${lang === 'si' ? 'තප්පර 5ක් ad එකේ රැඳෙන්න...' : 'Stay on sponsor site for 5s...'}</span>`;
+          }
+        };
+        updatePublicCountdown();
+
+        if (adCountdownInterval) {
+          clearInterval(adCountdownInterval);
+          adCountdownInterval = null;
+        }
+
+        adCountdownInterval = setInterval(() => {
+          countdown--;
+          if (countdown > 0) {
+            updatePublicCountdown();
+          } else {
+            clearInterval(adCountdownInterval);
+            adCountdownInterval = null;
+            if (!document.hidden && activeAdSession) {
+              completeAdSessionIfEligible();
+            }
+          }
+        }, 1000);
+
+        activeAdSession = {
+          startTime: Date.now(),
+          onReset: () => {
+            btnAd.disabled = false;
+            btnAd.classList.remove('opacity-85', 'cursor-not-allowed');
+            btnAd.innerHTML = `<span>Click to Verify Ad (${currentClicks}/10)</span>`;
+            if (adStatus) {
+              adStatus.innerHTML = `<span class="text-neon font-medium">${currentClicks}/10 Ads Verified.</span>`;
+            }
+          },
+          onSuccess: () => {
+            currentPublicState.adClicks++;
+            const clicks = currentPublicState.adClicks;
+            triggerMobileHaptic();
+
+            if (clicks >= 10) {
+              // 10 Ads Completed -> Output Custom Config
+              if (stepVerify) stepVerify.classList.add('hidden');
+              if (stepResult) stepResult.classList.remove('hidden');
+              showToast("🎉 Verification Complete! Releasing configuration...", "success");
+
+              const pkgKey = pkgSelect ? pkgSelect.value : 'social';
+              let customStr = '';
+
+              // Fetch saved configuration for this server & package
+              if (window.LegionStore && window.LegionStore.getPublicServers) {
+                const servers = window.LegionStore.getPublicServers();
+                const srv = servers.find(s => s.country === currentPublicState.country);
+                if (srv && srv.configs && srv.configs[pkgKey]) {
+                  customStr = srv.configs[pkgKey];
+                }
+              }
+
+              // Fallback generator if empty
+              if (!customStr) {
+                const ip = currentPublicState.ip;
+                const country = currentPublicState.country.toUpperCase();
+                const sniMap = { social: 'm.facebook.com', tiktok: 'v16m-default.tiktokcdn.com', youtube: 'googlevideo.com', zoom: 'zoom.us' };
+                const sni = sniMap[pkgKey] || 'm.facebook.com';
+                const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                  var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                  return v.toString(16);
+                });
+                customStr = `vless://${uuid}@${ip}:443?encryption=none&security=tls&sni=${sni}&type=ws&host=${ip}&path=%2F#LEGION-${country}-PUBLIC`;
+              }
+
+              if (vlessOutput) vlessOutput.value = customStr;
+              return;
+            }
+
             btnAd.disabled = false;
             btnAd.classList.remove('opacity-85', 'cursor-not-allowed');
             btnAd.innerHTML = `<span>Click to Verify Ad (${clicks}/10)</span>`;
+            if (adStatus) adStatus.innerHTML = `<span class="text-neon font-medium">${clicks}/10 Ads Verified.</span>`;
+            showToast(`✓ Ad Verified (${clicks}/10)`, "success");
           }
-        }, 1200);
+        };
       });
     }
   }
@@ -1320,7 +1470,8 @@ INSTRUCTIONS:
   // --- Copy to Clipboard helper ---
   function setupCopyButtons() {
     document.querySelectorAll('.js-copy-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const targetId = btn.getAttribute('data-target');
         const targetEl = document.getElementById(targetId);
         if (targetEl) {
@@ -1335,18 +1486,22 @@ INSTRUCTIONS:
             triggerMobileHaptic();
           });
         }
-      });
+      }, { capture: true });
     });
 
     const downloadBtn = document.getElementById('btn-download-trojan');
     if (downloadBtn) {
-      downloadBtn.addEventListener('click', downloadTrojanConfig);
+      downloadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        downloadTrojanConfig();
+      }, { capture: true });
     }
   }
 
   // DOM Content Loaded Handler
   document.addEventListener('DOMContentLoaded', () => {
     initDOM();
+    initAntiClickjackingSentinel();
     initTabVisibilityTracker();
     initBackNavigationTrap();
     initLenis();
@@ -1396,18 +1551,22 @@ INSTRUCTIONS:
     for (let i = 1; i <= 9; i++) {
       const btn = dom[`stepBtn${i}`];
       if (btn) {
-        btn.addEventListener('click', () => handleStepClick(i));
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          handleStepClick(i);
+        }, { capture: true });
       }
     }
 
     // Modal close handler
     if (dom.closeConfigModal) {
-      dom.closeConfigModal.addEventListener('click', () => {
+      dom.closeConfigModal.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (dom.configModal) {
           dom.configModal.classList.add('hidden');
           dom.configModal.classList.remove('flex');
         }
-      });
+      }, { capture: true });
     }
 
     // Scroll to packages CTA
@@ -1415,6 +1574,7 @@ INSTRUCTIONS:
     startClaimBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const section = document.getElementById('packages-selection-section');
         if (section) {
           if (window.lenisInstance) {
@@ -1423,7 +1583,7 @@ INSTRUCTIONS:
             section.scrollIntoView({ behavior: 'smooth' });
           }
         }
-      });
+      }, { capture: true });
     });
   });
 
@@ -1431,6 +1591,11 @@ INSTRUCTIONS:
   window.LegionApp = {
     showToast: showToast,
     resetFunnel: resetFunnel,
-    renderPackages: renderPackages
+    renderPackages: renderPackages,
+    checkAndShowRulesModal: checkAndShowRulesModal,
+    acceptAdRules: () => {
+      const btn = document.getElementById('btn-accept-ad-rules');
+      if (btn) btn.click();
+    }
   };
 })();

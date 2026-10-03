@@ -441,14 +441,14 @@
       }
     });
 
-    // Verification check after 2 seconds for live ad slots
+    // Verification check after 8 seconds for live ad slots (mobile-safe latency margin)
     setTimeout(function () {
       if (!securityState.isLocked && !securityState.braveDetected && !securityState.devtoolsDetected) {
         if (checkLiveAdSlots()) {
           triggerAdBlock();
         }
       }
-    }, 2500);
+    }, 8000);
   }
 
   if (document.readyState === 'loading') {
