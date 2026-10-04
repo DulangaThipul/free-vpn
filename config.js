@@ -17,9 +17,9 @@ window.LEGION_CONFIG = {
   
   // Adsterra / Monetag / CPA Network Monetization Settings
   ADS: {
-    // Popunder Script URL & Direct Fallback
-    POPUNDER_SCRIPT_URL: "https://accountut.com/1/640b77b911d151a0b818931ab492cd4f",
-    POPUNDER_URL: "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816",
+    // Popunder Script URL & Direct Fallback (Disabled for auto-load safety)
+    POPUNDER_SCRIPT_URL: "",
+    POPUNDER_URL: "",
     
     // Cooldown in seconds before resetting global 2-click popunder quota
     POPUNDER_COOLDOWN_SECONDS: 35,
@@ -71,41 +71,16 @@ window.LEGION_CONFIG = {
     // Timer seconds fallback
     STEP_WAIT_SECONDS: 5,
 
-    // Social Bar Settings
-    ENABLE_SOCIAL_BAR: true,
-    SOCIAL_BAR_SCRIPT_URL: "https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411",
+    // Social Bar Settings (Disabled for auto-load safety)
+    ENABLE_SOCIAL_BAR: false,
+    SOCIAL_BAR_SCRIPT_URL: "",
 
-    // Native Banner & Display Banner Zones
+    // Native Banner & Display Banner Zones (Disabled for auto-load safety)
     NATIVE_BANNER: {
-      CONTAINER_ID: "container-9a473b9de62958c724e520a2456b51da",
-      SCRIPT_URL: "https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da"
+      CONTAINER_ID: "",
+      SCRIPT_URL: ""
     },
-    BANNERS: {
-      BANNER_728x90: {
-        KEY: "2599cc924a898c0a880a45e1ebdd01fb",
-        SCRIPT_URL: "https://bellnewyork.org/22/2599cc924a898c0a880a45e1ebdd01fb"
-      },
-      BANNER_300x250: {
-        KEY: "08fcf6f647e8306da74abc152fa8f88f",
-        SCRIPT_URL: "https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f"
-      },
-      BANNER_468x60: {
-        KEY: "0d834bfe971fc8760fd46cb72bb1227f",
-        SCRIPT_URL: "https://bellnewyork.org/22/0d834bfe971fc8760fd46cb72bb1227f"
-      },
-      BANNER_160x300: {
-        KEY: "ef1a020b7c14529e6077f497f4c506ae",
-        SCRIPT_URL: "https://bellnewyork.org/22/ef1a020b7c14529e6077f497f4c506ae"
-      },
-      BANNER_320x50: {
-        KEY: "a3560d93dd6049fa0f9f2db53a702d34",
-        SCRIPT_URL: "https://bellnewyork.org/22/a3560d93dd6049fa0f9f2db53a702d34"
-      },
-      BANNER_160x600: {
-        KEY: "f35a73464f8b85cb335521ac47aafbdc",
-        SCRIPT_URL: "https://bellnewyork.org/22/f35a73464f8b85cb335521ac47aafbdc"
-      }
-    }
+    BANNERS: {}
   },
   
   // Premium Plan Details

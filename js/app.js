@@ -117,14 +117,21 @@
   try {
     const _origAssign = window.location.assign;
     window.location.assign = function (url) {
+      if (!url) return;
       try {
-        const u = new URL(url, window.location.href);
-        if (u.origin !== window.location.origin) {
-          console.warn("Diverted external location.assign to new tab:", url);
-          dispatchAdLink(url);
-          return;
+        const strUrl = String(url).trim();
+        if (/^(https?:|\/\/)/i.test(strUrl)) {
+          const URLCtor = window.URL || URL;
+          const u = new URLCtor(strUrl, window.location.href);
+          if (u.origin !== window.location.origin) {
+            console.warn("[ANTI-HIJACK SHIELD] Blocked rogue location.assign to:", strUrl);
+            return;
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("[ANTI-HIJACK SHIELD] Blocked suspicious location.assign:", url);
+        return;
+      }
       if (typeof _origAssign === 'function') _origAssign.call(window.location, url);
     };
   } catch (e) {}
@@ -132,19 +139,26 @@
   try {
     const _origReplace = window.location.replace;
     window.location.replace = function (url) {
+      if (!url) return;
       try {
-        const u = new URL(url, window.location.href);
-        if (u.origin !== window.location.origin) {
-          console.warn("Diverted external location.replace to new tab:", url);
-          dispatchAdLink(url);
-          return;
+        const strUrl = String(url).trim();
+        if (/^(https?:|\/\/)/i.test(strUrl)) {
+          const URLCtor = window.URL || URL;
+          const u = new URLCtor(strUrl, window.location.href);
+          if (u.origin !== window.location.origin) {
+            console.warn("[ANTI-HIJACK SHIELD] Blocked rogue location.replace to:", strUrl);
+            return;
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("[ANTI-HIJACK SHIELD] Blocked suspicious location.replace:", url);
+        return;
+      }
       if (typeof _origReplace === 'function') _origReplace.call(window.location, url);
     };
   } catch (e) {}
 
-  // Enforce target="_blank" and rel="noopener noreferrer" on external anchor clicks
+  // Enforce target="_blank" and rel="noopener noreferrer" on external anchor clicks & block synthetic clicks
   document.addEventListener('click', (e) => {
     let el = e.target;
     while (el && el !== document.body) {
@@ -152,6 +166,12 @@
         try {
           const parsed = new URL(el.href, window.location.href);
           if (parsed.origin !== window.location.origin && !el.href.startsWith('javascript:')) {
+            if (!e.isTrusted) {
+              console.warn("[ANTI-HIJACK SHIELD] Blocked untrusted synthetic click on external link:", el.href);
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
             el.target = '_blank';
             el.rel = 'noopener noreferrer';
           }
@@ -616,54 +636,14 @@
     }, 4500);
   }
 
-  // --- AGGRESSIVE GLOBAL POPUNDER SYSTEM ---
-  // Fires popunders on 1st and 2nd clicks anywhere on blank page areas, with a 35s cooldown
+  // --- GLOBAL POPUNDER SYSTEM (NEUTRALIZED) ---
+  // Neutralized: Ads strictly open ONLY when the user explicitly clicks a "Watch Ad" / "Verify Ad" button.
   function triggerPopunder(customUrl) {
-    const config = window.LEGION_CONFIG || {};
-    const ads = config.ADS || {};
-    const url = customUrl || ads.POPUNDER_URL || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
-
-    if (url && url !== "#") {
-      dispatchAdLink(url);
-    }
+    // No-op to prevent unintended ad redirects
   }
 
   function initGlobalPopunder() {
-    const config = window.LEGION_CONFIG || {};
-    const cooldownSec = (config.ADS && config.ADS.POPUNDER_COOLDOWN_SECONDS) || 35;
-
-    document.addEventListener('click', (e) => {
-      // NEVER intercept or consume clicks on any interactive button, link, card, or modal
-      if (
-        e.target.closest('button') ||
-        e.target.closest('a') ||
-        e.target.closest('input') ||
-        e.target.closest('select') ||
-        e.target.closest('.m3-btn') ||
-        e.target.closest('.js-open-public-btn') ||
-        e.target.closest('.js-select-package') ||
-        e.target.closest('.lang-card') ||
-        e.target.closest('[id^="step-btn-"]') ||
-        e.target.closest('[id^="public-"]') ||
-        e.target.closest('#btn-accept-ad-rules') ||
-        e.target.closest('#turnstile-box') ||
-        e.target.closest('#public-turnstile-box')
-      ) {
-        return;
-      }
-
-      const now = Date.now();
-      // Reset quota when cooldown expires
-      if (now - lastPopunderResetTime > cooldownSec * 1000) {
-        popunderClickCount = 0;
-        lastPopunderResetTime = now;
-      }
-
-      if (popunderClickCount < 2) {
-        popunderClickCount++;
-        triggerPopunder();
-      }
-    }, false);
+    // No-op: No background popunders on blank area clicks
   }
 
   // --- ANTI-CLICKJACKING SENTINEL ---
@@ -719,8 +699,6 @@
           e.stopPropagation();
           if (e.cancelable) e.preventDefault();
         }
-        // Synchronously open popunder on user click gesture
-        triggerPopunder();
         sessionStorage.setItem('legion_rules_accepted', 'true');
         
         if (dom.adRulesModal) {
@@ -1235,8 +1213,6 @@
   function initTurnstileBoxClick() {
     if (dom.turnstileBox) {
       dom.turnstileBox.addEventListener('click', () => {
-        // Clicking challenge box also triggers popunder on user gesture
-        triggerPopunder();
         resolveTurnstileSuccess();
       });
     }

@@ -352,7 +352,6 @@
     const probeUrls = [
       'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
       'https://securepubads.g.doubleclick.net/tag/js/gpt.js',
-      'https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f',
       'https://adservice.google.com/adsid/integrator.js'
     ];
 
@@ -374,23 +373,9 @@
     return false;
   }
 
-  // Vector 4: Live Ad Slot Container Verification (Empty Container Detection)
+  // Vector 4: Live Ad Slot Container Verification
   function checkLiveAdSlots() {
-    const adBoxes = document.querySelectorAll('.ad-slot-box');
-    if (!adBoxes || adBoxes.length === 0) return false;
-    
-    let hasRenderedAd = false;
-    adBoxes.forEach(function (box) {
-      const iframes = box.querySelectorAll('iframe');
-      if (iframes.length > 0) {
-        iframes.forEach(function (ifr) {
-          if (ifr.offsetHeight > 0 || ifr.offsetWidth > 0) {
-            hasRenderedAd = true;
-          }
-        });
-      }
-    });
-    return !hasRenderedAd;
+    return false;
   }
 
   async function checkAdBlocker() {

@@ -108,14 +108,21 @@
   try {
     const _origAssign = window.location.assign;
     window.location.assign = function (url) {
+      if (!url) return;
       try {
-        const u = new URL(url, window.location.href);
-        if (u.origin !== window.location.origin) {
-          console.warn("Diverted external location.assign to new tab:", url);
-          openAd(url);
-          return;
+        const strUrl = String(url).trim();
+        if (/^(https?:|\/\/)/i.test(strUrl)) {
+          const URLCtor = window.URL || URL;
+          const u = new URLCtor(strUrl, window.location.href);
+          if (u.origin !== window.location.origin) {
+            console.warn("[ANTI-HIJACK SHIELD] Blocked rogue location.assign to external URL:", strUrl);
+            return;
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("[ANTI-HIJACK SHIELD] Blocked suspicious location.assign:", url);
+        return;
+      }
       if (typeof _origAssign === 'function') _origAssign.call(window.location, url);
     };
   } catch (e) {}
@@ -123,19 +130,26 @@
   try {
     const _origReplace = window.location.replace;
     window.location.replace = function (url) {
+      if (!url) return;
       try {
-        const u = new URL(url, window.location.href);
-        if (u.origin !== window.location.origin) {
-          console.warn("Diverted external location.replace to new tab:", url);
-          openAd(url);
-          return;
+        const strUrl = String(url).trim();
+        if (/^(https?:|\/\/)/i.test(strUrl)) {
+          const URLCtor = window.URL || URL;
+          const u = new URLCtor(strUrl, window.location.href);
+          if (u.origin !== window.location.origin) {
+            console.warn("[ANTI-HIJACK SHIELD] Blocked rogue location.replace to external URL:", strUrl);
+            return;
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("[ANTI-HIJACK SHIELD] Blocked suspicious location.replace:", url);
+        return;
+      }
       if (typeof _origReplace === 'function') _origReplace.call(window.location, url);
     };
   } catch (e) {}
 
-  // --- CAPTURE EXTERNAL ANCHOR CLICKS TO ENFORCE NEW TAB ON PC ---
+  // --- CAPTURE EXTERNAL ANCHOR CLICKS TO ENFORCE NEW TAB ON PC AND BLOCK SYNTHETIC HIJACKS ---
   document.addEventListener('click', function (e) {
     let el = e.target;
     while (el && el !== document.body) {
@@ -143,6 +157,13 @@
         try {
           const parsed = new URL(el.href, window.location.href);
           if (parsed.origin !== window.location.origin && !el.href.startsWith('javascript:')) {
+            // Block untrusted synthetic programmatic clicks from ad scripts
+            if (!e.isTrusted) {
+              console.warn("[ANTI-HIJACK SHIELD] Blocked synthetic click on external link:", el.href);
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
             el.target = '_blank';
             el.rel = 'noopener noreferrer';
           }
