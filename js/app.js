@@ -195,6 +195,210 @@
     8: 10,
     9: 15  // Final Boss Milestone
   };
+  // Default Hardcoded ISP Packages (Immediate Zero-Latency Fallback)
+  const DEFAULT_PACKAGES = [
+    {
+      id: "pkg_dialog_social",
+      title: "Dialog Social (20 GB)",
+      badge: "Normal Package",
+      badgeType: "normal",
+      network: "Dialog",
+      simType: "Mobile Sim",
+      ispPrice: "Rs. 348 (20 GB)",
+      desc: "Dialog 20GB Social work plan high-speed tunnel.",
+      logins: "Up to 2 Logins (Unlimited 3 Logins)",
+      inStock: true,
+      trojanConfig: "trojan://legion-dialog-social-pass@sg01.legionvpn.net:443?security=tls&sni=m.facebook.com&type=tcp#LEGION-Dialog-Social-SG"
+    },
+    {
+      id: "pkg_dialog_tiktok",
+      title: "Dialog TikTok Unlimited",
+      badge: "Not Recommended",
+      badgeType: "warning",
+      network: "Dialog",
+      simType: "Mobile Sim",
+      ispPrice: "Rs. 297/Wk | Rs. 997/Mo",
+      desc: "50GB පසු වේගය 2Mbps දක්වා අඩු වේ. 50GB වඩා අවශ්‍ය නම් 1-Week plan එක සතියෙන් සතිය renew කරන්න.",
+      logins: "Up to 2 Logins (Unlimited 3 Logins)",
+      inStock: true,
+      trojanConfig: "trojan://legion-dialog-tiktok-pass@sg01.legionvpn.net:443?security=tls&sni=v16.musical.ly&type=tcp#LEGION-Dialog-TikTok-SG"
+    },
+    {
+      id: "pkg_airtel_tiktok",
+      title: "Airtel TikTok Unlimited",
+      badge: "Best Choice",
+      badgeType: "best",
+      network: "Airtel",
+      simType: "Mobile Sim",
+      ispPrice: "Rs. 297/Wk | Rs. 997/Mo",
+      desc: "Fastest speeds and zero restrictions on Airtel network.",
+      logins: "Up to 2 Logins (Unlimited 3 Logins)",
+      inStock: true,
+      trojanConfig: "trojan://legion-airtel-tiktok-pass@sg01.legionvpn.net:443?security=tls&sni=api.tiktokv.com&type=tcp#LEGION-Airtel-TikTok-SG"
+    },
+    {
+      id: "pkg_airtel_yt",
+      title: "Airtel YouTube Unlimited",
+      badge: "Best Choice",
+      badgeType: "best",
+      network: "Airtel",
+      simType: "Mobile Sim",
+      ispPrice: "Rs. 260 (Unlimited)",
+      desc: "High stability tunneling for unlimited daily browsing.",
+      logins: "Up to 2 Logins (Unlimited 3 Logins)",
+      inStock: true,
+      trojanConfig: "trojan://legion-airtel-yt-pass@sg01.legionvpn.net:443?security=tls&sni=googlevideo.com&type=tcp#LEGION-Airtel-YouTube-SG"
+    },
+    {
+      id: "pkg_airtel_zoom",
+      title: "Airtel Zoom (30 GB)",
+      badge: "Normal Package",
+      badgeType: "normal",
+      network: "Airtel",
+      simType: "Mobile Sim",
+      ispPrice: "Rs. 215 (Old SIMs only)",
+      desc: "Standard speed tunneling for registered older SIMs.",
+      logins: "Up to 2 Logins (Unlimited 3 Logins)",
+      inStock: true,
+      trojanConfig: "trojan://legion-airtel-zoom-pass@sg01.legionvpn.net:443?security=tls&sni=zoom.us&type=tcp#LEGION-Airtel-Zoom-SG"
+    },
+    {
+      id: "pkg_hutch_zoom",
+      title: "Hutch Zoom (30 GB)",
+      badge: "Normal Package",
+      badgeType: "normal",
+      network: "Hutch",
+      simType: "Mobile Sim",
+      ispPrice: "Rs. 224 (30 GB)",
+      desc: "Hutch network bypass for day-to-day internet needs.",
+      logins: "Up to 2 Logins (Unlimited 3 Logins)",
+      inStock: true,
+      trojanConfig: "trojan://legion-hutch-zoom-pass@sg01.legionvpn.net:443?security=tls&sni=zoom.us&type=tcp#LEGION-Hutch-Zoom-SG"
+    }
+  ];
+
+  // Default Hardcoded Public Servers (Immediate Zero-Latency Fallback)
+  const DEFAULT_PUBLIC_SERVERS = [
+    { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://141-94-33-194-fr@141.94.33.194:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=141.94.33.194&path=%2F#LEGION-FRANCE-PUBLIC" } },
+    { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Offline", isOnline: false, isOffline: true, isMaintenance: false, configs: { social: "vless://57-129-121-229-de@57.129.121.229:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.129.121.229&path=%2F#LEGION-GERMANY-PUBLIC" } },
+    { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online", isOnline: true, isOffline: false, isMaintenance: false, configs: { social: "vless://54-36-162-84-gb@54.36.162.84:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=54.36.162.84&path=%2F#LEGION-UK-PUBLIC" } },
+    { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://51-158-147-186-nl@51.158.147.186:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=51.158.147.186&path=%2F#LEGION-NETHERLANDS-PUBLIC" } },
+    { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://57-131-38-151-it@57.131.38.151:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.131.38.151&path=%2F#LEGION-ITALY-PUBLIC" } },
+    { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://158-69-208-120-ca@158.69.208.120:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=158.69.208.120&path=%2F#LEGION-CANADA-PUBLIC" } }
+  ];
+
+  /**
+   * Bulletproof Package Data Normalization
+   * Converts any raw input (null, undefined, object key-value map, or array) into a valid array of packages.
+   */
+  function getNormalizedPackages(pkgData) {
+    if (!pkgData) return DEFAULT_PACKAGES;
+    let list = [];
+    if (Array.isArray(pkgData)) {
+      list = pkgData;
+    } else if (typeof pkgData === 'object') {
+      // Handles key-value object e.g. { dialog_social: {...}, airtel_tiktok: {...} }
+      list = DEFAULT_PACKAGES.map(basePkg => {
+        let k = (basePkg.id || '').replace(/^pkg_/, '');
+        if (k === 'airtel_yt') k = 'airtel_youtube';
+        const override = pkgData[k] || pkgData[basePkg.id] || pkgData[basePkg.id.replace(/^pkg_/, '')];
+        if (override) {
+          return {
+            ...basePkg,
+            inStock: override.inStock !== undefined ? !!override.inStock : basePkg.inStock,
+            ispPrice: override.price || override.ispPrice || basePkg.ispPrice
+          };
+        }
+        return basePkg;
+      });
+      // Also include any extra keys present in pkgData
+      Object.keys(pkgData).forEach(key => {
+        const item = pkgData[key];
+        const normKey = key.replace(/^pkg_/, '');
+        const exists = list.some(p => p.id === 'pkg_' + normKey || p.id === key);
+        if (!exists && item && typeof item === 'object') {
+          list.push({
+            id: key.startsWith('pkg_') ? key : ('pkg_' + key),
+            title: item.title || (key.toUpperCase() + ' Bypass'),
+            badge: item.badge || 'Custom Package',
+            badgeType: item.badgeType || 'normal',
+            network: item.network || 'Universal',
+            simType: item.simType || 'Mobile Sim',
+            ispPrice: item.price || item.ispPrice || 'Standard',
+            desc: item.desc || 'High-speed encrypted bypass tunnel.',
+            logins: item.logins || 'Up to 2 Logins',
+            inStock: item.inStock !== undefined ? !!item.inStock : true,
+            trojanConfig: item.trojanConfig || ''
+          });
+        }
+      });
+    } else {
+      list = DEFAULT_PACKAGES;
+    }
+
+    if (!Array.isArray(list) || list.length === 0) {
+      list = DEFAULT_PACKAGES;
+    }
+
+    return list.map((pkg, idx) => {
+      const fallback = DEFAULT_PACKAGES[idx] || DEFAULT_PACKAGES[0];
+      return {
+        id: pkg.id || fallback.id,
+        title: pkg.title || fallback.title,
+        badge: pkg.badge || fallback.badge,
+        badgeType: pkg.badgeType || fallback.badgeType,
+        network: pkg.network || fallback.network,
+        simType: pkg.simType || fallback.simType,
+        ispPrice: pkg.ispPrice || pkg.price || fallback.ispPrice,
+        desc: pkg.desc || fallback.desc,
+        logins: pkg.logins || fallback.logins,
+        inStock: pkg.inStock !== undefined ? !!pkg.inStock : true,
+        trojanConfig: pkg.trojanConfig || fallback.trojanConfig
+      };
+    });
+  }
+
+  /**
+   * Bulletproof Public Servers Normalization
+   * Converts any raw input (null, undefined, object key-value map, or array) into a valid array of servers.
+   */
+  function getNormalizedPublicServers(srvData) {
+    let list = [];
+    if (Array.isArray(srvData) && srvData.length > 0) {
+      list = srvData;
+    } else if (srvData && typeof srvData === 'object' && !Array.isArray(srvData)) {
+      list = Object.values(srvData);
+    }
+    if (!Array.isArray(list) || list.length === 0) {
+      list = DEFAULT_PUBLIC_SERVERS;
+    }
+
+    list = list.filter(s => s && s.id !== 'pub_es' && s.id !== 'pub_sg');
+    if (list.length === 0) list = DEFAULT_PUBLIC_SERVERS;
+
+    return list.map((srv, idx) => {
+      const fallback = DEFAULT_PUBLIC_SERVERS[idx] || DEFAULT_PUBLIC_SERVERS[0];
+      const st = (srv.status || '').toString().trim().toLowerCase();
+      const isOff = (srv.isOffline === true) || (st === 'offline');
+      const isMaint = !isOff && ((srv.isMaintenance === true) || (st === 'maintenance'));
+      const isOn = !isOff && !isMaint;
+
+      return {
+        id: srv.id || fallback.id,
+        country: srv.country || fallback.country,
+        flag: srv.flag || fallback.flag,
+        ip: srv.ip || fallback.ip,
+        ping: srv.ping || fallback.ping,
+        sni: srv.sni || fallback.sni,
+        status: isOff ? 'Offline' : (isMaint ? 'Maintenance' : 'Online'),
+        isOnline: isOn,
+        isOffline: isOff,
+        isMaintenance: isMaint,
+        configs: srv.configs || fallback.configs
+      };
+    });
+  }
+
   let STEP_QUOTAS = { ...DEFAULT_STEP_QUOTAS };
   let TOTAL_ADS_REQUIRED = 100;
 
@@ -773,90 +977,99 @@
 
   // --- Render Packages on Home Screen ---
   function renderPackages() {
-    if (!dom.packagesContainer || !window.LegionStore) return;
-    const pkgs = window.LegionStore.getPackages();
-    dom.packagesContainer.innerHTML = '';
+    if (!dom.packagesContainer) return;
+    try {
+      const rawPkgs = (window.LegionStore && window.LegionStore.getPackages)
+        ? window.LegionStore.getPackages()
+        : DEFAULT_PACKAGES;
+      const pkgs = getNormalizedPackages(rawPkgs);
+      dom.packagesContainer.innerHTML = '';
 
-    pkgs.forEach(pkg => {
-      const card = document.createElement('div');
-      
-      let badgeClass = "bg-surface-300 border-zinc-700 text-zinc-300";
-      let badgeIcon = "✓";
-      if (pkg.badgeType === "best" || pkg.badge === "Best Choice") {
-        badgeClass = "bg-emerald-950/80 border-emerald-500/50 text-neon";
-        badgeIcon = "★";
-      } else if (pkg.badgeType === "warning" || pkg.badge === "Not Recommended") {
-        badgeClass = "bg-red-950/60 border-red-500/40 text-red-300";
-        badgeIcon = "✕";
-      }
-
-      card.className = `m3-surface-2 p-5 sm:p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between ${
-        pkg.inStock ? 'border-emerald-900/40 hover:border-neon' : 'border-zinc-800 opacity-60'
-      }`;
-
-      card.innerHTML = `
-        <div>
-          <!-- Badges -->
-          <div class="flex items-center justify-between gap-2 mb-4">
-            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 ${badgeClass}">
-              <span>${badgeIcon}</span> ${pkg.badge || 'Package'}
-            </span>
-            <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-surface-100 border border-emerald-950 text-zinc-400 flex items-center gap-1">
-              📶 ${pkg.simType || 'Mobile Sim'}
-            </span>
-          </div>
-
-          <!-- Title -->
-          <h3 class="text-base sm:text-lg font-black text-white mb-1.5">${pkg.title}</h3>
-          
-          <!-- ISP Price -->
-          <div class="text-xs font-bold text-neon mb-3 font-mono">
-            ISP Package Price: ${pkg.ispPrice || 'Standard'}
-          </div>
-
-          <!-- Description -->
-          <p class="text-xs text-zinc-400 mb-4 leading-relaxed line-clamp-2">
-            ${pkg.desc || ''}
-          </p>
-
-          <!-- Login limit indicator -->
-          <div class="text-[11px] text-amber-300 font-semibold mb-6 flex items-center gap-1.5">
-            <span>💡</span> ${pkg.logins || 'Up to 2 Logins (Unlimited 3 Logins)'}
-          </div>
-        </div>
-
-        <!-- Action Button (Click Here vs Out of Stock) -->
-        <div>
-          ${pkg.inStock ? `
-            <a href="claim.html?pkg=${encodeURIComponent(pkg.id)}" target="_blank" rel="noopener noreferrer" data-id="${pkg.id}" class="js-select-package w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-extrabold text-xs sm:text-sm tracking-wide m3-btn flex items-center justify-center gap-2 neon-glow transition-all">
-              <span>Click Here (Select VPN)</span> →
-            </a>
-          ` : `
-            <button disabled class="w-full py-3.5 rounded-2xl bg-zinc-900 border border-red-950 text-zinc-500 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-not-allowed">
-              <span class="text-red-400">✕</span> Out of Stock (අවසන් වී ඇත)
-            </button>
-          `}
-        </div>
-      `;
-
-      dom.packagesContainer.appendChild(card);
-    });
-
-    // Attach click handlers to "Click Here" links
-    document.querySelectorAll('.js-select-package').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pkgId = btn.getAttribute('data-id');
-        const pkg = window.LegionStore.getPackageById(pkgId);
-        if (pkg) {
-          state.selectedPackage = pkg;
-          saveVerificationProgress();
-          sendTelemetryLog({ event: 'package_selected', packageId: pkg.id, packageTitle: pkg.title });
-          showToast(`Opening ${pkg.title} in new tab...`, "success");
+      pkgs.forEach(pkg => {
+        const card = document.createElement('div');
+        
+        let badgeClass = "bg-surface-300 border-zinc-700 text-zinc-300";
+        let badgeIcon = "✓";
+        if (pkg.badgeType === "best" || pkg.badge === "Best Choice") {
+          badgeClass = "bg-emerald-950/80 border-emerald-500/50 text-neon";
+          badgeIcon = "★";
+        } else if (pkg.badgeType === "warning" || pkg.badge === "Not Recommended") {
+          badgeClass = "bg-red-950/60 border-red-500/40 text-red-300";
+          badgeIcon = "✕";
         }
-        triggerMobileHaptic();
-      }, { capture: true });
-    });
+
+        card.className = `m3-surface-2 p-5 sm:p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between ${
+          pkg.inStock ? 'border-emerald-900/40 hover:border-neon' : 'border-zinc-800 opacity-60'
+        }`;
+
+        card.innerHTML = `
+          <div>
+            <!-- Badges -->
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 ${badgeClass}">
+                <span>${badgeIcon}</span> ${pkg.badge || 'Package'}
+              </span>
+              <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-surface-100 border border-emerald-950 text-zinc-400 flex items-center gap-1">
+                📶 ${pkg.simType || 'Mobile Sim'}
+              </span>
+            </div>
+
+            <!-- Title -->
+            <h3 class="text-base sm:text-lg font-black text-white mb-1.5">${pkg.title}</h3>
+            
+            <!-- ISP Price -->
+            <div class="text-xs font-bold text-neon mb-3 font-mono">
+              ISP Package Price: ${pkg.ispPrice || 'Standard'}
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs text-zinc-400 mb-4 leading-relaxed line-clamp-2">
+              ${pkg.desc || ''}
+            </p>
+
+            <!-- Login limit indicator -->
+            <div class="text-[11px] text-amber-300 font-semibold mb-6 flex items-center gap-1.5">
+              <span>💡</span> ${pkg.logins || 'Up to 2 Logins (Unlimited 3 Logins)'}
+            </div>
+          </div>
+
+          <!-- Action Button (Click Here vs Out of Stock) -->
+          <div>
+            ${pkg.inStock ? `
+              <a href="claim.html?pkg=${encodeURIComponent(pkg.id)}" target="_blank" rel="noopener noreferrer" data-id="${pkg.id}" class="js-select-package w-full py-3.5 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-extrabold text-xs sm:text-sm tracking-wide m3-btn flex items-center justify-center gap-2 neon-glow transition-all">
+                <span>Click Here (Select VPN)</span> →
+              </a>
+            ` : `
+              <button disabled class="w-full py-3.5 rounded-2xl bg-zinc-900 border border-red-950 text-zinc-500 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                <span class="text-red-400">✕</span> Out of Stock (අවසන් වී ඇත)
+              </button>
+            `}
+          </div>
+        `;
+
+        dom.packagesContainer.appendChild(card);
+      });
+
+      // Attach click handlers to "Click Here" links
+      document.querySelectorAll('.js-select-package').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const pkgId = btn.getAttribute('data-id');
+          const pkg = (window.LegionStore && window.LegionStore.getPackageById)
+            ? window.LegionStore.getPackageById(pkgId)
+            : pkgs.find(p => p.id === pkgId);
+          if (pkg) {
+            state.selectedPackage = pkg;
+            saveVerificationProgress();
+            sendTelemetryLog({ event: 'package_selected', packageId: pkg.id, packageTitle: pkg.title });
+            showToast(`Opening ${pkg.title} in new tab...`, "success");
+          }
+          triggerMobileHaptic();
+        }, { capture: true });
+      });
+    } catch (err) {
+      console.error("[renderPackages error]:", err);
+    }
   }
 
   // --- SYNCHRONOUS AD TRIGGER & DIRECT SMARTLINK OPENER ---
@@ -1070,6 +1283,18 @@
         const data = await res.json();
         const settings = data.settings || data.data;
         if (settings && typeof settings === 'object') {
+          if (settings.packages) {
+            const normPkgs = getNormalizedPackages(settings.packages);
+            if (window.LegionStore && window.LegionStore.savePackages) {
+              window.LegionStore.savePackages(normPkgs);
+            }
+          }
+          if (settings.public_servers) {
+            const normSrvs = getNormalizedPublicServers(settings.public_servers);
+            if (window.LegionStore && window.LegionStore.savePublicServers) {
+              window.LegionStore.savePublicServers(normSrvs);
+            }
+          }
           if (window.LegionStore && window.LegionStore.applyGlobalSettings) {
             window.LegionStore.applyGlobalSettings(settings);
           }
@@ -1107,8 +1332,6 @@
   }
 
   async function syncPublicServers() {
-    renderPublicServersGrid();
-
     try {
       const apiBase = getApiBaseUrl();
       const res = await fetch(`${apiBase}/api/free/public-servers`, {
@@ -1118,9 +1341,10 @@
       if (res.ok) {
         const data = await res.json();
         const liveServers = data.servers || data.public_servers;
-        if (Array.isArray(liveServers) && liveServers.length > 0) {
+        if (liveServers) {
+          const normServers = getNormalizedPublicServers(liveServers);
           if (window.LegionStore && window.LegionStore.savePublicServers) {
-            window.LegionStore.savePublicServers(liveServers);
+            window.LegionStore.savePublicServers(normServers);
           }
           renderPublicServersGrid();
         }
@@ -1889,121 +2113,94 @@ INSTRUCTIONS:
     const grid = document.getElementById('public-servers-grid');
     if (!grid) return;
     
-    // Check if store exists, otherwise use fallback
-    const servers = (window.LegionStore && window.LegionStore.getPublicServers) 
-      ? window.LegionStore.getPublicServers() 
-      : [];
+    try {
+      const rawServers = (window.LegionStore && window.LegionStore.getPublicServers) 
+        ? window.LegionStore.getPublicServers() 
+        : DEFAULT_PUBLIC_SERVERS;
+      const servers = getNormalizedPublicServers(rawServers);
+        
+      grid.innerHTML = '';
       
-    grid.innerHTML = '';
-    
-    servers.forEach(srv => {
-      const isOffline = (srv.isOffline === true) || ((srv.status || '').trim().toLowerCase() === 'offline');
-      const isMaintenance = !isOffline && ((srv.isMaintenance === true) || ((srv.status || '').trim().toLowerCase() === 'maintenance'));
-      const isOnline = !isOffline && !isMaintenance && ((srv.isOnline === true) || ((srv.status || '').trim().toLowerCase() === 'online'));
+      servers.forEach(srv => {
+        const isOffline = (srv.isOffline === true) || ((srv.status || '').trim().toLowerCase() === 'offline');
+        const isMaintenance = !isOffline && ((srv.isMaintenance === true) || ((srv.status || '').trim().toLowerCase() === 'maintenance'));
+        const isOnline = !isOffline && !isMaintenance;
 
-      const card = document.createElement('div');
-      let borderClass = 'border-emerald-900/40 hover:border-emerald-500/60';
-      if (isOffline) {
-        borderClass = 'border-red-950/70 bg-surface-100/40 opacity-80';
-      } else if (isMaintenance) {
-        borderClass = 'border-amber-950/70 bg-surface-100/40 opacity-80';
-      }
-      card.className = `m3-surface-2 p-5 rounded-3xl border transition-all flex flex-col justify-between ${borderClass}`;
-      
-      const isInstantPublic = (state.publicSteps === 1);
-      const unlockBtnText = isInstantPublic ? '⚡ 1 Ad Instant Unlock →' : '10 Ads Quick Unlock →';
+        const card = document.createElement('div');
+        let borderClass = 'border-emerald-900/40 hover:border-emerald-500/60';
+        if (isOffline) {
+          borderClass = 'border-red-950/70 bg-surface-100/40 opacity-80';
+        } else if (isMaintenance) {
+          borderClass = 'border-amber-950/70 bg-surface-100/40 opacity-80';
+        }
+        card.className = `m3-surface-2 p-5 rounded-3xl border transition-all flex flex-col justify-between ${borderClass}`;
+        
+        const isInstantPublic = (state.publicSteps === 1);
+        const unlockBtnText = isInstantPublic ? '⚡ 1 Ad Instant Unlock →' : '10 Ads Quick Unlock →';
 
-      let pillHtml = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-300 border border-zinc-700 text-amber-400 flex items-center gap-1">
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> ${srv.ping || '45ms Ping'}
-      </span>`;
-      if (isOffline) {
-        pillHtml = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-red-950/80 border border-red-500/50 text-red-400 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Offline
+        let pillHtml = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-300 border border-zinc-700 text-amber-400 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> ${srv.ping || '45ms Ping'}
         </span>`;
-      } else if (isMaintenance) {
-        pillHtml = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-amber-400 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Maintenance
-        </span>`;
-      }
+        if (isOffline) {
+          pillHtml = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-red-950/80 border border-red-500/50 text-red-400 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Offline
+          </span>`;
+        } else if (isMaintenance) {
+          pillHtml = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-amber-400 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Maintenance
+          </span>`;
+        }
 
-      let btnHtml = `<button class="js-open-public-btn w-full py-3 rounded-2xl bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer" data-id="${srv.id || srv.country}" data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
-        <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm">
-        <span>${unlockBtnText}</span>
-      </button>`;
-      if (isOffline) {
-        btnHtml = `<button class="w-full py-3 rounded-2xl bg-red-950/30 border border-red-900/50 text-red-400 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80" disabled>
-          <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm opacity-40">
-          <span>🔴 Server Offline</span>
+        let btnHtml = `<button class="js-open-public-btn w-full py-3 rounded-2xl bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer" data-id="${srv.id || srv.country}" data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
+          <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm">
+          <span>${unlockBtnText}</span>
         </button>`;
-      } else if (isMaintenance) {
-        btnHtml = `<button class="w-full py-3 rounded-2xl bg-amber-950/30 border border-amber-900/50 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80" disabled>
-          <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm opacity-40">
-          <span>🟠 Under Maintenance</span>
-        </button>`;
-      }
+        if (isOffline) {
+          btnHtml = `<button class="w-full py-3 rounded-2xl bg-red-950/30 border border-red-900/50 text-red-400 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80" disabled>
+            <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm opacity-40">
+            <span>🔴 Server Offline</span>
+          </button>`;
+        } else if (isMaintenance) {
+          btnHtml = `<button class="w-full py-3 rounded-2xl bg-amber-950/30 border border-amber-900/50 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80" disabled>
+            <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm opacity-40">
+            <span>🟠 Under Maintenance</span>
+          </button>`;
+        }
 
-      card.innerHTML = `
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2.5">
-              <img src="https://flagcdn.com/w80/${srv.flag}.png" srcset="https://flagcdn.com/w160/${srv.flag}.png 2x" width="36" height="24" alt="${srv.country} Flag" class="w-9 h-6 object-cover rounded-md shadow-md border border-white/15">
-              <span class="text-xs font-bold text-zinc-400 font-mono uppercase tracking-wider">${srv.flag}</span>
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <img src="https://flagcdn.com/w80/${srv.flag}.png" srcset="https://flagcdn.com/w160/${srv.flag}.png 2x" width="36" height="24" alt="${srv.country} Flag" class="w-9 h-6 object-cover rounded-md shadow-md border border-white/15">
+                <span class="text-xs font-bold text-zinc-400 font-mono uppercase tracking-wider">${srv.flag}</span>
+              </div>
+              ${pillHtml}
             </div>
-            ${pillHtml}
+            <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">${srv.country}</h3>
+            <div class="text-xs font-mono text-neon mb-4">IP: ${srv.ip || '—'}</div>
           </div>
-          <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">${srv.country}</h3>
-          <div class="text-xs font-mono text-neon mb-4">IP: ${srv.ip || '—'}</div>
-        </div>
-        ${btnHtml}
-      `;
-      grid.appendChild(card);
-    });
+          ${btnHtml}
+        `;
+        grid.appendChild(card);
+      });
+    } catch (err) {
+      console.error("[renderPublicServersGrid error]:", err);
+    }
   }
 
-  // --- Global Public Servers (10 Ads Quick Access) ---
-  function initPublicServerModal() {
-    const modal = document.getElementById('public-server-modal');
-    const closeBtn = document.getElementById('close-public-modal');
-    const titleEl = document.getElementById('public-modal-title');
-    const ipEl = document.getElementById('public-modal-ip');
-    
-    const stepPkg = document.getElementById('public-step-pkg');
-    const stepVerify = document.getElementById('public-step-verify');
-    const stepResult = document.getElementById('public-step-result');
-    const pkgSelect = document.getElementById('public-pkg-select');
-    const btnStart = document.getElementById('public-btn-start');
-    
-    const turnstileBox = document.getElementById('public-turnstile-box');
-    const turnstileCheckbox = document.getElementById('public-turnstile-checkbox');
-    const turnstileText = document.getElementById('public-turnstile-text');
-    const btnAd = document.getElementById('public-btn-ad');
-    const adStatus = document.getElementById('public-ad-status');
-    const vlessOutput = document.getElementById('public-vless-output');
-
-    let currentPublicState = {
-      country: '',
-      flag: '',
-      ip: '',
-      adClicks: 0,
-      turnstilePassed: false,
-      isCooldown: false,
-      pendingAd: null
-    };
-
-    if (!modal) return; // Only execute if on page with the modal
-
-    // Apply Dynamic Modal Settings if store exists
-    if (window.LegionStore && window.LegionStore.getModalSettings) {
-      const ms = window.LegionStore.getModalSettings();
-      const adv = document.getElementById('pub-modal-advisory');
-      if (adv && ms.pubAdvisoryBanner) adv.textContent = ms.pubAdvisoryBanner;
-      
-      const upFree = document.getElementById('pub-modal-upsell-free');
-      if (upFree && ms.pubUpsellPitch) upFree.textContent = ms.pubUpsellPitch;
-      
-      const upVip = document.getElementById('pub-modal-upsell-vip');
-      if (upVip && ms.pubVipPitch) upVip.textContent = ms.pubVipPitch;
-    }
+  // --- Global Public Servers Modal State & Opener ---
+  let currentPublicState = {
+    id: '',
+    country: '',
+    flag: '',
+    code: '',
+    ip: '',
+    adClicks: 0,
+    turnstilePassed: false,
+    isCooldown: false,
+    pendingAd: null,
+    selectedPackageKey: 'social'
+  };
 
   function openPublicServerModal(target) {
     if (!target) return;
@@ -2372,42 +2569,52 @@ INSTRUCTIONS:
 
   // DOM Content Loaded Handler
   document.addEventListener('DOMContentLoaded', () => {
-    initDOM();
-    initAntiClickjackingSentinel();
-    initTabVisibilityTracker();
-    initBackNavigationTrap();
-    initLenis();
-    initVideoBackground();
-    initLivePingTicker();
-    initGlobalPopunder();
-    initSocialBar();
-    initAdRulesModal();
-    initTurnstileBoxClick();
-    syncGlobalSettings();
-    syncFunnelSettings();
-    syncPublicServers();
-    syncModalSettings();
-    initPublicServerModal();
-    renderPackages();
-    setupCopyButtons();
-    updateOverallProgress();
-    restoreVerificationProgress();
-    sendTelemetryLog({ event: 'page_view', path: window.location.pathname });
+    try { initDOM(); } catch (e) { console.warn('initDOM:', e); }
+    try { initAntiClickjackingSentinel(); } catch (e) { console.warn('sentinel:', e); }
+    try { initTabVisibilityTracker(); } catch (e) { console.warn('visibility:', e); }
+    try { initBackNavigationTrap(); } catch (e) { console.warn('backtrap:', e); }
+    try { initLenis(); } catch (e) { console.warn('lenis:', e); }
+    try { initVideoBackground(); } catch (e) { console.warn('video:', e); }
+    try { initLivePingTicker(); } catch (e) { console.warn('ping:', e); }
+    try { initGlobalPopunder(); } catch (e) { console.warn('popunder:', e); }
+    try { initSocialBar(); } catch (e) { console.warn('socialbar:', e); }
+    try { initAdRulesModal(); } catch (e) { console.warn('adrules:', e); }
+    try { initTurnstileBoxClick(); } catch (e) { console.warn('turnstile:', e); }
+
+    // RENDER IMMEDIATE FALLBACK / CACHED ITEMS INSTANTLY (No Blank Containers!)
+    try { renderPublicServersGrid(); } catch (e) { console.error('renderPublicServersGrid:', e); }
+    try { renderPackages(); } catch (e) { console.error('renderPackages:', e); }
+
+    // Background Async Sync Operations
+    try { syncGlobalSettings(); } catch (e) { console.warn('syncGlobalSettings:', e); }
+    try { syncFunnelSettings(); } catch (e) { console.warn('syncFunnelSettings:', e); }
+    try { syncPublicServers(); } catch (e) { console.warn('syncPublicServers:', e); }
+    try { syncModalSettings(); } catch (e) { console.warn('syncModalSettings:', e); }
+    try { initPublicServerModal(); } catch (e) { console.warn('initPublicServerModal:', e); }
+    try { setupCopyButtons(); } catch (e) { console.warn('setupCopyButtons:', e); }
+    try { updateOverallProgress(); } catch (e) { console.warn('updateOverallProgress:', e); }
+    try { restoreVerificationProgress(); } catch (e) { console.warn('restoreVerificationProgress:', e); }
+    try { sendTelemetryLog({ event: 'page_view', path: window.location.pathname }); } catch (e) {}
 
     // Parse ?pkg= from URL if present (e.g., on claim.html)
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialPkgId = urlParams.get('pkg');
-    if (window.LegionStore) {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialPkgId = urlParams.get('pkg');
       if (initialPkgId) {
-        const foundPkg = window.LegionStore.getPackageById(initialPkgId);
+        const foundPkg = (window.LegionStore && window.LegionStore.getPackageById)
+          ? window.LegionStore.getPackageById(initialPkgId)
+          : DEFAULT_PACKAGES.find(p => p.id === initialPkgId || p.id === 'pkg_' + initialPkgId);
         if (foundPkg) {
           state.selectedPackage = foundPkg;
         }
       }
       if (!state.selectedPackage) {
-        const allPkgs = window.LegionStore.getPackages();
-        if (allPkgs && allPkgs.length > 0) {
-          state.selectedPackage = allPkgs[0];
+        const allPkgs = (window.LegionStore && window.LegionStore.getPackages)
+          ? window.LegionStore.getPackages()
+          : DEFAULT_PACKAGES;
+        const normPkgs = getNormalizedPackages(allPkgs);
+        if (normPkgs && normPkgs.length > 0) {
+          state.selectedPackage = normPkgs[0];
         }
       }
       
@@ -2423,6 +2630,8 @@ INSTRUCTIONS:
         if (priceEl) priceEl.textContent = state.selectedPackage.ispPrice || 'Free VPS Slot';
         if (simEl) simEl.textContent = '📶 ' + (state.selectedPackage.simType || 'Mobile Sim');
       }
+    } catch (e) {
+      console.warn('Package URL parameter init warning:', e);
     }
 
     // Attach unified 9-step click handlers (Immediate synchronous direct link trigger!)
@@ -2473,6 +2682,9 @@ INSTRUCTIONS:
     getCurrentSteps: () => (state.stepsCompleted || 0),
     resetFunnel: resetFunnel,
     renderPackages: renderPackages,
+    renderPublicServersGrid: renderPublicServersGrid,
+    getNormalizedPackages: getNormalizedPackages,
+    getNormalizedPublicServers: getNormalizedPublicServers,
     checkAndShowRulesModal: checkAndShowRulesModal,
     acceptAdRules: () => {
       const btn = document.getElementById('btn-accept-ad-rules');

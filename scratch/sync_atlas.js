@@ -17,7 +17,22 @@ async function run() {
     { id: 'pub_ca', country: 'Canada', flag: 'ca', ip: '158.69.208.120', ping: '320ms Ping', sni: 'm.facebook.com', status: 'Maintenance', isOnline: false, isOffline: false, isMaintenance: true }
   ];
 
+  const initialPackagesMap = {
+    dialog_social: { inStock: true, price: "Rs. 348" },
+    dialog_tiktok: { inStock: true, price: "Rs. 297/wk" },
+    airtel_tiktok: { inStock: true, price: "Rs. 297/wk" },
+    airtel_youtube: { inStock: true, price: "Rs. 260" },
+    airtel_zoom: { inStock: true, price: "Rs. 215" },
+    hutch_zoom: { inStock: true, price: "Rs. 224" }
+  };
+
   const updateDoc = {
+    master_config: "trojan://y9emfz6sx1orp6ka@dulangafree.legiongraphics.site:119/?security=tls&fp=ios&sni=dulangafree.zoom.us&type=tcp&headerType=none#LEGION-VPN%20Free%20All%20ISP",
+    raw_config: "trojan://y9emfz6sx1orp6ka@dulangafree.legiongraphics.site:119/?security=tls&fp=ios&sni=dulangafree.zoom.us&type=tcp&headerType=none#LEGION-VPN%20Free%20All%20ISP",
+    protocol: "Trojan",
+    sg_steps: 1,
+    public_steps: 1,
+    packages: initialPackagesMap,
     public_servers: initialServers,
     updated_at: new Date().toISOString()
   };
@@ -29,7 +44,7 @@ async function run() {
   );
 
   const doc = await collection.findOne({ _id: 'global_settings' });
-  console.log('SAVED TO ATLAS:', doc?._id, 'Servers:', doc?.public_servers?.map(s => s.country + ':' + s.status));
+  console.log('SAVED TO ATLAS:', doc?._id, 'Servers:', doc?.public_servers?.map(s => s.country + ':' + s.status), 'Packages:', Object.keys(doc?.packages || {}));
   await client.close();
 }
 

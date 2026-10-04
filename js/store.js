@@ -99,19 +99,36 @@
   function getPackages() {
     try {
       const data = localStorage.getItem(PACKAGES_KEY);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (parsed && typeof parsed === 'object') {
+          return mergePackagesWithMap(DEFAULT_PACKAGES, parsed);
+        }
+      }
     } catch (e) {}
     localStorage.setItem(PACKAGES_KEY, JSON.stringify(DEFAULT_PACKAGES));
     return DEFAULT_PACKAGES;
   }
 
   function savePackages(packages) {
-    localStorage.setItem(PACKAGES_KEY, JSON.stringify(packages));
+    let toSave = packages;
+    if (packages && typeof packages === 'object' && !Array.isArray(packages)) {
+      toSave = mergePackagesWithMap(DEFAULT_PACKAGES, packages);
+    }
+    if (!Array.isArray(toSave) || toSave.length === 0) {
+      toSave = DEFAULT_PACKAGES;
+    }
+    localStorage.setItem(PACKAGES_KEY, JSON.stringify(toSave));
+    return toSave;
   }
 
   function getPackageById(id) {
     const list = getPackages();
-    return list.find(p => p.id === id) || list[0];
+    if (!Array.isArray(list) || list.length === 0) return DEFAULT_PACKAGES[0];
+    const cleanId = id ? id.toString().trim() : '';
+    const found = list.find(p => p && (p.id === cleanId || p.id === ('pkg_' + cleanId) || p.id.replace(/^pkg_/, '') === cleanId));
+    return found || list[0] || DEFAULT_PACKAGES[0];
   }
 
   function togglePackageStock(id) {
@@ -295,9 +312,16 @@
       const data = localStorage.getItem(PUBLIC_SERVERS_KEY);
       if (data) {
         let parsed = JSON.parse(data);
-        // Force remove Spain and Singapore
-        parsed = parsed.filter(s => s.id !== 'pub_es' && s.id !== 'pub_sg');
-        return normalizeServerModes(parsed);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          parsed = Object.values(parsed);
+        }
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Force remove Spain and Singapore
+          parsed = parsed.filter(s => s && s.id !== 'pub_es' && s.id !== 'pub_sg');
+          if (parsed.length > 0) {
+            return normalizeServerModes(parsed);
+          }
+        }
       }
     } catch (e) {}
     localStorage.setItem(PUBLIC_SERVERS_KEY, JSON.stringify(DEFAULT_PUBLIC_SERVERS));
@@ -305,7 +329,14 @@
   }
 
   function savePublicServers(servers) {
-    const normalized = normalizeServerModes(servers);
+    let list = servers;
+    if (servers && typeof servers === 'object' && !Array.isArray(servers)) {
+      list = Object.values(servers);
+    }
+    if (!Array.isArray(list) || list.length === 0) {
+      list = DEFAULT_PUBLIC_SERVERS;
+    }
+    const normalized = normalizeServerModes(list);
     localStorage.setItem(PUBLIC_SERVERS_KEY, JSON.stringify(normalized));
     return normalized;
   }
@@ -498,7 +529,7 @@
     }
 
     // 2. Public Servers
-    if (settings.public_servers && Array.isArray(settings.public_servers) && settings.public_servers.length > 0) {
+    if (settings.public_servers) {
       savePublicServers(settings.public_servers);
     }
 
