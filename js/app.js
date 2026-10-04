@@ -1897,30 +1897,66 @@ INSTRUCTIONS:
     grid.innerHTML = '';
     
     servers.forEach(srv => {
-      const isOnline = srv.status === 'Online';
+      const statusStr = (srv.status || 'Online').trim();
+      const statusLower = statusStr.toLowerCase();
+      const isOnline = statusLower === 'online';
+      const isMaintenance = statusLower === 'maintenance';
+      const isOffline = statusLower === 'offline' || (!isOnline && !isMaintenance);
+
       const card = document.createElement('div');
-      card.className = `m3-surface-2 p-5 rounded-3xl border transition-all flex flex-col justify-between ${isOnline ? 'border-emerald-900/40 hover:border-emerald-500/60' : 'border-red-950/40 opacity-80'}`;
+      let borderClass = 'border-emerald-900/40 hover:border-emerald-500/60';
+      if (isOffline) {
+        borderClass = 'border-red-950/70 bg-surface-100/40 opacity-80';
+      } else if (isMaintenance) {
+        borderClass = 'border-amber-950/70 bg-surface-100/40 opacity-80';
+      }
+      card.className = `m3-surface-2 p-5 rounded-3xl border transition-all flex flex-col justify-between ${borderClass}`;
       
-        const isInstantPublic = (state.publicSteps === 1);
-        const unlockBtnText = isInstantPublic ? '⚡ 1 Ad Instant Unlock →' : '10 Ads Quick Unlock →';
-        card.innerHTML = `
+      const isInstantPublic = (state.publicSteps === 1);
+      const unlockBtnText = isInstantPublic ? '⚡ 1 Ad Instant Unlock →' : '10 Ads Quick Unlock →';
+
+      let pillHtml = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-300 border border-zinc-700 text-amber-400 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> ${srv.ping || '45ms Ping'}
+      </span>`;
+      if (isOffline) {
+        pillHtml = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-red-950/80 border border-red-500/50 text-red-400 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Offline
+        </span>`;
+      } else if (isMaintenance) {
+        pillHtml = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-amber-400 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Maintenance
+        </span>`;
+      }
+
+      let btnHtml = `<button class="js-open-public-btn w-full py-3 rounded-2xl bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer" data-id="${srv.id || srv.country}" data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
+        <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm">
+        <span>${unlockBtnText}</span>
+      </button>`;
+      if (isOffline) {
+        btnHtml = `<button class="w-full py-3 rounded-2xl bg-red-950/30 border border-red-900/50 text-red-400 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80" disabled>
+          <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm opacity-40">
+          <span>🔴 Server Offline</span>
+        </button>`;
+      } else if (isMaintenance) {
+        btnHtml = `<button class="w-full py-3 rounded-2xl bg-amber-950/30 border border-amber-900/50 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80" disabled>
+          <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm opacity-40">
+          <span>🟠 Under Maintenance</span>
+        </button>`;
+      }
+
+      card.innerHTML = `
         <div>
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2.5">
               <img src="https://flagcdn.com/w80/${srv.flag}.png" srcset="https://flagcdn.com/w160/${srv.flag}.png 2x" width="36" height="24" alt="${srv.country} Flag" class="w-9 h-6 object-cover rounded-md shadow-md border border-white/15">
               <span class="text-xs font-bold text-zinc-400 font-mono uppercase tracking-wider">${srv.flag}</span>
             </div>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-300 border border-zinc-700 ${isOnline ? 'text-amber-400' : 'text-red-400'} flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-amber-400 animate-pulse' : 'bg-red-500'}"></span> ${isOnline ? srv.ping : 'Maintenance'}
-            </span>
+            ${pillHtml}
           </div>
           <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">${srv.country}</h3>
-          <div class="text-xs font-mono text-neon mb-4">IP: ${srv.ip}</div>
+          <div class="text-xs font-mono text-neon mb-4">IP: ${srv.ip || '—'}</div>
         </div>
-        <button class="js-open-public-btn w-full py-3 rounded-2xl ${isOnline ? 'bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white' : 'bg-red-950/20 border-red-900/40 text-red-500 cursor-not-allowed'} font-bold text-xs transition-colors flex items-center justify-center gap-2" ${isOnline ? '' : 'disabled'} data-id="${srv.id}" data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
-          <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm ${isOnline ? '' : 'opacity-50'}">
-          <span>${isOnline ? unlockBtnText : 'Offline'}</span>
-        </button>
+        ${btnHtml}
       `;
       grid.appendChild(card);
     });

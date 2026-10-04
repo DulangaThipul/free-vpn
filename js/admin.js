@@ -729,7 +729,21 @@
     table.innerHTML = '';
     
     servers.forEach(srv => {
-      const isOnline = (srv.status || '').toLowerCase() === 'online';
+      const statusNorm = (srv.status || 'Online').trim().toLowerCase();
+      const isOnline = statusNorm === 'online';
+      const isMaintenance = statusNorm === 'maintenance';
+      const isOffline = statusNorm === 'offline' || (!isOnline && !isMaintenance);
+
+      let badgeClass = 'bg-emerald-950 border border-neon/50 text-neon hover:bg-emerald-900';
+      let badgeLabel = 'Online';
+      if (isOffline) {
+        badgeClass = 'bg-red-950 border border-red-500/50 text-red-400 hover:bg-red-900';
+        badgeLabel = 'Offline';
+      } else if (isMaintenance) {
+        badgeClass = 'bg-amber-950 border border-amber-500/50 text-amber-400 hover:bg-amber-900';
+        badgeLabel = 'Maintenance';
+      }
+
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-surface-200/50 transition-colors';
       tr.innerHTML = `
@@ -741,12 +755,8 @@
         <td class="py-3.5 px-4 font-mono text-amber-400">${srv.ping || '—'}</td>
         <td class="py-3.5 px-4 font-mono text-zinc-300 text-[10px]">${srv.sni || '—'}</td>
         <td class="py-3.5 px-4">
-          <button type="button" class="js-toggle-srv-status px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all ${
-            isOnline 
-              ? 'bg-emerald-950 border border-neon/50 text-neon hover:bg-emerald-900' 
-              : 'bg-red-950 border border-red-500/50 text-red-400 hover:bg-red-900'
-          }" data-id="${srv.id || srv.country}" title="Click to toggle Online / Maintenance">
-            ${isOnline ? 'Online' : 'Maintenance'}
+          <button type="button" class="js-toggle-srv-status px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all ${badgeClass}" data-id="${srv.id || srv.country}" title="Click to cycle status: Online -> Offline -> Maintenance">
+            ${badgeLabel}
           </button>
         </td>
         <td class="py-3.5 px-4 text-right">
@@ -773,8 +783,14 @@
         const servers = window.LegionStore.getPublicServers() || [];
         const srv = servers.find(s => s.id === id || s.country === id);
         if (srv) {
-          const currentNorm = (srv.status || '').toLowerCase();
-          srv.status = (currentNorm === 'online') ? 'Maintenance' : 'Online';
+          const currentNorm = (srv.status || 'Online').trim().toLowerCase();
+          if (currentNorm === 'online') {
+            srv.status = 'Offline';
+          } else if (currentNorm === 'offline') {
+            srv.status = 'Maintenance';
+          } else {
+            srv.status = 'Online';
+          }
           pushPublicServersToBackend(servers);
           showAdminToast(`${srv.country} set to ${srv.status}`, "info");
         }
@@ -810,7 +826,10 @@
 
     const statusSelect = document.getElementById('edit-pub-srv-status');
     if (statusSelect) {
-      statusSelect.value = ((srv.status || '').toLowerCase() === 'maintenance') ? 'Maintenance' : 'Online';
+      const sLower = (srv.status || 'Online').trim().toLowerCase();
+      if (sLower === 'maintenance') statusSelect.value = 'Maintenance';
+      else if (sLower === 'offline') statusSelect.value = 'Offline';
+      else statusSelect.value = 'Online';
     }
 
     setVal('edit-pub-srv-social', (srv.configs && srv.configs.social) ? srv.configs.social : '');
