@@ -209,6 +209,7 @@
       const isChecked = chk ? chk.checked : true;
       if (isAuthorized && isChecked && document.visibilityState === 'visible') {
         loadVisitorLogs();
+        loadUserActivityLogs();
       }
     }, 10000);
   }
@@ -223,6 +224,7 @@
     loadFunnelSettings();
     renderPackages();
     renderUsers();
+    setupPublicServersEventDelegation();
     loadPublicServers();
     loadModalSettings();
     loadAdminLogins();
@@ -377,67 +379,175 @@
     });
   }
 
-  // --- Render Users Table ---
-  function renderUsers() {
-    if (!usersTableEl) return;
-    usersTableEl.innerHTML = '';
+  // --- Live User Activity Logs & Ban Controller ---
+  let liveUserLogs = [];
 
-    if (users.length === 0) {
-      usersTableEl.innerHTML = `
+  function formatTimeAgoOrDate(dateStr) {
+    if (!dateStr) return 'Recent';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return 'Just now';
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  async function loadUserActivityLogs() {
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/admin/logs?type=users`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const usersList = data.logs || data.users || [];
+        if (Array.isArray(usersList) && usersList.length > 0) {
+          liveUserLogs = usersList;
+          renderUsersTable(liveUserLogs);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("loadUserActivityLogs notice:", e);
+    }
+
+    // Fallback to local store users if worker has no users yet
+    const localUsers = (window.LegionStore && window.LegionStore.getUsers()) || [];
+    renderUsersTable(localUsers);
+  }
+
+  function renderUsersTable(usersList) {
+    const table = document.getElementById('admin-users-table');
+    if (!table) return;
+    table.innerHTML = '';
+
+    const list = Array.isArray(usersList) ? usersList : [];
+    
+    // Update stat cards
+    const statTotalEl = document.getElementById('stat-total-users') || document.getElementById('stat-users');
+    if (statTotalEl) statTotalEl.textContent = list.length;
+    
+    let bannedCount = 0;
+    list.forEach(u => {
+      const email = (u.email || '').toLowerCase().trim();
+      const isBanned = u.banned || (window.LegionStore && window.LegionStore.isUserBanned(email));
+      if (isBanned) bannedCount++;
+    });
+    const statBannedEl = document.getElementById('stat-banned-users') || document.getElementById('stat-banned');
+    if (statBannedEl) statBannedEl.textContent = bannedCount;
+
+    if (list.length === 0) {
+      table.innerHTML = `
         <tr>
-          <td colspan="7" class="py-8 text-center text-zinc-500">
-            No user logins recorded yet. Users will appear here automatically when they sign in with Google on the main site.
+          <td colspan="6" class="py-8 text-center text-zinc-500">
+            No user sign-ins recorded yet. Users will appear here in real-time when they authenticate with Google.
           </td>
         </tr>
       `;
       return;
     }
 
-    users.forEach(u => {
-      const isBanned = window.LegionStore.isUserBanned(u.email);
-      const tr = document.createElement('tr');
-      tr.className = `hover:bg-surface-200/50 transition-colors ${isBanned ? 'bg-red-950/10' : ''}`;
+    list.forEach(u => {
+      const email = (u.email || '').toLowerCase().trim();
+      const isBanned = u.banned || (window.LegionStore && window.LegionStore.isUserBanned(email));
+      const avatar = u.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}&backgroundColor=060a08`;
+      const name = u.name || 'Legion Member';
+      const firstSignIn = formatTimeAgoOrDate(u.firstSignIn || u.firstLogin || u.createdAt);
+      const lastActivity = formatTimeAgoOrDate(u.lastActivity || u.lastLogin || u.timestamp);
+      const ip = u.ip || '112.134.xxx.xx';
+      const isp = u.isp || (u.country ? `${u.country} (Direct)` : 'Dialog / Mobitel');
+      const countryCode = (u.countryCode || 'lk').toLowerCase();
 
+      const tr = document.createElement('tr');
+      tr.className = `hover:bg-surface-200/50 transition-colors ${isBanned ? 'bg-red-950/15' : ''}`;
       tr.innerHTML = `
         <td class="py-3.5 px-4 flex items-center gap-2.5">
-          <img src="${u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'}" class="w-7 h-7 rounded-full bg-emerald-950 border border-neon/40">
-          <span class="font-semibold text-white">${u.name || 'Anonymous'}</span>
+          <img src="${avatar}" class="w-7 h-7 rounded-full bg-emerald-950 border border-neon/40 flex-shrink-0">
+          <div class="min-w-0">
+            <span class="font-semibold text-white block truncate text-xs sm:text-sm">${name}</span>
+            <span class="font-mono text-[11px] text-zinc-400 block truncate">${email}</span>
+          </div>
         </td>
-        <td class="py-3.5 px-4 font-mono text-zinc-300">${u.email}</td>
-        <td class="py-3.5 px-4 text-zinc-400">${u.firstLogin || 'Recent'}</td>
-        <td class="py-3.5 px-4 text-zinc-400 font-mono">${u.lastLogin || 'Recent'}</td>
-        <td class="py-3.5 px-4 font-mono text-zinc-300">${u.loginCount || 1}</td>
+        <td class="py-3.5 px-4 text-zinc-400 font-mono text-[11px] whitespace-nowrap">${firstSignIn}</td>
+        <td class="py-3.5 px-4 font-mono text-[11px] text-emerald-300 whitespace-nowrap">${lastActivity}</td>
         <td class="py-3.5 px-4">
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          <div class="font-mono text-neon text-[11px]">${ip}</div>
+          <div class="text-zinc-400 text-[10px] truncate max-w-[140px] flex items-center gap-1">
+            <img src="https://flagcdn.com/w20/${countryCode}.png" class="w-3.5 h-2.5 rounded-xs inline-block">
+            <span>${isp}</span>
+          </div>
+        </td>
+        <td class="py-3.5 px-4">
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${
             isBanned 
-              ? 'bg-red-950 border border-red-500/50 text-red-400' 
-              : 'bg-emerald-950 border border-neon/50 text-neon'
+              ? 'bg-red-950 text-red-400 border border-red-500/50' 
+              : 'bg-emerald-950/80 text-neon border border-neon/30'
           }">
             ${isBanned ? 'BANNED' : 'ACTIVE'}
           </span>
         </td>
         <td class="py-3.5 px-4 text-right">
-          <button data-email="${u.email}" class="js-toggle-ban px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          <button type="button" class="js-toggle-ban px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             isBanned 
-              ? 'bg-emerald-900/40 hover:bg-emerald-800 text-neon border border-neon/40' 
-              : 'bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/40'
-          }">
-            ${isBanned ? 'Unban User' : 'Ban User'}
+              ? 'bg-surface-300 hover:bg-surface-200 text-zinc-300 border border-zinc-700' 
+              : 'bg-red-950 hover:bg-red-900 text-red-400 border border-red-500/50'
+          }" data-email="${email}">
+            ${isBanned ? 'Unban' : 'Ban User'}
           </button>
         </td>
       `;
-
-      usersTableEl.appendChild(tr);
+      table.appendChild(tr);
     });
 
-    document.querySelectorAll('.js-toggle-ban').forEach(btn => {
-      btn.addEventListener('click', () => {
+    // Ban / Unban click listener
+    table.querySelectorAll('.js-toggle-ban').forEach(btn => {
+      btn.addEventListener('click', async () => {
         const email = btn.getAttribute('data-email');
-        const isBannedNow = window.LegionStore.toggleBanUser(email);
-        alert(`User ${email} has been ${isBannedNow ? 'BANNED' : 'UNBANNED'}!`);
-        loadDashboardData();
+        if (!email) return;
+
+        const isCurrentlyBanned = window.LegionStore.isUserBanned(email);
+        const newBannedState = !isCurrentlyBanned;
+
+        // Toggle in local store
+        window.LegionStore.toggleBanUser(email);
+
+        // Sync with Cloudflare Worker
+        try {
+          const apiBase = getApiBaseUrl();
+          await fetch(`${apiBase}/api/admin/ban-user`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-pin': DEFAULT_PIN
+            },
+            body: JSON.stringify({
+              pin: DEFAULT_PIN,
+              email: email,
+              banned: newBannedState
+            })
+          });
+        } catch (e) {}
+
+        showAdminToast(`User ${email} has been ${newBannedState ? 'BANNED' : 'UNBANNED'}!`, newBannedState ? 'error' : 'success');
+        loadUserActivityLogs();
       });
     });
+  }
+
+  function renderUsers() {
+    loadUserActivityLogs();
   }
 
   // --- Modal Operations ---
@@ -549,6 +659,7 @@
 
   // --- Public Servers Manager ---
   async function loadPublicServers() {
+    setupPublicServersEventDelegation();
     renderPublicServers();
     try {
       const apiBase = getApiBaseUrl();
@@ -570,8 +681,11 @@
   }
 
   async function pushPublicServersToBackend(servers) {
-    window.LegionStore.savePublicServers(servers);
+    if (window.LegionStore && window.LegionStore.savePublicServers) {
+      window.LegionStore.savePublicServers(servers);
+    }
     renderPublicServers();
+
     try {
       const apiBase = getApiBaseUrl();
       const res = await fetch(`${apiBase}/api/free/admin/public-servers`, {
@@ -585,8 +699,21 @@
           servers: servers
         })
       });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
+
+      // Also ensure global-settings doc gets updated
+      await fetch(`${apiBase}/api/free/admin/global-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          public_servers: servers
+        })
+      }).catch(() => {});
+
+      if (res.ok) {
         showAdminToast("Public servers saved & synced to MongoDB Atlas!", "success");
       }
     } catch (err) {
@@ -598,11 +725,11 @@
     const table = document.getElementById('admin-public-servers-table');
     if (!table) return;
     
-    const servers = window.LegionStore.getPublicServers();
+    const servers = window.LegionStore.getPublicServers() || [];
     table.innerHTML = '';
     
     servers.forEach(srv => {
-      const isOnline = srv.status === 'Online';
+      const isOnline = (srv.status || '').toLowerCase() === 'online';
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-surface-200/50 transition-colors';
       tr.innerHTML = `
@@ -610,68 +737,93 @@
           <img src="https://flagcdn.com/w40/${srv.flag}.png" class="w-5 h-3.5 rounded-sm object-cover">
           <span class="font-bold text-white">${srv.country}</span>
         </td>
-        <td class="py-3.5 px-4 font-mono text-neon text-[11px]">${srv.ip}</td>
-        <td class="py-3.5 px-4 font-mono text-amber-400">${srv.ping}</td>
-        <td class="py-3.5 px-4 font-mono text-zinc-300 text-[10px]">${srv.sni}</td>
+        <td class="py-3.5 px-4 font-mono text-neon text-[11px]">${srv.ip || '—'}</td>
+        <td class="py-3.5 px-4 font-mono text-amber-400">${srv.ping || '—'}</td>
+        <td class="py-3.5 px-4 font-mono text-zinc-300 text-[10px]">${srv.sni || '—'}</td>
         <td class="py-3.5 px-4">
-          <button class="js-toggle-srv-status px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          <button type="button" class="js-toggle-srv-status px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all ${
             isOnline 
               ? 'bg-emerald-950 border border-neon/50 text-neon hover:bg-emerald-900' 
               : 'bg-red-950 border border-red-500/50 text-red-400 hover:bg-red-900'
-          }" data-id="${srv.id}">
-            ${srv.status}
+          }" data-id="${srv.id || srv.country}" title="Click to toggle Online / Maintenance">
+            ${isOnline ? 'Online' : 'Maintenance'}
           </button>
         </td>
         <td class="py-3.5 px-4 text-right">
-          <button class="js-edit-srv px-3 py-1.5 rounded-xl bg-surface-300 hover:bg-surface-200 text-zinc-300 border border-zinc-700 text-xs font-bold transition-all" data-id="${srv.id}">
+          <button type="button" class="js-edit-srv px-3 py-1.5 rounded-xl bg-surface-300 hover:bg-surface-200 text-zinc-300 border border-zinc-700 text-xs font-bold transition-all cursor-pointer" data-id="${srv.id || srv.country}">
             Edit
           </button>
         </td>
       `;
       table.appendChild(tr);
     });
+  }
 
-    document.querySelectorAll('.js-toggle-srv-status').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        const srv = servers.find(s => s.id === id);
-        if (srv) {
-          srv.status = srv.status === 'Online' ? 'Maintenance' : 'Online';
-          pushPublicServersToBackend(servers);
-        }
-      });
-    });
+  function setupPublicServersEventDelegation() {
+    const table = document.getElementById('admin-public-servers-table');
+    if (!table || table._hasPublicServerDelegation) return;
+    table._hasPublicServerDelegation = true;
 
-    document.querySelectorAll('.js-edit-srv').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    table.addEventListener('click', (e) => {
+      const toggleBtn = e.target.closest('.js-toggle-srv-status');
+      if (toggleBtn) {
+        e.preventDefault();
         e.stopPropagation();
-        const id = btn.getAttribute('data-id');
-        const srv = servers.find(s => s.id === id);
+        const id = toggleBtn.getAttribute('data-id');
+        const servers = window.LegionStore.getPublicServers() || [];
+        const srv = servers.find(s => s.id === id || s.country === id);
         if (srv) {
-          const setVal = (elemId, val) => {
-            const el = document.getElementById(elemId);
-            if (el) el.value = val || '';
-          };
-          setVal('edit-pub-srv-id', srv.id);
-          const title = document.getElementById('pub-srv-modal-title');
-          if (title) title.textContent = `Edit ${srv.country} Node`;
-          setVal('edit-pub-srv-ip', srv.ip);
-          setVal('edit-pub-srv-ping', srv.ping);
-          
-          setVal('edit-pub-srv-social', (srv.configs && srv.configs.social) ? srv.configs.social : '');
-          setVal('edit-pub-srv-tiktok', (srv.configs && srv.configs.tiktok) ? srv.configs.tiktok : '');
-          setVal('edit-pub-srv-youtube', (srv.configs && srv.configs.youtube) ? srv.configs.youtube : '');
-          setVal('edit-pub-srv-zoom', (srv.configs && srv.configs.zoom) ? srv.configs.zoom : '');
-          
-          const modal = document.getElementById('public-server-edit-modal');
-          if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            modal.style.display = 'flex';
-          }
+          const currentNorm = (srv.status || '').toLowerCase();
+          srv.status = (currentNorm === 'online') ? 'Maintenance' : 'Online';
+          pushPublicServersToBackend(servers);
+          showAdminToast(`${srv.country} set to ${srv.status}`, "info");
         }
-      });
+        return;
+      }
+
+      const editBtn = e.target.closest('.js-edit-srv');
+      if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = editBtn.getAttribute('data-id');
+        const servers = window.LegionStore.getPublicServers() || [];
+        const srv = servers.find(s => s.id === id || s.country === id);
+        if (srv) {
+          openPublicServerEditModal(srv);
+        }
+        return;
+      }
     });
+  }
+
+  function openPublicServerEditModal(srv) {
+    const setVal = (elemId, val) => {
+      const el = document.getElementById(elemId);
+      if (el) el.value = val || '';
+    };
+    setVal('edit-pub-srv-id', srv.id || srv.country);
+    const title = document.getElementById('pub-srv-modal-title');
+    if (title) title.textContent = `Edit ${srv.country} Node`;
+    setVal('edit-pub-srv-ip', srv.ip);
+    setVal('edit-pub-srv-ping', srv.ping);
+    setVal('edit-pub-srv-sni', srv.sni || 'm.facebook.com');
+
+    const statusSelect = document.getElementById('edit-pub-srv-status');
+    if (statusSelect) {
+      statusSelect.value = ((srv.status || '').toLowerCase() === 'maintenance') ? 'Maintenance' : 'Online';
+    }
+
+    setVal('edit-pub-srv-social', (srv.configs && srv.configs.social) ? srv.configs.social : '');
+    setVal('edit-pub-srv-tiktok', (srv.configs && srv.configs.tiktok) ? srv.configs.tiktok : '');
+    setVal('edit-pub-srv-youtube', (srv.configs && srv.configs.youtube) ? srv.configs.youtube : '');
+    setVal('edit-pub-srv-zoom', (srv.configs && srv.configs.zoom) ? srv.configs.zoom : '');
+
+    const modal = document.getElementById('public-server-edit-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      modal.style.display = 'flex';
+    }
   }
 
   function closePublicServerModal() {
@@ -686,21 +838,27 @@
   function handlePublicServerEditSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('edit-pub-srv-id').value;
-    const servers = window.LegionStore.getPublicServers();
-    const srv = servers.find(s => s.id === id);
+    const servers = window.LegionStore.getPublicServers() || [];
+    const srv = servers.find(s => s.id === id || s.country === id);
     if (srv) {
-      srv.ip = document.getElementById('edit-pub-srv-ip').value.trim();
-      srv.ping = document.getElementById('edit-pub-srv-ping').value.trim();
-      
+      srv.ip = (document.getElementById('edit-pub-srv-ip').value || '').trim();
+      srv.ping = (document.getElementById('edit-pub-srv-ping').value || '').trim();
+
+      const sniEl = document.getElementById('edit-pub-srv-sni');
+      if (sniEl) srv.sni = (sniEl.value || '').trim();
+
+      const statusEl = document.getElementById('edit-pub-srv-status');
+      if (statusEl) srv.status = (statusEl.value || '').trim();
+
       if (!srv.configs) srv.configs = {};
-      srv.configs.social = document.getElementById('edit-pub-srv-social').value.trim();
-      srv.configs.tiktok = document.getElementById('edit-pub-srv-tiktok').value.trim();
-      srv.configs.youtube = document.getElementById('edit-pub-srv-youtube').value.trim();
-      srv.configs.zoom = document.getElementById('edit-pub-srv-zoom').value.trim();
-      
+      srv.configs.social = (document.getElementById('edit-pub-srv-social').value || '').trim();
+      srv.configs.tiktok = (document.getElementById('edit-pub-srv-tiktok').value || '').trim();
+      srv.configs.youtube = (document.getElementById('edit-pub-srv-youtube').value || '').trim();
+      srv.configs.zoom = (document.getElementById('edit-pub-srv-zoom').value || '').trim();
+
       pushPublicServersToBackend(servers);
       closePublicServerModal();
-      showAdminToast("Public Server Config Saved!", "success");
+      showAdminToast(`Server ${srv.country} updated & synced!`, "success");
     }
   }
 
@@ -814,62 +972,6 @@
       }
       alert(`⚠️ Saved locally, but MongoDB Atlas update failed:\n${err.message}`);
     }
-  }
-
-  // --- Users Manager ---
-  function renderUsers() {
-    const table = document.getElementById('admin-users-table');
-    if (!table) return;
-    table.innerHTML = '';
-    
-    const users = window.LegionStore.getUsers() || [];
-    document.getElementById('stat-total-users').textContent = users.length;
-    
-    let bannedCount = 0;
-
-    users.forEach(u => {
-      const isBanned = window.LegionStore.isUserBanned(u.email);
-      if (isBanned) bannedCount++;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
-          <img src="${u.avatar}" class="w-6 h-6 rounded-full bg-surface-300">
-          ${u.name}
-        </td>
-        <td class="py-3.5 px-4 text-zinc-400">${u.email}</td>
-        <td class="py-3.5 px-4 text-zinc-500">${u.createdAt || u.lastLogin || 'Unknown'}</td>
-        <td class="py-3.5 px-4 text-zinc-400">${u.lastLogin || 'Unknown'}</td>
-        <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded-md bg-surface-300 text-white font-mono">${u.loginCount || 1}</span></td>
-        <td class="py-3.5 px-4">
-          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${isBanned ? 'bg-red-950 text-red-400 border border-red-500/50' : 'bg-neon/10 text-neon border border-neon/30'}">
-            ${isBanned ? 'BANNED' : 'ACTIVE'}
-          </span>
-        </td>
-        <td class="py-3.5 px-4 text-right">
-          <button class="js-toggle-ban px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-            isBanned 
-              ? 'bg-surface-300 hover:bg-surface-200 text-zinc-300 border border-zinc-700' 
-              : 'bg-red-950 hover:bg-red-900 text-red-400 border border-red-500/50'
-          }" data-email="${u.email}">
-            ${isBanned ? 'Unban' : 'Ban User'}
-          </button>
-        </td>
-      `;
-      table.appendChild(tr);
-    });
-
-    document.getElementById('stat-banned-users').textContent = bannedCount;
-
-    document.querySelectorAll('.js-toggle-ban').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const email = btn.getAttribute('data-email');
-        if (email) {
-          window.LegionStore.toggleBanUser(email);
-          renderUsers();
-        }
-      });
-    });
   }
 
   // --- Singapore Master VPN Config Management ---

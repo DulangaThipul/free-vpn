@@ -1514,6 +1514,28 @@
       }
       return false;
     }
+
+    const email = (user.email || state.userEmail || '').trim().toLowerCase();
+    const isGmail = /^[a-z0-9](\.?[a-z0-9]){4,}@gmail\.com$/i.test(email);
+    if (!isGmail) {
+      if (window.LegionAuth && window.LegionAuth.showInvalidEmailModal) {
+        window.LegionAuth.showInvalidEmailModal();
+      } else {
+        showWarningPopupModal({
+          titleSi: "⚠️ අවලංගු Email ලිපිනයක්!",
+          titleEn: "⚠️ Invalid Email Provider",
+          descSi: "Temporary / Disposable mail ලිපින භාවිතය සම්පූර්ණයෙන්ම තහනම්ය. කරුණාකර ඔබගේ නිල @gmail.com ගිණුමෙන් Sign in වන්න.",
+          descEn: "⚠️ Invalid Email Provider: Temporary / Disposable mail addresses are strictly prohibited. Please sign in using your official @gmail.com account to claim high-speed Singapore nodes.",
+          btnSi: "මම තේරුම් ගත්තා (OK)",
+          btnEn: "Understood (OK)"
+        });
+      }
+      if (window.LegionAuth && window.LegionAuth.logout) {
+        window.LegionAuth.logout();
+      }
+      return false;
+    }
+
     return true;
   }
 
@@ -1657,6 +1679,24 @@
       v2ray_link: masterConfig,
       package_id: pkgKey
     };
+
+    // Send background user claim telemetry
+    try {
+      const user = window.LegionAuth ? window.LegionAuth.getUser() : null;
+      const userEmail = (user ? user.email : state.userEmail || '').trim().toLowerCase();
+      if (userEmail) {
+        const apiBase = getApiBaseUrl();
+        fetch(`${apiBase}/api/telemetry/user-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: userEmail,
+            action: 'Node Claim',
+            steps: state.stepsCompleted || (state.sgSteps === 1 ? 1 : 9)
+          })
+        }).catch(() => {});
+      }
+    } catch (e) {}
 
     saveVerificationProgress();
     sendTelemetryLog({
@@ -2351,6 +2391,8 @@ INSTRUCTIONS:
   window.LegionApp = {
     showToast: showToast,
     showWarningModal: showWarningPopupModal,
+    showWarningPopupModal: showWarningPopupModal,
+    getCurrentSteps: () => (state.stepsCompleted || 0),
     resetFunnel: resetFunnel,
     renderPackages: renderPackages,
     checkAndShowRulesModal: checkAndShowRulesModal,

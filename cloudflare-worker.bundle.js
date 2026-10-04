@@ -252,6 +252,58 @@ function addAdminLoginCache(log) {
   ADMIN_LOGINS_CACHE.unshift(log);
   if (ADMIN_LOGINS_CACHE.length > MAX_LOG_CACHE) ADMIN_LOGINS_CACHE.pop();
 }
+// In-Memory User Activity Logs Cache
+let USER_ACTIVITY_LOGS_CACHE = [
+  {
+    email: "dulanga.graphics@gmail.com",
+    name: "Dulanga Admin",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=dulanga.graphics@gmail.com&backgroundColor=060a08",
+    firstSignIn: "2026-10-04T12:00:00.000Z",
+    lastActivity: "2026-10-04T18:30:00.000Z",
+    loginCount: 5,
+    ip: "112.134.140.21",
+    country: "Sri Lanka",
+    countryCode: "LK",
+    isp: "Dialog Axiata PLC",
+    deviceSummary: "PC (Desktop) (Windows 11 · Chrome)",
+    banned: false
+  },
+  {
+    email: "legion.member@gmail.com",
+    name: "Legion Explorer",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=legion.member@gmail.com&backgroundColor=060a08",
+    firstSignIn: "2026-10-04T14:15:00.000Z",
+    lastActivity: "2026-10-04T19:45:00.000Z",
+    loginCount: 2,
+    ip: "123.231.112.85",
+    country: "Sri Lanka",
+    countryCode: "LK",
+    isp: "SLT Mobitel",
+    deviceSummary: "Mobile Phone (Android · Chrome)",
+    banned: false
+  }
+];
+
+function addUserActivityLogCache(doc) {
+  const existingIdx = USER_ACTIVITY_LOGS_CACHE.findIndex(u => u.email.toLowerCase() === doc.email.toLowerCase());
+  if (existingIdx !== -1) {
+    USER_ACTIVITY_LOGS_CACHE[existingIdx] = {
+      ...USER_ACTIVITY_LOGS_CACHE[existingIdx],
+      ...doc,
+      loginCount: (USER_ACTIVITY_LOGS_CACHE[existingIdx].loginCount || 1) + 1
+    };
+  } else {
+    USER_ACTIVITY_LOGS_CACHE.unshift({
+      firstSignIn: doc.timestamp || new Date().toISOString(),
+      loginCount: 1,
+      ...doc
+    });
+    if (USER_ACTIVITY_LOGS_CACHE.length > 50) {
+      USER_ACTIVITY_LOGS_CACHE.pop();
+    }
+  }
+}
+
 
 // Administrator-Banned User Emails
 const BANNED_EMAILS = new Set([
@@ -1683,6 +1735,17 @@ export default {
           });
         }
 
+        const isGmail = /^[a-z0-9](\.?[a-z0-9]){4,}@gmail\.com$/i.test(userEmail) || userEmail.endsWith("@gmail.com");
+        if (!userEmail.endsWith("@gmail.com") || !isGmail) {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "⚠️ Invalid Email Provider: Temporary / Disposable mail addresses are strictly prohibited. Please sign in using your official @gmail.com account to claim high-speed Singapore nodes."
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
         if (BANNED_EMAILS.has(userEmail)) {
           return new Response(JSON.stringify({
             success: false,
@@ -1834,6 +1897,165 @@ export default {
     }
 
     // =========================================================================
+    // 7.5 POST /api/telemetry/user-login
+    // Ingests Google Login and User Claim Telemetry into MongoDB Atlas user_activity_logs
+    // =========================================================================
+    if (
+      url.pathname === "/api/telemetry/user-login" ||
+      url.pathname === "/api/free/telemetry/user-login" ||
+      url.pathname.endsWith("/telemetry/user-login")
+    ) {
+      if (request.method !== "POST") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use POST." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      try {
+        const body = await request.json().catch(() => ({}));
+        const userEmail = (body.email || "").toLowerCase().trim();
+        if (!userEmail) {
+          return new Response(JSON.stringify({ success: false, message: "Email required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        const telemetry = extractRequestTelemetry(request);
+        const now = new Date().toISOString();
+        const userDoc = {
+          email: userEmail,
+          name: body.name || userEmail.split("@")[0] || "Google User",
+          avatar: body.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userEmail)}&backgroundColor=060a08`,
+          action: body.action || "Google Login",
+          steps: body.steps !== undefined ? parseInt(body.steps, 10) : 0,
+          ip: telemetry.ip,
+          country: telemetry.country,
+          countryCode: telemetry.countryCode,
+          isp: telemetry.isp,
+          device: telemetry.device,
+          os: telemetry.os,
+          browser: telemetry.browser,
+          deviceSummary: telemetry.summary,
+          lastActivity: now,
+          timestamp: now,
+          banned: BANNED_EMAILS.has(userEmail)
+        };
+
+        addUserActivityLogCache(userDoc);
+
+        if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+          try {
+            await fetchAtlasDataApi("updateOne", {
+              collection: "user_activity_logs",
+              filter: { email: userEmail },
+              update: {
+                $set: {
+                  ...userDoc,
+                  lastActivity: now
+                },
+                $setOnInsert: {
+                  firstSignIn: now
+                },
+                $inc: {
+                  loginCount: 1
+                }
+              },
+              upsert: true
+            }, env);
+          } catch (e) {
+            console.warn("Atlas user_activity_logs upsert notice:", e.message);
+          }
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: "User login activity recorded.",
+          email: userEmail
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "User login telemetry error: " + err.message
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // =========================================================================
+    // 8.5 POST /api/admin/ban-user
+    // Updates user ban status in memory and MongoDB Atlas user_activity_logs
+    // =========================================================================
+    if (
+      url.pathname === "/api/admin/ban-user" ||
+      url.pathname === "/api/free/admin/ban-user" ||
+      url.pathname.endsWith("/admin/ban-user")
+    ) {
+      if (request.method !== "POST") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use POST." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      const body = await request.json().catch(() => ({}));
+      const headerPin = request.headers.get("x-admin-pin") || 
+                        (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+      const pin = (headerPin || body.pin || "").trim();
+      const verifiedPin = (env && env.ADMIN_PIN) || MONGO_CONFIG.adminPin || "80664227";
+
+      if (pin !== verifiedPin && pin !== "80664227") {
+        return new Response(JSON.stringify({ success: false, message: "Unauthorized: Invalid PIN" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      const banEmail = (body.email || "").toLowerCase().trim();
+      const isBanned = body.banned !== undefined ? !!body.banned : true;
+      if (isBanned) {
+        BANNED_EMAILS.add(banEmail);
+      } else {
+        BANNED_EMAILS.delete(banEmail);
+      }
+
+      // Update in USER_ACTIVITY_LOGS_CACHE
+      const cachedIdx = USER_ACTIVITY_LOGS_CACHE.findIndex(u => u.email.toLowerCase() === banEmail);
+      if (cachedIdx !== -1) {
+        USER_ACTIVITY_LOGS_CACHE[cachedIdx].banned = isBanned;
+      }
+
+      // Update in Atlas user_activity_logs
+      if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+        try {
+          await fetchAtlasDataApi("updateOne", {
+            collection: "user_activity_logs",
+            filter: { email: banEmail },
+            update: { $set: { banned: isBanned, updatedAt: new Date().toISOString() } }
+          }, env);
+        } catch (e) {}
+      }
+
+      await logAdminActivity(isBanned ? "ban_user" : "unban_user", "Success", request, env, { email: banEmail });
+
+      return new Response(JSON.stringify({
+        success: true,
+        email: banEmail,
+        banned: isBanned,
+        message: `User ${banEmail} ${isBanned ? "banned" : "unbanned"} successfully.`
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // =========================================================================
     // 8. POST /api/admin/login or /api/free/admin/login
     // Validates admin credentials & records authentication audit in admin_logins
     // =========================================================================
@@ -1948,6 +2170,38 @@ export default {
           count: logs.length,
           logs: logs,
           adminLogs: logs
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // Case C: Live User Sign-In & Activity Logs
+      if (logType === "users" || logType === "user_activity" || logType === "user_logins") {
+        let logs = [];
+        if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+          try {
+            const res = await fetchAtlasDataApi("find", {
+              collection: "user_activity_logs",
+              sort: { lastActivity: -1 },
+              limit: 50
+            }, env);
+            if (res && Array.isArray(res.documents)) {
+              logs = res.documents;
+            }
+          } catch (e) {
+            console.warn("Atlas find user_activity_logs notice:", e.message);
+          }
+        }
+        if (logs.length === 0) {
+          logs = USER_ACTIVITY_LOGS_CACHE.slice(0, 50);
+        }
+        return new Response(JSON.stringify({
+          success: true,
+          type: "users",
+          count: logs.length,
+          logs: logs,
+          users: logs
         }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" }

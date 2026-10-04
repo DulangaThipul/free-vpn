@@ -108,9 +108,34 @@
     }
   }
 
+  function isValidGmail(rawEmail) {
+    const email = (rawEmail || '').trim().toLowerCase();
+    return /^[a-z0-9](\.?[a-z0-9]){4,}@gmail\.com$/i.test(email);
+  }
+
+  function showInvalidEmailModal() {
+    if (window.LegionApp && window.LegionApp.showWarningPopupModal) {
+      window.LegionApp.showWarningPopupModal({
+        titleSi: "⚠️ අවලංගු Email ලිපිනයක්!",
+        titleEn: "⚠️ Invalid Email Provider",
+        descSi: "Temporary / Disposable mail ලිපින භාවිතය සම්පූර්ණයෙන්ම තහනම්ය. කරුණාකර ඔබගේ නිල @gmail.com ගිණුමෙන් Sign in වන්න.",
+        descEn: "⚠️ Invalid Email Provider: Temporary / Disposable mail addresses are strictly prohibited. Please sign in using your official @gmail.com account to claim high-speed Singapore nodes.",
+        btnSi: "මම තේරුම් ගත්තා (OK)",
+        btnEn: "Understood (OK)"
+      });
+    } else {
+      alert("⚠️ Invalid Email Provider: Temporary / Disposable mail addresses are strictly prohibited. Please sign in using your official @gmail.com account to claim high-speed Singapore nodes.");
+    }
+  }
+
   async function simulateGoogleSignIn(customEmail, customName) {
     const name = customName || "Google Explorer";
-    const email = (customEmail || "user@gmail.com").toLowerCase().trim();
+    const email = (customEmail || "").trim().toLowerCase();
+
+    if (!isValidGmail(email)) {
+      showInvalidEmailModal();
+      return;
+    }
 
     // 1. Local Store Ban Check
     if (window.LegionStore && window.LegionStore.isUserBanned(email)) {
@@ -153,6 +178,23 @@
 
     setCurrentUser(user);
     closeLoginModal();
+
+    // Ingest Google Login Telemetry
+    try {
+      const config = window.LEGION_CONFIG || {};
+      const apiBase = config.API_BASE_URL || (config.API_ENDPOINT ? config.API_ENDPOINT.replace(/\/claim$/, '') : 'https://freevpn.dulangathipul.workers.dev');
+      fetch(`${apiBase}/api/telemetry/user-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          name: name,
+          avatar: avatar,
+          action: 'Google Login',
+          steps: (window.LegionApp && window.LegionApp.getCurrentSteps) ? window.LegionApp.getCurrentSteps() : 0
+        })
+      }).catch(() => {});
+    } catch (e) {}
     
     if (window.LegionApp && window.LegionApp.showToast) {
       window.LegionApp.showToast(`Signed in as ${user.name}! 10-Step claim unlocked.`, "success");
@@ -217,12 +259,8 @@
           return;
         }
 
-        if (!email.endsWith('@gmail.com')) {
-          if (window.LegionApp && window.LegionApp.showToast) {
-            window.LegionApp.showToast("Invalid Email! You must use a valid @gmail.com address.", "error");
-          } else {
-            alert("Invalid Email! You must use a valid @gmail.com address.");
-          }
+        if (!isValidGmail(email)) {
+          showInvalidEmailModal();
           return;
         }
 
@@ -235,6 +273,8 @@
     getUser: getCurrentUser,
     openLoginModal: openLoginModal,
     logout: logout,
-    simulateGoogleSignIn: simulateGoogleSignIn
+    simulateGoogleSignIn: simulateGoogleSignIn,
+    isValidGmail: isValidGmail,
+    showInvalidEmailModal: showInvalidEmailModal
   };
 })();
