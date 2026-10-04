@@ -236,11 +236,18 @@ function parseUserAgent(ua) {
   if (!ua) return { device: "Unknown", os: "Unknown", browser: "Unknown", summary: "Unknown Device" };
   const u = ua.toLowerCase();
 
-  let device = "Desktop";
-  if (/mobile|android|iphone|ipod|blackberry|opera mini|iemobile/i.test(u)) {
-    device = "Mobile";
-  } else if (/ipad|tablet/i.test(u)) {
-    device = "Tablet";
+  const isIPad = /ipad/i.test(u);
+  const isAndroidTablet = u.includes("android") && !u.includes("mobile");
+  const isTablet = isIPad || isAndroidTablet || /tablet|playbook|silk|kindle/i.test(u);
+  const isMobile = !isTablet && (/mobile|iphone|ipod|blackberry|opera mini|iemobile|wpdesktop/i.test(u) || (u.includes("android") && u.includes("mobile")));
+
+  let device = "PC (Desktop)";
+  if (isTablet) {
+    device = "Tablet (Tab)";
+  } else if (isMobile) {
+    device = "Mobile Phone";
+  } else {
+    device = "PC (Desktop)";
   }
 
   let os = "Unknown";
@@ -387,6 +394,17 @@ async function logVisitorActivity(eventPayload, request, env) {
     progressSummary: eventPayload.progressSummary || (eventPayload.totalAdsVerified ? `${eventPayload.totalAdsVerified}/100 Ads` : `Step ${eventPayload.step || 1}`),
     details: eventPayload.details || null
   };
+
+  if (eventPayload.deviceType === 'tablet') {
+    logDoc.device = 'Tablet (Tab)';
+    logDoc.deviceSummary = `Tablet (Tab) (${telemetry.os} · ${telemetry.browser})`;
+  } else if (eventPayload.deviceType === 'mobile') {
+    logDoc.device = 'Mobile Phone';
+    logDoc.deviceSummary = `Mobile Phone (${telemetry.os} · ${telemetry.browser})`;
+  } else if (eventPayload.deviceType === 'pc') {
+    logDoc.device = 'PC (Desktop)';
+    logDoc.deviceSummary = `PC (Desktop) (${telemetry.os} · ${telemetry.browser})`;
+  }
 
   addVisitorLogCache(logDoc);
 

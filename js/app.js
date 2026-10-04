@@ -19,14 +19,70 @@
 (function () {
   'use strict';
 
-  // --- BULLETPROOF MOBILE AD POPUP & ANTI-HIJACKING GUARD ---
-  // Forces all window.open calls across any script or third-party ad to open strictly in a new tab with noopener,noreferrer
-  const _origWindowOpen = window.open;
+  // --- DEVICE INTELLIGENCE & AD NAVIGATION CONTROLLER ---
+  // If window.LegionDevice is not already initialized, provide self-contained device intelligence
+  const LegionDevice = window.LegionDevice || (function() {
+    const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+    const platform = (navigator.platform || '').toLowerCase();
+    const touchPoints = navigator.maxTouchPoints || 0;
+    const width = Math.min(window.innerWidth || 0, window.screen ? window.screen.width : 0) || window.innerWidth || 0;
+
+    const isAndroidPhone = ua.includes('android') && ua.includes('mobile');
+    const isIPad = /ipad/i.test(ua) || ((ua.includes('macintosh') || platform === 'macintel') && touchPoints > 1);
+    const isAndroidTablet = ua.includes('android') && !ua.includes('mobile');
+    const hasTabletToken = /tablet|playbook|silk|kindle/i.test(ua);
+
+    let dev = 'pc';
+    if (isIPad || isAndroidTablet || hasTabletToken) {
+      dev = 'tablet';
+    } else if (
+      isAndroidPhone ||
+      /iphone|ipod|blackberry|opera mini|iemobile|wpdesktop/i.test(ua) ||
+      (/mobile/i.test(ua) && !isIPad && !isAndroidTablet)
+    ) {
+      dev = 'mobile';
+    }
+
+    return {
+      getType: () => dev,
+      type: dev,
+      isPC: () => dev === 'pc',
+      isTablet: () => dev === 'tablet',
+      isMobile: () => dev === 'mobile',
+      isMobileOrTablet: () => dev === 'mobile' || dev === 'tablet',
+      openAdInNewTabPC: (url) => {
+        if (!url || url === '#' || url.startsWith('javascript:')) return;
+        try {
+          const a = document.createElement('a');
+          a.href = url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 150);
+          return null;
+        } catch (e) {}
+        try {
+          const win = window.open(url, '_blank');
+          if (win) { try { win.opener = null; } catch (err) {} return win; }
+        } catch (e) {}
+      }
+    };
+  })();
+  window.LegionDevice = LegionDevice;
+
+  // Global window.open wrapper respecting platform rules
+  const _origWindowOpen = window._legionOrigWindowOpen || window.open;
   window.open = function (url, target, features) {
+    if (LegionDevice.isPC()) {
+      return LegionDevice.openAdInNewTabPC(url);
+    }
+    // Mobile and Tablet: Keep existing logic exactly as is!
     return _origWindowOpen.call(window, url, '_blank', 'noopener,noreferrer');
   };
 
-  // Prevent rogue external navigation via window.location.assign
+  // Prevent rogue external navigation via window.location.assign and replace
   try {
     const _origAssign = window.location.assign;
     window.location.assign = function(url) {
@@ -34,11 +90,34 @@
         const u = new URL(url, window.location.href);
         if (u.origin !== window.location.origin) {
           console.warn("Diverted external location.assign to new tab:", url);
-          window.open(url, '_blank', 'noopener,noreferrer');
+          if (LegionDevice.isPC()) {
+            LegionDevice.openAdInNewTabPC(url);
+          } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
           return;
         }
       } catch (e) {}
       if (typeof _origAssign === 'function') _origAssign.call(window.location, url);
+    };
+  } catch (e) {}
+
+  try {
+    const _origReplace = window.location.replace;
+    window.location.replace = function(url) {
+      try {
+        const u = new URL(url, window.location.href);
+        if (u.origin !== window.location.origin) {
+          console.warn("Diverted external location.replace to new tab:", url);
+          if (LegionDevice.isPC()) {
+            LegionDevice.openAdInNewTabPC(url);
+          } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+          return;
+        }
+      } catch (e) {}
+      if (typeof _origReplace === 'function') _origReplace.call(window.location, url);
     };
   } catch (e) {}
 
@@ -227,6 +306,7 @@
         packageId: pkg.id || pkg.key || eventData.packageId || null,
         packageTitle: pkg.title || eventData.packageTitle || null,
         userEmail: user ? user.email : (eventData.userEmail || null),
+        deviceType: (window.LegionDevice ? window.LegionDevice.getType() : 'pc'),
         details: eventData.details || null,
         timestamp: new Date().toISOString(),
         ...eventData
@@ -511,10 +591,14 @@
     const url = customUrl || ads.POPUNDER_URL || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
 
     if (url && url !== "#") {
-      try {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      } catch (err) {
-        console.warn("Popunder window open blocked:", err);
+      if (window.LegionDevice && window.LegionDevice.isPC()) {
+        window.LegionDevice.openAdInNewTabPC(url);
+      } else {
+        try {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        } catch (err) {
+          console.warn("Popunder window open blocked:", err);
+        }
       }
     }
   }
@@ -736,7 +820,14 @@
     const link = getDirectLink(stepNumber);
     if (!link || link === "#") return;
 
-    // 1. Direct window.open on trusted user gesture guarantees a new tab in mobile & desktop browsers
+    // On PC: Strictly enforce opening in a clean new tab without popup flags or parent redirection
+    if (window.LegionDevice && window.LegionDevice.isPC()) {
+      window.LegionDevice.openAdInNewTabPC(link);
+      return;
+    }
+
+    // Mobile & Tablet: Preserves existing verified mobile behavior
+    // 1. Direct window.open on trusted user gesture guarantees a new tab in mobile browsers
     try {
       const win = window.open(link, '_blank', 'noopener,noreferrer');
       if (win) {
