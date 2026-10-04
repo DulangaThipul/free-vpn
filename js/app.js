@@ -19,6 +19,48 @@
 (function () {
   'use strict';
 
+  // --- BULLETPROOF MOBILE AD POPUP & ANTI-HIJACKING GUARD ---
+  // Forces all window.open calls across any script or third-party ad to open strictly in a new tab with noopener,noreferrer
+  const _origWindowOpen = window.open;
+  window.open = function (url, target, features) {
+    return _origWindowOpen.call(window, url, '_blank', 'noopener,noreferrer');
+  };
+
+  // Prevent rogue external navigation via window.location.assign
+  try {
+    const _origAssign = window.location.assign;
+    window.location.assign = function(url) {
+      try {
+        const u = new URL(url, window.location.href);
+        if (u.origin !== window.location.origin) {
+          console.warn("Diverted external location.assign to new tab:", url);
+          window.open(url, '_blank', 'noopener,noreferrer');
+          return;
+        }
+      } catch (e) {}
+      if (typeof _origAssign === 'function') _origAssign.call(window.location, url);
+    };
+  } catch (e) {}
+
+  // Enforce target="_blank" and rel="noopener noreferrer" on external anchor clicks
+  document.addEventListener('click', (e) => {
+    let el = e.target;
+    while (el && el !== document.body) {
+      if (el.tagName === 'A' && el.href) {
+        try {
+          const parsed = new URL(el.href, window.location.href);
+          if (parsed.origin !== window.location.origin && !el.href.startsWith('javascript:')) {
+            el.target = '_blank';
+            el.rel = 'noopener noreferrer';
+          }
+        } catch (err) {}
+        break;
+      }
+      el = el.parentElement;
+    }
+  }, true);
+
+
   // Step Quotas configuration (Grand Total: exactly 100 Ad Interactions)
   const STEP_QUOTAS = {
     1: 10,
@@ -65,6 +107,144 @@
 
   // DOM Elements cache
   let dom = {};
+
+
+  // --- BULLETPROOF PROGRESS PERSISTENCE & TELEMETRY PIPELINE ---
+  const PROGRESS_STORAGE_KEY = 'legion_verification_progress';
+
+  function saveVerificationProgress() {
+    try {
+      const user = window.LegionAuth ? window.LegionAuth.getUser() : null;
+      const dataToSave = {
+        currentStep: state.currentStep,
+        stepsCompleted: state.stepsCompleted,
+        stepClicks: state.stepClicks,
+        selectedPackage: state.selectedPackage,
+        userEmail: user ? user.email : (state.userEmail || null),
+        vpnConfig: state.vpnConfig,
+        turnstileCompleted: state.turnstileCompleted,
+        claimedSession: state.claimedSession || null,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch (err) {
+      console.warn("Could not save verification progress to localStorage:", err);
+    }
+  }
+
+  function restoreVerificationProgress() {
+    try {
+      const raw = localStorage.getItem(PROGRESS_STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (!data) return false;
+
+      // Restore package if stored
+      if (data.selectedPackage && (!state.selectedPackage || !state.selectedPackage.id)) {
+        state.selectedPackage = data.selectedPackage;
+        const titleEl = document.getElementById('claim-pkg-title');
+        const descEl = document.getElementById('claim-pkg-desc');
+        const priceEl = document.getElementById('claim-pkg-price');
+        const simEl = document.getElementById('claim-pkg-sim');
+        if (titleEl) titleEl.textContent = state.selectedPackage.title;
+        if (descEl) descEl.textContent = state.selectedPackage.desc || 'High-speed Trojan protocol configuration.';
+        if (priceEl) priceEl.textContent = state.selectedPackage.ispPrice || 'Free VPS Slot';
+        if (simEl) simEl.textContent = '📶 ' + (state.selectedPackage.simType || 'Mobile Sim');
+      }
+
+      // Restore step clicks
+      if (data.stepClicks && typeof data.stepClicks === 'object') {
+        state.stepClicks = { ...state.stepClicks, ...data.stepClicks };
+      }
+
+      // Restore completed steps
+      if (typeof data.stepsCompleted === 'number' && data.stepsCompleted > 0) {
+        state.stepsCompleted = data.stepsCompleted;
+      }
+
+      // Restore current step
+      if (typeof data.currentStep === 'number' && data.currentStep > 0) {
+        state.currentStep = data.currentStep;
+      } else {
+        state.currentStep = Math.min(9, (state.stepsCompleted || 0) + 1);
+      }
+
+      if (data.turnstileCompleted) {
+        state.turnstileCompleted = true;
+      }
+      if (data.vpnConfig) {
+        state.vpnConfig = data.vpnConfig;
+      }
+      if (data.claimedSession) {
+        state.claimedSession = data.claimedSession;
+      }
+
+      // Refresh UI for all 9 steps
+      const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+      for (let i = 1; i <= 9; i++) {
+        if (i <= state.stepsCompleted) {
+          updateStepUI(i, true);
+        } else if (i === state.stepsCompleted + 1) {
+          unlockStep(i);
+          const clicks = state.stepClicks[i] || 0;
+          const quota = STEP_QUOTAS[i] || 10;
+          const btn = dom[`stepBtn${i}`];
+          const statusEl = dom[`stepStatus${i}`];
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'opacity-85', 'cursor-not-allowed', 'bg-zinc-800', 'text-zinc-400');
+            btn.classList.add('bg-neon', 'hover:bg-emerald-400', 'text-black', 'm3-btn');
+            const btnText = lang === 'si'
+              ? `Ad එක Verify කරන්න (${clicks}/${quota})`
+              : `Click to Verify Ad (${clicks}/${quota})`;
+            btn.innerHTML = `<span>${btnText}</span>`;
+          }
+          if (statusEl && clicks > 0) {
+            statusEl.innerHTML = `<span class="text-neon font-medium">${clicks}/${quota} Ads Verified.</span>`;
+          }
+        }
+      }
+
+      updateOverallProgress();
+      return true;
+    } catch (err) {
+      console.warn("Could not restore verification progress:", err);
+      return false;
+    }
+  }
+
+  function sendTelemetryLog(eventData) {
+    try {
+      const apiBase = getApiBaseUrl();
+      const user = window.LegionAuth ? window.LegionAuth.getUser() : null;
+      const pkg = state.selectedPackage || {};
+      const payload = {
+        event: eventData.event || 'page_view',
+        path: window.location.pathname,
+        step: state.currentStep,
+        stepsCompleted: state.stepsCompleted,
+        totalAdsVerified: calculateTotalAdsDone(),
+        packageId: pkg.id || pkg.key || eventData.packageId || null,
+        packageTitle: pkg.title || eventData.packageTitle || null,
+        userEmail: user ? user.email : (eventData.userEmail || null),
+        details: eventData.details || null,
+        timestamp: new Date().toISOString(),
+        ...eventData
+      };
+
+      if (typeof navigator !== 'undefined' && navigator.sendBeacon && eventData.event === 'page_unload') {
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        navigator.sendBeacon(`${apiBase}/api/telemetry/log`, blob);
+      } else {
+        fetch(`${apiBase}/api/telemetry/log`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }
 
   function initDOM() {
     dom = {
@@ -130,7 +310,12 @@
   // Cleanly restores button readiness when user returns from ad tab
   function initTabVisibilityTracker() {
     function handleReturn() {
-      if (state.isCooldown) {
+      // 1. Handle active ad countdown return
+      if (activeAdSession) {
+        if (!cancelAdSessionIfEarly()) {
+          completeAdSessionIfEligible();
+        }
+      } else if (state.isCooldown) {
         state.isCooldown = false;
         const stepNum = state.currentStep;
         const quota = STEP_QUOTAS[stepNum] || 10;
@@ -146,13 +331,30 @@
           btn.innerHTML = `<span>${btnText}</span>`;
         }
       }
+
+      // 2. Synchronize progress
+      restoreVerificationProgress();
     }
 
     window.addEventListener('focus', handleReturn);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         handleReturn();
+      } else {
+        saveVerificationProgress();
       }
+    });
+
+    window.addEventListener('pageshow', () => {
+      restoreVerificationProgress();
+    });
+
+    window.addEventListener('pagehide', () => {
+      saveVerificationProgress();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      saveVerificationProgress();
     });
   }
 
@@ -310,7 +512,7 @@
 
     if (url && url !== "#") {
       try {
-        window.open(url, '_blank', 'noopener');
+        window.open(url, '_blank', 'noopener,noreferrer');
       } catch (err) {
         console.warn("Popunder window open blocked:", err);
       }
@@ -510,6 +712,8 @@
         const pkg = window.LegionStore.getPackageById(pkgId);
         if (pkg) {
           state.selectedPackage = pkg;
+          saveVerificationProgress();
+          sendTelemetryLog({ event: 'package_selected', packageId: pkg.id, packageTitle: pkg.title });
           showToast(`Opening ${pkg.title} in new tab...`, "success");
         }
         triggerMobileHaptic();
@@ -534,7 +738,7 @@
 
     // 1. Direct window.open on trusted user gesture guarantees a new tab in mobile & desktop browsers
     try {
-      const win = window.open(link, '_blank');
+      const win = window.open(link, '_blank', 'noopener,noreferrer');
       if (win) {
         return;
       }
@@ -841,11 +1045,26 @@
 
         triggerMobileHaptic();
         updateOverallProgress();
+        saveVerificationProgress();
+        sendTelemetryLog({
+          event: 'ad_verified',
+          step: stepNumber,
+          clicks: newClicks,
+          quota: quota,
+          totalAdsVerified: calculateTotalAdsDone()
+        });
 
         if (newClicks >= quota) {
           state.stepsCompleted = stepNumber;
           updateStepUI(stepNumber, true);
           updateOverallProgress();
+          saveVerificationProgress();
+          sendTelemetryLog({
+            event: 'step_completed',
+            step: stepNumber,
+            totalAdsVerified: calculateTotalAdsDone(),
+            progressSummary: `Step ${stepNumber} Complete (${quota}/${quota} Ads)`
+          });
 
           if (stepNumber < 9) {
             unlockStep(stepNumber + 1);
@@ -1101,6 +1320,13 @@
       package_id: pkgKey
     };
 
+    saveVerificationProgress();
+    sendTelemetryLog({
+      event: 'node_claimed',
+      packageId: pkgKey,
+      protocol: protocol,
+      totalAdsVerified: 100
+    });
     renderCelebratoryCompletionModal(masterConfig, protocol, pkgKey);
     triggerCelebrationConfetti();
   }
@@ -1686,6 +1912,8 @@ INSTRUCTIONS:
     renderPackages();
     setupCopyButtons();
     updateOverallProgress();
+    restoreVerificationProgress();
+    sendTelemetryLog({ event: 'page_view', path: window.location.pathname });
 
     // Parse ?pkg= from URL if present (e.g., on claim.html)
     const urlParams = new URLSearchParams(window.location.search);

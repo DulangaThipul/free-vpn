@@ -31,6 +31,21 @@ let activeMasterConfig = {
 const RATE_LIMIT_STORE = new Map();
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
+// In-Memory Telemetry Ring Buffers (Edge Memory Fallback)
+const VISITOR_LOGS_CACHE = [];
+const ADMIN_LOGINS_CACHE = [];
+const MAX_LOG_CACHE = 100;
+
+function addVisitorLogCache(log) {
+  VISITOR_LOGS_CACHE.unshift(log);
+  if (VISITOR_LOGS_CACHE.length > MAX_LOG_CACHE) VISITOR_LOGS_CACHE.pop();
+}
+
+function addAdminLoginCache(log) {
+  ADMIN_LOGINS_CACHE.unshift(log);
+  if (ADMIN_LOGINS_CACHE.length > MAX_LOG_CACHE) ADMIN_LOGINS_CACHE.pop();
+}
+
 // Administrator-Banned User Emails
 const BANNED_EMAILS = new Set([
   "abuser@spam.com",
@@ -215,6 +230,107 @@ function injectPackageSni(rawConfigUrl, packageKey) {
 }
 
 /**
+ * User-Agent Device, OS & Browser Parser
+ */
+function parseUserAgent(ua) {
+  if (!ua) return { device: "Unknown", os: "Unknown", browser: "Unknown", summary: "Unknown Device" };
+  const u = ua.toLowerCase();
+
+  let device = "Desktop";
+  if (/mobile|android|iphone|ipod|blackberry|opera mini|iemobile/i.test(u)) {
+    device = "Mobile";
+  } else if (/ipad|tablet/i.test(u)) {
+    device = "Tablet";
+  }
+
+  let os = "Unknown";
+  if (u.includes("windows nt 10")) os = "Windows 10/11";
+  else if (u.includes("windows")) os = "Windows";
+  else if (u.includes("android")) os = "Android";
+  else if (u.includes("iphone") || u.includes("ipad") || u.includes("ipod")) os = "iOS";
+  else if (u.includes("mac os") || u.includes("macintosh")) os = "macOS";
+  else if (u.includes("linux")) os = "Linux";
+
+  let browser = "Unknown";
+  if (u.includes("edg/")) browser = "Edge";
+  else if (u.includes("chrome/") && !u.includes("edg/")) browser = "Chrome";
+  else if (u.includes("safari/") && !u.includes("chrome/")) browser = "Safari";
+  else if (u.includes("firefox/")) browser = "Firefox";
+  else if (u.includes("opera") || u.includes("opr/")) browser = "Opera";
+
+  return {
+    device,
+    os,
+    browser,
+    summary: `${device} (${os} · ${browser})`
+  };
+}
+
+/**
+ * Format timestamp in Sri Lanka Time (UTC+5:30)
+ */
+function formatSriLankaTime(date) {
+  try {
+    return new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Colombo",
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    }).format(date) + " (SLT)";
+  } catch (e) {
+    const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const sl = new Date(utc + (5.5 * 3600000));
+    return sl.toISOString().replace('T', ' ').substring(0, 19) + " (SLT)";
+  }
+}
+
+/**
+ * Extract Cloudflare CF-Headers & Client Telemetry
+ */
+function extractRequestTelemetry(request) {
+  const ip = request.headers.get("cf-connecting-ip") || 
+             request.headers.get("x-real-ip") || 
+             request.headers.get("x-forwarded-for") || 
+             "127.0.0.1";
+  
+  const cf = request.cf || {};
+  const country = cf.country || "Unknown";
+  const city = cf.city || "Unknown";
+  const isp = cf.asOrganization || cf.colo || "Unknown";
+  const ua = request.headers.get("user-agent") || "";
+  const parsedUa = parseUserAgent(ua);
+  
+  const now = new Date();
+  const isoTime = now.toISOString();
+  const slTime = formatSriLankaTime(now);
+
+  let pathname = "/";
+  try {
+    pathname = new URL(request.url).pathname;
+  } catch (e) {}
+
+  return {
+    ip,
+    country,
+    city,
+    location: (city !== "Unknown" && country !== "Unknown") ? `${city}, ${country}` : country,
+    isp,
+    userAgent: ua,
+    device: parsedUa.device,
+    os: parsedUa.os,
+    browser: parsedUa.browser,
+    deviceSummary: parsedUa.summary,
+    timestamp: isoTime,
+    slTime: slTime,
+    path: pathname
+  };
+}
+
+/**
  * MongoDB Atlas Data API Helper (Native HTTPS Fetch)
  */
 async function fetchAtlasDataApi(action, payload, env) {
@@ -222,7 +338,7 @@ async function fetchAtlasDataApi(action, payload, env) {
   const apiKey = (env && env.MONGODB_API_KEY) || (env && env.DATA_API_KEY) || "";
   const dataSource = (env && env.MONGODB_CLUSTER) || MONGO_CONFIG.dataSource;
   const database = (env && env.MONGODB_DATABASE) || MONGO_CONFIG.database;
-  const collection = (env && env.MONGODB_COLLECTION) || MONGO_CONFIG.collection;
+  const targetCollection = payload.collection || (env && env.MONGODB_COLLECTION) || MONGO_CONFIG.collection;
 
   const url = `${endpoint.replace(/\/+$/, "")}/${action}`;
   const headers = {
@@ -233,14 +349,16 @@ async function fetchAtlasDataApi(action, payload, env) {
     headers["apiKey"] = apiKey;
   }
 
+  const { collection, ...restPayload } = payload;
+
   const response = await fetch(url, {
     method: "POST",
     headers,
     body: JSON.stringify({
       dataSource,
       database,
-      collection,
-      ...payload
+      collection: targetCollection,
+      ...restPayload
     })
   });
 
@@ -250,6 +368,68 @@ async function fetchAtlasDataApi(action, payload, env) {
   }
 
   return await response.json();
+}
+
+/**
+ * Log Visitor Activity to visitor_logs Collection & Edge Cache
+ */
+async function logVisitorActivity(eventPayload, request, env) {
+  const telemetry = extractRequestTelemetry(request);
+  const logDoc = {
+    ...telemetry,
+    event: eventPayload.event || "page_view",
+    userEmail: eventPayload.userEmail || "Anonymous",
+    packageId: eventPayload.packageId || null,
+    packageTitle: eventPayload.packageTitle || null,
+    step: eventPayload.step || 1,
+    stepsCompleted: eventPayload.stepsCompleted || 0,
+    totalAdsVerified: eventPayload.totalAdsVerified || 0,
+    progressSummary: eventPayload.progressSummary || (eventPayload.totalAdsVerified ? `${eventPayload.totalAdsVerified}/100 Ads` : `Step ${eventPayload.step || 1}`),
+    details: eventPayload.details || null
+  };
+
+  addVisitorLogCache(logDoc);
+
+  if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+    try {
+      await fetchAtlasDataApi("insertOne", {
+        collection: "visitor_logs",
+        document: logDoc
+      }, env);
+    } catch (e) {
+      console.warn("MongoDB visitor_logs insert notice:", e.message);
+    }
+  }
+
+  return logDoc;
+}
+
+/**
+ * Log Admin Activity to admin_logins Collection & Edge Cache
+ */
+async function logAdminActivity(action, status, request, env, extra = {}) {
+  const telemetry = extractRequestTelemetry(request);
+  const adminDoc = {
+    ...telemetry,
+    action: action,
+    status: status,
+    ...extra
+  };
+
+  addAdminLoginCache(adminDoc);
+
+  if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+    try {
+      await fetchAtlasDataApi("insertOne", {
+        collection: "admin_logins",
+        document: adminDoc
+      }, env);
+    } catch (e) {
+      console.warn("MongoDB admin_logins insert notice:", e.message);
+    }
+  }
+
+  return adminDoc;
 }
 
 export default {
@@ -407,6 +587,9 @@ export default {
 
         const verifiedPin = (env && env.ADMIN_PIN) || MONGO_CONFIG.adminPin;
         if (pin !== verifiedPin) {
+          await logAdminActivity("save_master_config_attempt", "Invalid PIN", request, env, {
+            pinAttempt: pin ? "****" : "empty"
+          });
           return new Response(JSON.stringify({
             success: false,
             message: "Unauthorized: Invalid Admin PIN"
@@ -451,6 +634,7 @@ export default {
         if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
           try {
             await fetchAtlasDataApi("updateOne", {
+              collection: "settings",
               filter: { _id: "master_config" },
               update: {
                 $set: {
@@ -466,6 +650,11 @@ export default {
             console.warn("Atlas Data API updateOne notice:", err.message);
           }
         }
+
+        await logAdminActivity("save_master_config", "Success", request, env, {
+          protocol: protocol,
+          raw_config_snippet: rawConfig.substring(0, 40) + "..."
+        });
 
         return new Response(JSON.stringify({
           success: true,
@@ -604,6 +793,19 @@ export default {
           issued_at: new Date().toISOString()
         };
 
+        // Log successful node claim in visitor_logs
+        await logVisitorActivity({
+          event: "node_claimed",
+          userEmail: userEmail,
+          packageId: packageId,
+          packageTitle: matchedPkg ? matchedPkg.name : "Singapore Master Node",
+          step: 9,
+          stepsCompleted: 9,
+          totalAdsVerified: 100,
+          progressSummary: "100/100 Ads Verified (Claimed)",
+          details: `Session ${sessionCode} (${deliveredProtocol})`
+        }, request, env);
+
         return new Response(JSON.stringify({
           success: true,
           timestamp: now,
@@ -623,6 +825,183 @@ export default {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
+    }
+
+    // =========================================================================
+    // 7. POST /api/telemetry/log
+    // Ingests real-time client verification, milestone, and visitor telemetry
+    // =========================================================================
+    if (url.pathname === "/api/telemetry/log" || url.pathname.endsWith("/api/telemetry/log") || url.pathname.endsWith("/telemetry/log")) {
+      if (request.method !== "POST") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use POST." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      try {
+        const body = await request.json().catch(() => ({}));
+        const logDoc = await logVisitorActivity(body, request, env);
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Telemetry logged successfully.",
+          timestamp: logDoc.timestamp
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Telemetry ingestion error: " + err.message
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // =========================================================================
+    // 8. POST /api/admin/login or /api/free/admin/login
+    // Validates admin credentials & records authentication audit in admin_logins
+    // =========================================================================
+    if (url.pathname === "/api/admin/login" || url.pathname.endsWith("/admin/login") || url.pathname.endsWith("/api/free/admin/login")) {
+      if (request.method !== "POST") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use POST." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      try {
+        const body = await request.json().catch(() => ({}));
+        const headerPin = request.headers.get("x-admin-pin") || 
+                          (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+        const pin = (headerPin || body.pin || body.adminPin || "").trim();
+        const verifiedPin = (env && env.ADMIN_PIN) || MONGO_CONFIG.adminPin;
+
+        if (pin === verifiedPin) {
+          await logAdminActivity("admin_dashboard_login", "Success", request, env);
+          return new Response(JSON.stringify({
+            success: true,
+            token: "authorized",
+            message: "Admin authentication successful."
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        } else {
+          await logAdminActivity("admin_dashboard_login_attempt", "Invalid PIN", request, env, {
+            pinAttempt: pin ? "****" : "empty"
+          });
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Unauthorized: Invalid Admin PIN"
+          }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      } catch (err) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Login error: " + err.message
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // =========================================================================
+    // 9. GET /api/admin/logs (type=visitors | type=admin)
+    // Fetches security audit logs and visitor traffic telemetry
+    // =========================================================================
+    if (url.pathname === "/api/admin/logs" || url.pathname.endsWith("/admin/logs") || url.pathname.endsWith("/api/free/admin/logs")) {
+      if (request.method !== "GET") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use GET." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      const headerPin = request.headers.get("x-admin-pin") || 
+                        (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+      const queryPin = url.searchParams.get("pin") || "";
+      const pin = (headerPin || queryPin).trim();
+      const verifiedPin = (env && env.ADMIN_PIN) || MONGO_CONFIG.adminPin;
+
+      if (pin !== verifiedPin) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Unauthorized: Invalid Admin PIN"
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      const logType = (url.searchParams.get("type") || "visitors").toLowerCase().trim();
+
+      // Case A: Admin Logins & Security Audit
+      if (logType === "admin" || logType === "admin_logins" || logType === "security") {
+        let logs = [];
+        if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+          try {
+            const res = await fetchAtlasDataApi("find", {
+              collection: "admin_logins",
+              sort: { timestamp: -1 },
+              limit: 50
+            }, env);
+            if (res && Array.isArray(res.documents)) {
+              logs = res.documents;
+            }
+          } catch (e) {
+            console.warn("Atlas find admin_logins notice:", e.message);
+          }
+        }
+        if (logs.length === 0) {
+          logs = ADMIN_LOGINS_CACHE.slice(0, 50);
+        }
+        return new Response(JSON.stringify({
+          success: true,
+          type: "admin",
+          count: logs.length,
+          logs: logs
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // Case B: Live Visitors & Verification Traffic Telemetry
+      let logs = [];
+      if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+        try {
+          const res = await fetchAtlasDataApi("find", {
+            collection: "visitor_logs",
+            sort: { timestamp: -1 },
+            limit: 50
+          }, env);
+          if (res && Array.isArray(res.documents)) {
+            logs = res.documents;
+          }
+        } catch (e) {
+          console.warn("Atlas find visitor_logs notice:", e.message);
+        }
+      }
+      if (logs.length === 0) {
+        logs = VISITOR_LOGS_CACHE.slice(0, 50);
+      }
+      return new Response(JSON.stringify({
+        success: true,
+        type: "visitors",
+        count: logs.length,
+        logs: logs
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     // 404

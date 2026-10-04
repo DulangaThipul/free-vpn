@@ -51,9 +51,20 @@
     }
   }
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
     const pin = passInput.value.trim();
+
+    // Async login audit & verification
+    try {
+      const apiBase = getApiBaseUrl();
+      fetch(`${apiBase}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      }).catch(() => {});
+    } catch (e) {}
+
     if (pin === DEFAULT_PIN) {
       sessionStorage.setItem(ADMIN_SESSION_KEY, 'authorized');
       passInput.value = '';
@@ -68,6 +79,140 @@
     checkAuth();
   }
 
+
+  // --- Admin Security Logs & Live Traffic Telemetry ---
+  let trafficRefreshTimer = null;
+
+  async function loadAdminLogins() {
+    const tableEl = document.getElementById('admin-logins-table');
+    const badgeEl = document.getElementById('badge-admin-logins-count');
+    if (!tableEl) return;
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/admin/logs?type=admin`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const logs = data.logs || [];
+        if (badgeEl) badgeEl.textContent = `${logs.length} Records`;
+
+        if (logs.length === 0) {
+          tableEl.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-500 font-mono">No admin security logs recorded yet.</td></tr>`;
+          return;
+        }
+
+        tableEl.innerHTML = logs.map(l => {
+          const isSuccess = l.status === 'Success';
+          const statusBadge = isSuccess
+            ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold text-[11px]">✓ Success</span>`
+            : `<span class="px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/30 font-semibold text-[11px]">✕ Invalid PIN</span>`;
+
+          const actionLabel = l.action === 'save_master_config'
+            ? 'Save Master Config'
+            : (l.action === 'admin_dashboard_login' ? 'Dashboard Login' : l.action);
+
+          return `
+            <tr class="hover:bg-surface-200/50 transition-colors">
+              <td class="py-3 px-4 font-mono text-[11px] text-zinc-300">${l.slTime || l.timestamp}</td>
+              <td class="py-3 px-4 font-mono text-neon font-bold">${l.ip || '127.0.0.1'}</td>
+              <td class="py-3 px-4 text-zinc-300">${l.location || 'Unknown'} <span class="text-[10px] text-zinc-500 block">${l.isp || ''}</span></td>
+              <td class="py-3 px-4 font-medium text-white">${actionLabel}</td>
+              <td class="py-3 px-4 font-mono text-[11px] text-zinc-400">${l.deviceSummary || l.device || 'Desktop'}</td>
+              <td class="py-3 px-4 text-right">${statusBadge}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        tableEl.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-amber-400 text-xs">Could not fetch admin security logs (HTTP ${res.status}).</td></tr>`;
+      }
+    } catch (err) {
+      console.warn("loadAdminLogins notice:", err);
+      tableEl.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-zinc-500 text-xs">Admin telemetry worker endpoint offline or unreachable.</td></tr>`;
+    }
+  }
+
+  async function loadVisitorLogs() {
+    const tableEl = document.getElementById('admin-visitors-table');
+    const badgeEl = document.getElementById('badge-visitors-count');
+    if (!tableEl) return;
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/admin/logs?type=visitors`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const logs = data.logs || [];
+        if (badgeEl) badgeEl.textContent = `${logs.length} Sessions`;
+
+        if (logs.length === 0) {
+          tableEl.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-zinc-500 font-mono">No active visitor sessions recorded yet.</td></tr>`;
+          return;
+        }
+
+        tableEl.innerHTML = logs.map(l => {
+          let eventBadge = `<span class="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 text-[10px]">${l.event}</span>`;
+          if (l.event === 'node_claimed') {
+            eventBadge = `<span class="px-2 py-0.5 rounded-full bg-neon/15 text-neon font-bold text-[10px] border border-neon/40">🎉 Claimed Node</span>`;
+          } else if (l.event === 'ad_verified') {
+            eventBadge = `<span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px]">✓ Ad Verified</span>`;
+          } else if (l.event === 'step_completed') {
+            eventBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-semibold text-[10px]">⭐ Step Unlocked</span>`;
+          } else if (l.event === 'page_view') {
+            eventBadge = `<span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px]">👀 Page Visit</span>`;
+          }
+
+          const progressText = l.progressSummary || (l.totalAdsVerified ? `${l.totalAdsVerified}/100 Ads` : `Step ${l.step || 1}`);
+
+          return `
+            <tr class="hover:bg-surface-200/50 transition-colors">
+              <td class="py-3 px-4 font-mono text-[11px] text-zinc-300">${l.slTime || l.timestamp}</td>
+              <td class="py-3 px-4 font-mono text-emerald-300 font-bold">${l.ip || '127.0.0.1'}</td>
+              <td class="py-3 px-4 text-zinc-300">${l.isp || 'Sri Lanka Telecom'} <span class="text-[10px] text-zinc-500 block">${l.location || ''}</span></td>
+              <td class="py-3 px-4 font-mono text-[11px] text-zinc-400">${l.deviceSummary || (l.device + ' - ' + l.browser) || 'Desktop'}</td>
+              <td class="py-3 px-4 font-bold text-white font-mono text-[11px]">${progressText}</td>
+              <td class="py-3 px-4">${eventBadge}</td>
+              <td class="py-3 px-4 text-right text-zinc-300 font-mono text-[11px]">${l.userEmail || 'Anonymous'}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        tableEl.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-amber-400 text-xs">Could not fetch visitor telemetry (HTTP ${res.status}).</td></tr>`;
+      }
+    } catch (err) {
+      console.warn("loadVisitorLogs notice:", err);
+      tableEl.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-zinc-500 text-xs">Visitor telemetry worker endpoint offline or unreachable.</td></tr>`;
+    }
+  }
+
+  function setupTrafficAutoRefresh() {
+    if (trafficRefreshTimer) {
+      clearInterval(trafficRefreshTimer);
+      trafficRefreshTimer = null;
+    }
+    const chk = document.getElementById('chk-auto-refresh-traffic');
+    trafficRefreshTimer = setInterval(() => {
+      const isAuthorized = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'authorized';
+      const isChecked = chk ? chk.checked : true;
+      if (isAuthorized && isChecked && document.visibilityState === 'visible') {
+        loadVisitorLogs();
+      }
+    }, 10000);
+  }
+
   // --- Data Loader ---
   function loadDashboardData() {
     packages = window.LegionStore.getPackages();
@@ -78,6 +223,9 @@
     renderUsers();
     renderPublicServers();
     loadModalSettings();
+    loadAdminLogins();
+    loadVisitorLogs();
+    setupTrafficAutoRefresh();
   }
 
   function renderStats() {
@@ -712,6 +860,17 @@
     if (btnSaveMaster) {
       btnSaveMaster.addEventListener('click', handleSaveMasterConfig);
     }
+
+    
+    const btnRefAdmin = document.getElementById('btn-refresh-admin-logs');
+    if (btnRefAdmin) btnRefAdmin.addEventListener('click', () => {
+      loadAdminLogins();
+    });
+
+    const btnRefVisitors = document.getElementById('btn-refresh-visitor-logs');
+    if (btnRefVisitors) btnRefVisitors.addEventListener('click', () => {
+      loadVisitorLogs();
+    });
 
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);

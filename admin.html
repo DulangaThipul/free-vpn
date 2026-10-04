@@ -284,8 +284,85 @@
         </div>
       </section>
 
-    
-</main>
+      <!-- SECTION 5: Admin Logins & Security Audit -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl font-bold text-white">Admin Logins & Security Audit</h2>
+              <span id="badge-admin-logins-count" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">0 Records</span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-0.5">Audit log of administrator dashboard logins, security PIN verifications, and master config updates</p>
+          </div>
+          <button id="btn-refresh-admin-logs" type="button" class="px-5 py-2.5 rounded-2xl bg-surface-200 hover:bg-surface-300 border border-emerald-800/40 text-zinc-200 font-bold text-xs m3-btn flex items-center gap-2 self-start sm:self-auto">
+            <span>🔄 Refresh Admin Logs</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-surface-200 text-zinc-400 uppercase font-mono text-[11px] border-b border-emerald-950">
+              <tr>
+                <th class="py-3.5 px-4">Date / Time (Sri Lanka)</th>
+                <th class="py-3.5 px-4">IP Address</th>
+                <th class="py-3.5 px-4">Location & ISP</th>
+                <th class="py-3.5 px-4">Action</th>
+                <th class="py-3.5 px-4">Device / OS</th>
+                <th class="py-3.5 px-4 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody id="admin-logins-table" class="divide-y divide-emerald-950/60 font-sans">
+              <tr>
+                <td colspan="6" class="py-8 text-center text-zinc-500 font-mono">Loading admin security audit logs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 6: Live Visitors & Verification Traffic -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl font-bold text-white">Live Visitors & Verification Traffic</h2>
+              <span id="badge-visitors-count" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-neon/10 text-neon border border-neon/30">0 Sessions</span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-0.5">Real-time visitor telemetry, ad verification milestones (1-100 Ads), and claimed sessions</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none">
+              <input type="checkbox" id="chk-auto-refresh-traffic" checked class="w-4 h-4 rounded text-neon bg-surface-100 border-emerald-950">
+              <span>Auto-refresh (10s)</span>
+            </label>
+            <button id="btn-refresh-visitor-logs" type="button" class="px-5 py-2.5 rounded-2xl bg-neon text-black hover:bg-emerald-400 font-bold text-xs m3-btn flex items-center gap-2">
+              <span>🔄 Refresh Visitors</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-surface-200 text-zinc-400 uppercase font-mono text-[11px] border-b border-emerald-950">
+              <tr>
+                <th class="py-3.5 px-4">Date / Time (SLT)</th>
+                <th class="py-3.5 px-4">IP Address</th>
+                <th class="py-3.5 px-4">ISP / Carrier</th>
+                <th class="py-3.5 px-4">Device / OS / Browser</th>
+                <th class="py-3.5 px-4">Verification Progress</th>
+                <th class="py-3.5 px-4">Event / Action</th>
+                <th class="py-3.5 px-4 text-right">User / Email</th>
+              </tr>
+            </thead>
+            <tbody id="admin-visitors-table" class="divide-y divide-emerald-950/60 font-sans">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-zinc-500 font-mono">Loading real-time visitor traffic telemetry...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
 
 
