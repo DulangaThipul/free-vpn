@@ -20,83 +20,108 @@
   'use strict';
 
   // --- DEVICE INTELLIGENCE & AD NAVIGATION CONTROLLER ---
-  // If window.LegionDevice is not already initialized, provide self-contained device intelligence
-  const LegionDevice = window.LegionDevice || (function() {
-    const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
-    const platform = (navigator.platform || '').toLowerCase();
-    const touchPoints = navigator.maxTouchPoints || 0;
-    const width = Math.min(window.innerWidth || 0, window.screen ? window.screen.width : 0) || window.innerWidth || 0;
-
-    const isAndroidPhone = ua.includes('android') && ua.includes('mobile');
-    const isIPad = /ipad/i.test(ua) || ((ua.includes('macintosh') || platform === 'macintel') && touchPoints > 1);
-    const isAndroidTablet = ua.includes('android') && !ua.includes('mobile');
-    const hasTabletToken = /tablet|playbook|silk|kindle/i.test(ua);
-
-    let dev = 'pc';
-    if (isIPad || isAndroidTablet || hasTabletToken) {
-      dev = 'tablet';
-    } else if (
-      isAndroidPhone ||
-      /iphone|ipod|blackberry|opera mini|iemobile|wpdesktop/i.test(ua) ||
-      (/mobile/i.test(ua) && !isIPad && !isAndroidTablet)
-    ) {
-      dev = 'mobile';
-    }
-
-    return {
-      getType: () => dev,
-      type: dev,
-      isPC: () => dev === 'pc',
-      isTablet: () => dev === 'tablet',
-      isMobile: () => dev === 'mobile',
-      isMobileOrTablet: () => dev === 'mobile' || dev === 'tablet',
-      openAdInNewTabPC: (url) => {
-        if (!url || url === '#' || url.startsWith('javascript:')) return;
-        try {
-          const a = document.createElement('a');
-          a.href = url;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); }, 150);
-          return null;
-        } catch (e) {}
-        try {
-          const win = window.open(url, '_blank');
-          if (win) { try { win.opener = null; } catch (err) {} return win; }
-        } catch (e) {}
-      }
-    };
-  })();
-  window.LegionDevice = LegionDevice;
-
-  // Global window.open wrapper respecting platform rules
   const _origWindowOpen = window._legionOrigWindowOpen || window.open;
-  window.open = function (url, target, features) {
-    if (window.LegionDevice && window.LegionDevice.openAd) {
-      return window.LegionDevice.openAd(url);
+
+  /**
+   * Device Detection Engine
+   * Exactly matches user specification:
+   * const isMobileOrTablet = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+   */
+  function isMobileOrTabletDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+  }
+
+  /**
+   * Explicit Device-Aware Ad Dispatcher
+   * 1. DESKTOP / PC BEHAVIOR (!isMobileOrTablet):
+   *    - Directly and synchronously executes native window.open(adUrl, '_blank')
+   *    - NO setTimeout, NO async promise callbacks, NO synthetic anchor click wrappers
+   *    - Calling native window.open directly on click retains user activation so popup blockers don't block it
+   *    - Focus remains on the original tab, but ad launches in a brand-new browser tab cleanly
+   *    - Step count / state updates smoothly without reloading or freezing
+   * 2. MOBILE / TABLET BEHAVIOR (isMobileOrTablet):
+   *    - Saves current verification step in localStorage immediately
+   *    - Dispatches ad via clean isolated tab without allowing location hijack
+   *    - Recovers state seamlessly on tab switch / visibilitychange
+   */
+  function dispatchAdLink(adUrl) {
+    if (!adUrl || adUrl === '#' || adUrl.startsWith('javascript:')) return null;
+
+    const isMobileOrTablet = isMobileOrTabletDevice();
+
+    if (!isMobileOrTablet) {
+      // 2. DESKTOP / PC: Direct, synchronous native window.open with '_blank' and NO feature strings
+      try {
+        const win = (_origWindowOpen || window.open).call(window, adUrl, '_blank');
+        if (win) {
+          try { win.opener = null; } catch (e) {}
+          return win;
+        }
+      } catch (e) {
+        console.warn("[PC Ad Dispatcher] Direct window.open notice:", e);
+      }
+      return null;
     }
-    if (LegionDevice.isPC()) {
-      return LegionDevice.openAdInNewTabPC(url);
+
+    // 3. MOBILE / TABLET:
+    // a. Save progress immediately
+    if (typeof saveVerificationProgress === 'function') {
+      saveVerificationProgress();
     }
-    return _origWindowOpen.call(window, url, '_blank');
-  };
+
+    // b. Dispatch ad via clean isolated tab
+    try {
+      const win = (_origWindowOpen || window.open).call(window, adUrl, '_blank');
+      if (win) {
+        try { win.opener = null; } catch (e) {}
+        return win;
+      }
+    } catch (e) {}
+
+    // Fallback for strict mobile WebKit
+    try {
+      const a = document.createElement('a');
+      a.href = adUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.position = 'fixed';
+      a.style.left = '-9999px';
+      a.style.top = '-9999px';
+      a.style.width = '1px';
+      a.style.height = '1px';
+      a.style.opacity = '0.01';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+      }, 150);
+    } catch (err) {
+      console.warn("[Mobile Ad Dispatcher] Fallback notice:", err);
+    }
+    return null;
+  }
+
+  // Ensure window.LegionDevice exists with updated dispatcher
+  if (!window.LegionDevice) {
+    window.LegionDevice = {
+      isMobileOrTablet: isMobileOrTabletDevice,
+      isPC: () => !isMobileOrTabletDevice(),
+      isDesktop: () => !isMobileOrTabletDevice(),
+      openAd: dispatchAdLink,
+      openAdInNewTabPC: dispatchAdLink,
+      dispatchAd: dispatchAdLink
+    };
+  }
 
   // Prevent rogue external navigation via window.location.assign and replace
   try {
     const _origAssign = window.location.assign;
-    window.location.assign = function(url) {
+    window.location.assign = function (url) {
       try {
         const u = new URL(url, window.location.href);
         if (u.origin !== window.location.origin) {
           console.warn("Diverted external location.assign to new tab:", url);
-          if (LegionDevice.isPC()) {
-            LegionDevice.openAdInNewTabPC(url);
-          } else {
-            window.open(url, '_blank', 'noopener,noreferrer');
-          }
+          dispatchAdLink(url);
           return;
         }
       } catch (e) {}
@@ -106,16 +131,12 @@
 
   try {
     const _origReplace = window.location.replace;
-    window.location.replace = function(url) {
+    window.location.replace = function (url) {
       try {
         const u = new URL(url, window.location.href);
         if (u.origin !== window.location.origin) {
           console.warn("Diverted external location.replace to new tab:", url);
-          if (LegionDevice.isPC()) {
-            LegionDevice.openAdInNewTabPC(url);
-          } else {
-            window.open(url, '_blank', 'noopener,noreferrer');
-          }
+          dispatchAdLink(url);
           return;
         }
       } catch (e) {}
@@ -603,15 +624,7 @@
     const url = customUrl || ads.POPUNDER_URL || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
 
     if (url && url !== "#") {
-      if (window.LegionDevice && window.LegionDevice.isPC()) {
-        window.LegionDevice.openAdInNewTabPC(url);
-      } else {
-        try {
-          window.open(url, '_blank', 'noopener,noreferrer');
-        } catch (err) {
-          console.warn("Popunder window open blocked:", err);
-        }
-      }
+      dispatchAdLink(url);
     }
   }
 
@@ -831,44 +844,7 @@
   function triggerAdLink(stepNumber) {
     const link = getDirectLink(stepNumber);
     if (!link || link === "#") return;
-
-    // Use device intelligence orchestrator
-    if (window.LegionDevice && window.LegionDevice.openAd) {
-      window.LegionDevice.openAd(link);
-      return;
-    }
-
-    // Direct clean window.open without popup features (features trigger mobile popup blockers!)
-    try {
-      const win = _origWindowOpen.call(window, link, '_blank');
-      if (win) {
-        try { win.opener = null; } catch (e) {}
-        return;
-      }
-    } catch (e) {
-      console.warn("window.open new tab notice:", e);
-    }
-
-    // Secondary fallback using offscreen rendered <a> tag
-    try {
-      const a = document.createElement('a');
-      a.href = link;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.style.position = 'fixed';
-      a.style.left = '-9999px';
-      a.style.top = '-9999px';
-      a.style.width = '1px';
-      a.style.height = '1px';
-      a.style.opacity = '0.01';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (a.parentNode) a.parentNode.removeChild(a);
-      }, 150);
-    } catch (err) {
-      console.warn("Direct link opener error:", err);
-    }
+    dispatchAdLink(link);
   }
 
   // Calculate total ads verified across all steps for progress bar

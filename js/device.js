@@ -1,10 +1,10 @@
 /**
  * LEGION Free VPN - Device Intelligence & Ad Navigation Engine
- * Accurately detects Mobile Phone, Tablet (Tab), or PC (Desktop/Laptop).
+ * Precision Device Detection (Mobile, Tablet, PC/Desktop).
  * 
  * Enforces:
- * - PC (Desktop/Laptop): Every single ad is strictly opened in a real NEW TAB (_blank, no popup windows, no parent redirect)
- * - Mobile & Tablet: Preserves existing verified mobile workflow with dwell-time recovery and anti-hijack guard
+ * - PC (Desktop/Laptop): Native synchronous window.open(adUrl, '_blank') directly on click with zero popup blocker suppression.
+ * - Mobile & Tablet: Preserves verified mobile anti-hijack workflow with localStorage persistence and dwell-time recovery.
  */
 
 (function () {
@@ -15,111 +15,68 @@
   window._legionOrigWindowOpen = _origWindowOpen;
 
   /**
-   * High-Precision Device Detection Engine
-   * Returns: 'mobile' | 'tablet' | 'pc'
+   * Device Detection Engine
+   * Exactly matches user specification:
+   * const isMobileOrTablet = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+   */
+  function isMobileOrTabletDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+  }
+
+  /**
+   * Detailed Device Type Detection
+   * Returns: 'pc' | 'tablet' | 'mobile'
    */
   function detectDeviceType() {
+    if (!isMobileOrTabletDevice()) {
+      return 'pc';
+    }
+
     const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
     const platform = (navigator.platform || '').toLowerCase();
     const touchPoints = navigator.maxTouchPoints || 0;
-    const width = Math.min(window.innerWidth || 0, window.screen ? window.screen.width : 0) || window.innerWidth || 0;
 
-    // 1. Android Phone Check: If Android AND Mobile, it is strictly a Mobile Phone
-    const isAndroidPhone = ua.includes('android') && ua.includes('mobile');
-
-    // 2. Apple iPad Detection (Classic iPad + iPadOS 13+ Safari Desktop Mode)
     const isIPad = /ipad/i.test(ua) || (
       (ua.includes('macintosh') || platform === 'macintel') && touchPoints > 1
     );
-
-    // 3. Android Tablet Detection (Android WITHOUT 'mobile')
     const isAndroidTablet = ua.includes('android') && !ua.includes('mobile');
-
-    // 4. Dedicated Tablet Tokens
     const hasTabletToken = /tablet|playbook|silk|kindle/i.test(ua);
 
-    if (isIPad || isAndroidTablet || hasTabletToken) {
-      return 'tablet'; // Tab
+    if (isIPad || isAndroidTablet || hasTabletToken || (window.innerWidth > 600 && window.innerWidth <= 1024)) {
+      return 'tablet';
     }
 
-    // 5. Mobile Phone Detection
-    const isMobilePhone = isAndroidPhone ||
-      /iphone|ipod|blackberry|opera mini|iemobile|wpdesktop/i.test(ua) ||
-      (/mobile/i.test(ua) && !isIPad && !isAndroidTablet);
-
-    if (isMobilePhone) {
-      return 'mobile'; // Mobile Phone
-    }
-
-    // 6. Otherwise: PC (Desktop / Laptop)
-    return 'pc';
-  }
-
-  const detectedType = detectDeviceType();
-
-  /**
-   * Bulletproof PC New Tab Opener
-   * Guarantees a real NEW BROWSER TAB in Desktop Chrome, Edge, Firefox, Brave, Safari, Opera.
-   * Completely bypasses popup window flags and popup blocker traps.
-   */
-  function openAdInNewTabPC(url) {
-    if (!url || url === '#' || url.startsWith('javascript:')) return null;
-
-    // Method 1: Programmatic <a> click with target="_blank" and rel="noopener noreferrer"
-    // Rendered offscreen with fixed coordinates (WebKit/iOS Safari compatible, never display:none)
-    try {
-      const a = document.createElement('a');
-      a.href = url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.style.position = 'fixed';
-      a.style.left = '-9999px';
-      a.style.top = '-9999px';
-      a.style.width = '1px';
-      a.style.height = '1px';
-      a.style.opacity = '0.01';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () {
-        if (a.parentNode) a.parentNode.removeChild(a);
-      }, 150);
-      return null;
-    } catch (e) {
-      console.warn("PC <a> click notice:", e);
-    }
-
-    // Method 2: Native window.open with '_blank' and NO feature strings
-    // In Chromium and Firefox desktop, passing feature strings causes the browser to open a popup window!
-    // Calling it with only ('_blank') opens a real browser tab.
-    try {
-      const win = _origWindowOpen.call(window, url, '_blank');
-      if (win) {
-        try { win.opener = null; } catch (err) {}
-        return win;
-      }
-    } catch (err) {
-      console.warn("PC window.open fallback notice:", err);
-    }
-
-    return null;
+    return 'mobile';
   }
 
   /**
    * Device-Aware Ad Opener
-   * Opens ads reliably across all mobile (Android/iOS) and desktop browsers without triggering popup blockers
+   * - PC/Desktop: Executes direct native window.open(url, '_blank') synchronously during user gesture.
+   * - Mobile/Tablet: Executes clean window.open with isolated fallback.
    */
   function openAd(url) {
-    if (!url || url === '#' || url.startsWith('javascript:')) return;
+    if (!url || url === '#' || url.startsWith('javascript:')) return null;
 
-    if (detectedType === 'pc') {
-      return openAdInNewTabPC(url);
+    if (!isMobileOrTabletDevice()) {
+      // 1. DESKTOP / PC:
+      // Direct synchronous window.open with '_blank' and NO feature strings.
+      // Calling native window.open directly inside the click event ensures 100% bypass of PC popup blockers.
+      try {
+        const win = (_origWindowOpen || window.open).call(window, url, '_blank');
+        if (win) {
+          try { win.opener = null; } catch (err) {}
+          return win;
+        }
+      } catch (e) {
+        console.warn("[PC Ad Dispatcher] Direct window.open notice:", e);
+      }
+      return null;
     }
 
-    // Mobile & Tablet:
+    // 2. MOBILE & TABLET:
     // First try standard window.open(url, '_blank') WITHOUT feature strings
-    // (Passing 'noopener,noreferrer' as windowFeatures is what causes mobile Chrome & Safari popup blockers to fire!)
     try {
-      const win = _origWindowOpen.call(window, url, '_blank');
+      const win = (_origWindowOpen || window.open).call(window, url, '_blank');
       if (win) {
         try { win.opener = null; } catch (e) {}
         return win;
@@ -144,16 +101,8 @@
         if (a.parentNode) a.parentNode.removeChild(a);
       }, 150);
     } catch (err) {}
+    return null;
   }
-
-  // --- GLOBAL WINDOW.OPEN INTERCEPTION ---
-  window.open = function (url, target, features) {
-    if (detectedType === 'pc') {
-      return openAdInNewTabPC(url);
-    } else {
-      return openAd(url);
-    }
-  };
 
   // --- ANTI-HIJACKING LOCATION GUARDS ---
   try {
@@ -207,17 +156,16 @@
   // Expose API globally
   window.LegionDevice = {
     getType: detectDeviceType,
-    type: detectedType,
-    isPC: function () { return detectDeviceType() === 'pc'; },
+    type: detectDeviceType(),
+    isPC: function () { return !isMobileOrTabletDevice(); },
+    isDesktop: function () { return !isMobileOrTabletDevice(); },
     isTablet: function () { return detectDeviceType() === 'tablet'; },
     isMobile: function () { return detectDeviceType() === 'mobile'; },
-    isMobileOrTablet: function () {
-      const t = detectDeviceType();
-      return t === 'mobile' || t === 'tablet';
-    },
+    isMobileOrTablet: isMobileOrTabletDevice,
     openAd: openAd,
-    openAdInNewTabPC: openAdInNewTabPC
+    openAdInNewTabPC: openAd,
+    dispatchAd: openAd
   };
 
-  console.log(`[LEGION Device Intelligence] Identified Device: ${detectedType.toUpperCase()} (PC New Tab Enforcement: ${detectedType === 'pc' ? 'ACTIVE' : 'STANDBY'})`);
+  console.log(`[LEGION Device Intelligence] Identified Device: ${detectDeviceType().toUpperCase()} (PC Direct New Tab: ${!isMobileOrTabletDevice() ? 'ACTIVE' : 'STANDBY'})`);
 })();
