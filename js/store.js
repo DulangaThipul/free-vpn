@@ -398,6 +398,38 @@
     return val;
   }
 
+  const FUNNEL_SETTINGS_KEY = 'legion_funnel_settings';
+  const DEFAULT_FUNNEL_SETTINGS = {
+    sg_steps: 100,
+    public_steps: 10
+  };
+
+  function getFunnelSettings() {
+    try {
+      const data = localStorage.getItem(FUNNEL_SETTINGS_KEY);
+      if (data) {
+        const parsed = JSON.parse(data);
+        return {
+          sg_steps: (parsed.sg_steps === 1 || parsed.sg_steps === '1') ? 1 : 100,
+          public_steps: (parsed.public_steps === 1 || parsed.public_steps === '1') ? 1 : 10
+        };
+      }
+    } catch (e) {}
+    return { ...DEFAULT_FUNNEL_SETTINGS };
+  }
+
+  function saveFunnelSettings(settings) {
+    if (!settings) return DEFAULT_FUNNEL_SETTINGS;
+    const finalSettings = {
+      sg_steps: (settings.sg_steps === 1 || settings.sg_steps === '1') ? 1 : 100,
+      public_steps: (settings.public_steps === 1 || settings.public_steps === '1') ? 1 : 10
+    };
+    try {
+      localStorage.setItem(FUNNEL_SETTINGS_KEY, JSON.stringify(finalSettings));
+    } catch (e) {}
+    return finalSettings;
+  }
+
   // Global store export
   window.LegionStore = {
     ISP_SNI_MAP: ISP_SNI_MAP,
@@ -405,6 +437,8 @@
     injectPackageSni: injectPackageSni,
     getMasterConfig: getMasterConfig,
     saveMasterConfig: saveMasterConfig,
+    getFunnelSettings: getFunnelSettings,
+    saveFunnelSettings: saveFunnelSettings,
     getPackages: getPackages,
     savePackages: savePackages,
     getPackageById: getPackageById,

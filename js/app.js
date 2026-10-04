@@ -183,8 +183,8 @@
   }, true);
 
 
-  // Step Quotas configuration (Grand Total: exactly 100 Ad Interactions)
-  const STEP_QUOTAS = {
+  // Step Quotas configuration (Grand Total: exactly 100 Ad Interactions in Standard Mode)
+  const DEFAULT_STEP_QUOTAS = {
     1: 10,
     2: 10,
     3: 10,
@@ -195,12 +195,15 @@
     8: 10,
     9: 15  // Final Boss Milestone
   };
-  const TOTAL_ADS_REQUIRED = 100;
+  let STEP_QUOTAS = { ...DEFAULT_STEP_QUOTAS };
+  let TOTAL_ADS_REQUIRED = 100;
 
   // Application State
   const state = {
     currentStep: 1,
     stepsCompleted: 0,
+    sgSteps: 100,
+    publicSteps: 10,
     isCooldown: false,
     cooldownInterval: null,
     vpnConfig: null,
@@ -875,6 +878,9 @@
 
   // Calculate total ads verified across all steps for progress bar
   function calculateTotalAdsDone() {
+    if (state.sgSteps === 1) {
+      return (state.stepsCompleted >= 1 || (state.stepClicks && state.stepClicks[1] >= 1)) ? 1 : 0;
+    }
     let total = 0;
     for (let i = 1; i <= 9; i++) {
       if (state.stepsCompleted >= i) {
@@ -893,7 +899,187 @@
       dom.progressBar.style.width = `${percent}%`;
     }
     if (dom.progressText) {
-      dom.progressText.textContent = `${totalDone}/100 Ads (${percent}%)`;
+      const label = (TOTAL_ADS_REQUIRED === 1) 
+        ? `${totalDone}/1 Ad (${percent}%)` 
+        : `${totalDone}/100 Ads (${percent}%)`;
+      dom.progressText.textContent = label;
+    }
+  }
+
+  // --- DYNAMIC AD VERIFICATION FUNNEL CONTROLLER ---
+  function updateClaimPageFunnelUI() {
+    const isInstant = (state.sgSteps === 1);
+    const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+
+    const modeBadge = document.getElementById('sg-funnel-mode-badge');
+    const modeDesc = document.getElementById('sg-funnel-mode-desc');
+
+    if (modeBadge) {
+      if (isInstant) {
+        modeBadge.textContent = "⚡ Instant 1-Step Unlock";
+        modeBadge.className = "ad-slot-badge mb-1 inline-block bg-amber-500/20 text-amber-300 border-amber-500/40";
+      } else {
+        modeBadge.textContent = "Dedicated Singapore Uplink";
+        modeBadge.className = "ad-slot-badge mb-1 inline-block";
+      }
+    }
+
+    if (modeDesc) {
+      if (isInstant) {
+        modeDesc.innerHTML = `<span class="text-amber-400 font-bold">⚡ Instant Unlock Active:</span> Complete Step 1 below (1 Ad) to instantly claim your 30-day Singapore VPN credentials!`;
+      } else {
+        modeDesc.textContent = "🛡️ Watch sponsor ads sequentially by clicking the step buttons below.";
+      }
+    }
+
+    // Step 1 Button text and quota update
+    if (dom.stepBtn1 && !state.stepsCompleted) {
+      const quota = STEP_QUOTAS[1] || (isInstant ? 1 : 10);
+      const clicks = (state.stepClicks && state.stepClicks[1]) || 0;
+      const btnText = lang === 'si'
+        ? `Ad එක Verify කරන්න (${clicks}/${quota})`
+        : `Click to Verify Ad (${clicks}/${quota})`;
+      dom.stepBtn1.innerHTML = `<span>${btnText}</span>`;
+    }
+
+    // Steps 2-9 visual bypass indicator if Instant mode is active
+    for (let s = 2; s <= 9; s++) {
+      const card = dom[`stepCard${s}`];
+      const statusEl = dom[`stepStatus${s}`];
+      const btn = dom[`stepBtn${s}`];
+
+      if (isInstant) {
+        if (statusEl && !state.stepsCompleted) {
+          statusEl.innerHTML = `<span class="text-amber-400 font-mono text-[10px]">⚡ Instant Bypass</span>`;
+        }
+        if (btn && !state.stepsCompleted) {
+          btn.innerHTML = `<span>⚡ Unlocked in Step 1</span>`;
+        }
+      }
+    }
+
+    updateOverallProgress();
+  }
+
+  function updatePublicServersFunnelUI() {
+    renderPublicServersGrid();
+  }
+
+  function applyFunnelSettings(sgSteps, publicSteps) {
+    state.sgSteps = (sgSteps === 1) ? 1 : 100;
+    state.publicSteps = (publicSteps === 1) ? 1 : 10;
+
+    if (state.sgSteps === 1) {
+      TOTAL_ADS_REQUIRED = 1;
+      STEP_QUOTAS = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1 };
+    } else {
+      TOTAL_ADS_REQUIRED = 100;
+      STEP_QUOTAS = { ...DEFAULT_STEP_QUOTAS };
+    }
+
+    updateClaimPageFunnelUI();
+    updatePublicServersFunnelUI();
+  }
+
+  async function syncFunnelSettings() {
+    // 1. Initial application from local cache
+    if (window.LegionStore && window.LegionStore.getFunnelSettings) {
+      const cached = window.LegionStore.getFunnelSettings();
+      applyFunnelSettings(cached.sg_steps, cached.public_steps);
+    }
+
+    // 2. Fetch live settings from Cloudflare Worker API (MongoDB Atlas)
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/config`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const sgSteps = (data.sg_steps === 1) ? 1 : 100;
+        const publicSteps = (data.public_steps === 1) ? 1 : 10;
+        if (window.LegionStore && window.LegionStore.saveFunnelSettings) {
+          window.LegionStore.saveFunnelSettings({ sg_steps: sgSteps, public_steps: publicSteps });
+        }
+        applyFunnelSettings(sgSteps, publicSteps);
+      }
+    } catch (e) {
+      console.warn("[syncFunnelSettings notice]:", e);
+    }
+  }
+
+  function applyModalSettingsToDOM(ms) {
+    if (!ms) return;
+    const tag = document.getElementById('sg-modal-tag');
+    if (tag && ms.sgStatusTag) tag.textContent = ms.sgStatusTag;
+    const v = document.getElementById('sg-modal-validity');
+    if (v && ms.sgValidityNotice) v.textContent = ms.sgValidityNotice;
+    const s = document.getElementById('sg-modal-support-banner');
+    if (s && ms.sgSupportBanner) s.textContent = ms.sgSupportBanner;
+
+    const heading = document.getElementById('sg-modal-heading');
+    if (heading && ms.sgHeading) heading.textContent = ms.sgHeading;
+    const proto = document.getElementById('sg-modal-protocol-label');
+    if (proto && ms.sgProtocolLabel) proto.textContent = ms.sgProtocolLabel;
+    const footer = document.getElementById('sg-modal-footer');
+    if (footer && ms.sgFooter) footer.textContent = ms.sgFooter;
+
+    const adv = document.getElementById('pub-modal-advisory');
+    if (adv && ms.pubAdvisoryBanner) adv.textContent = ms.pubAdvisoryBanner;
+    const upFree = document.getElementById('pub-modal-upsell-free');
+    if (upFree && ms.pubUpsellPitch) upFree.textContent = ms.pubUpsellPitch;
+    const upVip = document.getElementById('pub-modal-upsell-vip');
+    if (upVip && ms.pubVipPitch) upVip.textContent = ms.pubVipPitch;
+  }
+
+  async function syncModalSettings() {
+    if (window.LegionStore && window.LegionStore.getModalSettings) {
+      applyModalSettingsToDOM(window.LegionStore.getModalSettings());
+    }
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/modal-settings`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const liveMs = data.modal_settings || data.settings;
+        if (liveMs && typeof liveMs === 'object') {
+          if (window.LegionStore && window.LegionStore.saveModalSettings) {
+            window.LegionStore.saveModalSettings(liveMs);
+          }
+          applyModalSettingsToDOM(liveMs);
+        }
+      }
+    } catch (e) {
+      console.warn("[syncModalSettings notice]:", e);
+    }
+  }
+
+  async function syncPublicServers() {
+    renderPublicServersGrid();
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/public-servers`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const liveServers = data.servers || data.public_servers;
+        if (Array.isArray(liveServers) && liveServers.length > 0) {
+          if (window.LegionStore && window.LegionStore.savePublicServers) {
+            window.LegionStore.savePublicServers(liveServers);
+          }
+          renderPublicServersGrid();
+        }
+      }
+    } catch (e) {
+      console.warn("[syncPublicServers notice]:", e);
     }
   }
 
@@ -1162,7 +1348,7 @@
         });
 
         if (newClicks >= quota) {
-          state.stepsCompleted = stepNumber;
+          state.stepsCompleted = (state.sgSteps === 1) ? 9 : stepNumber;
           updateStepUI(stepNumber, true);
           updateOverallProgress();
           saveVerificationProgress();
@@ -1170,21 +1356,21 @@
             event: 'step_completed',
             step: stepNumber,
             totalAdsVerified: calculateTotalAdsDone(),
-            progressSummary: `Step ${stepNumber} Complete (${quota}/${quota} Ads)`
+            progressSummary: (state.sgSteps === 1) ? "1/1 Ad Complete (Instant Unlock)" : `Step ${stepNumber} Complete (${quota}/${quota} Ads)`
           });
 
-          if (stepNumber < 9) {
+          if (state.sgSteps === 1 || stepNumber >= 9) {
+            const finalToastMsg = lang === 'si'
+              ? ((state.sgSteps === 1) ? "🎉 1-Step Instant Verification සාර්ථකයි! Trojan Credentials සාදමින්..." : "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්...")
+              : ((state.sgSteps === 1) ? "🎉 Instant 1-Step Verification Complete! Fetching Trojan Credentials..." : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...");
+            showToast(finalToastMsg, "success");
+            fetchSecureVPNConfig();
+          } else {
             unlockStep(stepNumber + 1);
             const toastMsg = lang === 'si'
               ? `${stepNumber} වන පියවර සාර්ථකයි (${quota}/${quota} Ads)! ඊළඟ පියවර Unlock විය.`
               : `Step ${stepNumber} Complete (${quota}/${quota} Ads)! Next step unlocked.`;
             showToast(toastMsg, "success");
-          } else {
-            const finalToastMsg = lang === 'si'
-              ? "🎉 පියවර 9 සහ Ads 100 සම්පූර්ණයි! Trojan Credentials සාදමින්..."
-              : "🎉 All 9 Steps & 100 Ads Verified! Fetching Trojan Credentials...";
-            showToast(finalToastMsg, "success");
-            fetchSecureVPNConfig();
           }
           return;
         }
@@ -1365,7 +1551,7 @@
     const cfg = window.LEGION_CONFIG || {};
     if (cfg.API_BASE_URL) return cfg.API_BASE_URL.replace(/\/+$/, '');
     if (cfg.API_ENDPOINT) return cfg.API_ENDPOINT.replace(/\/claim\/?$/, '').replace(/\/+$/, '');
-    return "https://legion-vpn-api.legiongraphics.workers.dev";
+    return "https://freevpn.dulangathipul.workers.dev";
   }
 
   // --- Single Master VPN Config Delivery (Connected to MongoDB Atlas) ---
@@ -1500,6 +1686,8 @@
     // Apply custom modal settings if configured by admin
     if (window.LegionStore && window.LegionStore.getModalSettings) {
       const ms = window.LegionStore.getModalSettings();
+      applyModalSettingsToDOM(ms);
+      syncModalSettings().catch(() => {});
       const tag = document.getElementById('sg-modal-tag');
       if (tag && ms.sgStatusTag) tag.textContent = ms.sgStatusTag;
       const v = document.getElementById('sg-modal-validity');
@@ -1626,7 +1814,9 @@ INSTRUCTIONS:
       const card = document.createElement('div');
       card.className = `m3-surface-2 p-5 rounded-3xl border transition-all flex flex-col justify-between ${isOnline ? 'border-emerald-900/40 hover:border-emerald-500/60' : 'border-red-950/40 opacity-80'}`;
       
-      card.innerHTML = `
+        const isInstantPublic = (state.publicSteps === 1);
+        const unlockBtnText = isInstantPublic ? '⚡ 1 Ad Instant Unlock →' : '10 Ads Quick Unlock →';
+        card.innerHTML = `
         <div>
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2.5">
@@ -1642,7 +1832,7 @@ INSTRUCTIONS:
         </div>
         <button class="js-open-public-btn w-full py-3 rounded-2xl ${isOnline ? 'bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white' : 'bg-red-950/20 border-red-900/40 text-red-500 cursor-not-allowed'} font-bold text-xs transition-colors flex items-center justify-center gap-2" ${isOnline ? '' : 'disabled'} data-id="${srv.id}" data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
           <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm ${isOnline ? '' : 'opacity-50'}">
-          <span>${isOnline ? '10 Ads Quick Unlock →' : 'Offline'}</span>
+          <span>${isOnline ? unlockBtnText : 'Offline'}</span>
         </button>
       `;
       grid.appendChild(card);
@@ -1771,7 +1961,13 @@ INSTRUCTIONS:
           btnAd.classList.remove('bg-neon', 'text-black', 'hover:bg-emerald-400');
           btnAd.innerHTML = '<span>Complete Turnstile First</span>';
         }
-        if (adStatus) adStatus.textContent = "Requires 10 Sponsored Impressions";
+        const isInstantPublic = (state.publicSteps === 1);
+        const publicQuota = isInstantPublic ? 1 : 10;
+        if (adStatus) {
+          adStatus.textContent = isInstantPublic
+            ? "Requires 1 Sponsored Impression (⚡ Instant Unlock)"
+            : "Requires 10 Sponsored Impressions";
+        }
         
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -1812,13 +2008,15 @@ INSTRUCTIONS:
           if (turnstileText) turnstileText.textContent = "Success";
           triggerMobileHaptic();
           
+          const isInstantPublicNow = (state.publicSteps === 1);
+          const currentQuota = isInstantPublicNow ? 1 : 10;
           if (btnAd) {
             btnAd.disabled = false;
             btnAd.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'text-zinc-400');
             btnAd.classList.add('bg-neon', 'text-black', 'hover:bg-emerald-400');
-            btnAd.innerHTML = `<span>Click to Verify Ad (0/10)</span>`;
+            btnAd.innerHTML = `<span>Click to Verify Ad (0/${currentQuota})</span>`;
           }
-          if (adStatus) adStatus.textContent = "Click button to open sponsor (0/10 ads verified)";
+          if (adStatus) adStatus.textContent = `Click button to open sponsor (0/${currentQuota} ads verified)`;
         }, 1800);
       });
     }
@@ -1871,19 +2069,23 @@ INSTRUCTIONS:
         activeAdSession = {
           startTime: Date.now(),
           onReset: () => {
+            const isInstantPublicNow = (state.publicSteps === 1);
+            const currentQuota = isInstantPublicNow ? 1 : 10;
             btnAd.disabled = false;
             btnAd.classList.remove('opacity-85', 'cursor-not-allowed');
-            btnAd.innerHTML = `<span>Click to Verify Ad (${currentClicks}/10)</span>`;
+            btnAd.innerHTML = `<span>Click to Verify Ad (${currentClicks}/${currentQuota})</span>`;
             if (adStatus) {
-              adStatus.innerHTML = `<span class="text-neon font-medium">${currentClicks}/10 Ads Verified.</span>`;
+              adStatus.innerHTML = `<span class="text-neon font-medium">${currentClicks}/${currentQuota} Ads Verified.</span>`;
             }
           },
           onSuccess: () => {
             currentPublicState.adClicks++;
             const clicks = currentPublicState.adClicks;
+            const isInstantPublicNow = (state.publicSteps === 1);
+            const currentQuota = isInstantPublicNow ? 1 : 10;
             triggerMobileHaptic();
 
-            if (clicks >= 10) {
+            if (clicks >= currentQuota) {
               // 10 Ads Completed -> Close public modal & release Master Config via Celebratory Completion Modal
               if (modal) {
                 modal.classList.add('hidden');
@@ -1897,16 +2099,19 @@ INSTRUCTIONS:
                 : '';
               if (vlessOutput && masterConfig) vlessOutput.value = masterConfig;
 
-              showToast("🎉 10 Ads Verified! Releasing Singapore Master VPN...", "success");
+              const toastMsg = isInstantPublicNow
+                ? "🎉 1 Ad Verified! Releasing Singapore Master VPN..."
+                : "🎉 10 Ads Verified! Releasing Singapore Master VPN...";
+              showToast(toastMsg, "success");
               deliverMasterVPNConfig(currentPublicState.selectedPackageKey);
               return;
             }
 
             btnAd.disabled = false;
             btnAd.classList.remove('opacity-85', 'cursor-not-allowed');
-            btnAd.innerHTML = `<span>Click to Verify Ad (${clicks}/10)</span>`;
-            if (adStatus) adStatus.innerHTML = `<span class="text-neon font-medium">${clicks}/10 Ads Verified.</span>`;
-            showToast(`✓ Ad Verified (${clicks}/10)`, "success");
+            btnAd.innerHTML = `<span>Click to Verify Ad (${clicks}/${currentQuota})</span>`;
+            if (adStatus) adStatus.innerHTML = `<span class="text-neon font-medium">${clicks}/${currentQuota} Ads Verified.</span>`;
+            showToast(`✓ Ad Verified (${clicks}/${currentQuota})`, "success");
           }
         };
       });
@@ -2013,7 +2218,9 @@ INSTRUCTIONS:
     initSocialBar();
     initAdRulesModal();
     initTurnstileBoxClick();
-    renderPublicServersGrid();
+    syncFunnelSettings();
+    syncPublicServers();
+    syncModalSettings();
     initPublicServerModal();
     renderPackages();
     setupCopyButtons();

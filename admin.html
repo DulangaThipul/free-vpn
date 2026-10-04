@@ -144,6 +144,73 @@
         </div>
       </section>
 
+      <!-- SECTION 0.5: Ad Verification Funnel Settings (100/10 Ads vs 1-Step Instant Unlock) -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-neon/50 space-y-6 shadow-xl relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white">Ad Verification Funnel Settings</h2>
+              <span id="funnel-settings-badge" class="px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-neon/15 text-neon border border-neon/30">Active</span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-1">Switch between full ad monetization (Standard) and 1-Step instant bypass unlock for testing or promotions</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="funnel-save-status" class="text-xs text-emerald-400 font-sans"></span>
+            <button id="btn-save-funnel-settings" type="button" class="px-6 py-2.5 rounded-2xl bg-neon text-black font-bold text-xs m3-btn flex items-center gap-2 hover:bg-emerald-400">
+              <span>💾 Save Funnel Settings</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Toggle 1: Singapore VIP Node -->
+          <div class="p-5 rounded-2xl bg-surface-200 border border-emerald-900/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🇸🇬</span>
+                <span class="text-sm font-bold text-white">Singapore VIP Node (Claim Page)</span>
+              </div>
+              <span id="sg-steps-mode-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 font-mono">100 Ads</span>
+            </div>
+            <p class="text-xs text-zinc-400">Controls verification required to release Singapore Master Trojan credentials on claim.html</p>
+            
+            <div class="space-y-2 pt-2">
+              <label class="block text-xs font-semibold text-zinc-400">Verification Flow Mode:</label>
+              <select id="select-sg-steps" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-xs font-semibold text-white">
+                <option value="100">Standard: 100 Ads (9-Step Funnel - Maximum Revenue)</option>
+                <option value="1">⚡ Instant 1-Step (1 Ad - Instant Unlock Bypass)</option>
+              </select>
+            </div>
+            <div class="text-[11px] text-zinc-500 font-sans" id="sg-steps-explainer">
+              Current mode: Users must watch 100 sponsor ads across 9 sequential steps.
+            </div>
+          </div>
+
+          <!-- Toggle 2: Public Servers -->
+          <div class="p-5 rounded-2xl bg-surface-200 border border-emerald-900/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🌐</span>
+                <span class="text-sm font-bold text-white">Global Public Servers (Index Page)</span>
+              </div>
+              <span id="public-steps-mode-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 font-mono">10 Ads</span>
+            </div>
+            <p class="text-xs text-zinc-400">Controls verification required to unlock public server modal on index.html</p>
+            
+            <div class="space-y-2 pt-2">
+              <label class="block text-xs font-semibold text-zinc-400">Verification Flow Mode:</label>
+              <select id="select-public-steps" class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-xs font-semibold text-white">
+                <option value="10">Standard: 10 Ads (Fair-use Verification)</option>
+                <option value="1">⚡ Instant 1-Step (1 Ad - Instant Unlock Bypass)</option>
+              </select>
+            </div>
+            <div class="text-[11px] text-zinc-500 font-sans" id="public-steps-explainer">
+              Current mode: Users must watch 10 sponsor ads to copy server config.
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- SECTION 1: ISP Packages & Trojan Configurations Management -->
       <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -251,7 +318,7 @@
             </div>
           </div>
 
-          <button type="submit" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
+          <button id="btn-save-modal-settings" type="submit" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
             Save Modal Settings & Push to Clients
           </button>
         </form>

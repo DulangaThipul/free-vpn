@@ -219,9 +219,10 @@
     users = window.LegionStore.getUsers();
     renderStats();
     loadMasterConfig();
+    loadFunnelSettings();
     renderPackages();
     renderUsers();
-    renderPublicServers();
+    loadPublicServers();
     loadModalSettings();
     loadAdminLogins();
     loadVisitorLogs();
@@ -475,6 +476,52 @@
   }
 
   // --- Public Servers Manager ---
+  async function loadPublicServers() {
+    renderPublicServers();
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/public-servers`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const liveServers = data.servers || data.public_servers;
+        if (Array.isArray(liveServers) && liveServers.length > 0) {
+          window.LegionStore.savePublicServers(liveServers);
+          renderPublicServers();
+        }
+      }
+    } catch (e) {
+      console.warn("loadPublicServers notice:", e);
+    }
+  }
+
+  async function pushPublicServersToBackend(servers) {
+    window.LegionStore.savePublicServers(servers);
+    renderPublicServers();
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/admin/public-servers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          servers: servers
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        showAdminToast("Public servers saved & synced to MongoDB Atlas!", "success");
+      }
+    } catch (err) {
+      console.warn("pushPublicServersToBackend error:", err);
+    }
+  }
+
   function renderPublicServers() {
     const table = document.getElementById('admin-public-servers-table');
     if (!table) return;
@@ -518,8 +565,7 @@
         const srv = servers.find(s => s.id === id);
         if (srv) {
           srv.status = srv.status === 'Online' ? 'Maintenance' : 'Online';
-          window.LegionStore.savePublicServers(servers);
-          renderPublicServers();
+          pushPublicServersToBackend(servers);
         }
       });
     });
@@ -580,8 +626,7 @@
       srv.configs.youtube = document.getElementById('edit-pub-srv-youtube').value.trim();
       srv.configs.zoom = document.getElementById('edit-pub-srv-zoom').value.trim();
       
-      window.LegionStore.savePublicServers(servers);
-      renderPublicServers();
+      pushPublicServersToBackend(servers);
       closePublicServerModal();
       showAdminToast("Public Server Config Saved!", "success");
     }
@@ -607,22 +652,42 @@
         sni: sni ? sni.trim() : "m.facebook.com",
         status: "Online"
       });
-      window.LegionStore.savePublicServers(servers);
-      renderPublicServers();
+      pushPublicServersToBackend(servers);
     }
   }
 
   // --- Modal Settings Manager ---
-  function loadModalSettings() {
-    const ms = window.LegionStore.getModalSettings();
+  async function loadModalSettings() {
     const fields = ['sgHeading', 'sgStatusTag', 'sgProtocolLabel', 'sgValidityNotice', 'sgSupportBanner', 'sgFooter', 'pubAdvisoryBanner', 'pubUpsellPitch', 'pubVipPitch'];
+    const ms = window.LegionStore.getModalSettings();
     fields.forEach(f => {
       const el = document.getElementById('ms-' + f);
-      if (el) el.value = ms[f];
+      if (el) el.value = ms[f] || '';
     });
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/modal-settings`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const liveMs = data.modal_settings || data.settings;
+        if (liveMs && typeof liveMs === 'object') {
+          window.LegionStore.saveModalSettings(liveMs);
+          fields.forEach(f => {
+            const el = document.getElementById('ms-' + f);
+            if (el && liveMs[f] !== undefined) el.value = liveMs[f];
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("loadModalSettings notice:", e);
+    }
   }
 
-  function handleModalSettingsSubmit(e) {
+  async function handleModalSettingsSubmit(e) {
     e.preventDefault();
     const fields = ['sgHeading', 'sgStatusTag', 'sgProtocolLabel', 'sgValidityNotice', 'sgSupportBanner', 'sgFooter', 'pubAdvisoryBanner', 'pubUpsellPitch', 'pubVipPitch'];
     const ms = {};
@@ -631,7 +696,52 @@
       if (el) ms[f] = el.value.trim();
     });
     window.LegionStore.saveModalSettings(ms);
-    alert("Modal settings successfully saved and pushed to clients!");
+
+    const btn = document.getElementById('btn-save-modal-settings') || e.target.querySelector('button[type="submit"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳ Saving to MongoDB Atlas...</span>`;
+    }
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/admin/modal-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          modal_settings: ms
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        if (btn) {
+          btn.innerHTML = `<span>✓ Saved to MongoDB!</span>`;
+          btn.classList.add('bg-emerald-400');
+          setTimeout(() => {
+            btn.innerHTML = `<span>Save Modal Settings & Push to Clients</span>`;
+            btn.classList.remove('bg-emerald-400');
+            btn.disabled = false;
+          }, 2500);
+        }
+        showAdminToast("Modal settings saved to MongoDB Atlas & pushed to clients!", "success");
+      } else {
+        throw new Error(data.message || `HTTP ${res.status}`);
+      }
+    } catch (err) {
+      console.warn("Save modal settings error:", err);
+      if (btn) {
+        btn.innerHTML = `<span>💾 Saved Locally</span>`;
+        btn.disabled = false;
+        setTimeout(() => {
+          btn.innerHTML = `<span>Save Modal Settings & Push to Clients</span>`;
+        }, 2500);
+      }
+      alert(`⚠️ Saved locally, but MongoDB Atlas update failed:\n${err.message}`);
+    }
   }
 
   // --- Users Manager ---
@@ -725,7 +835,7 @@
     const cfg = window.LEGION_CONFIG || {};
     if (cfg.API_BASE_URL) return cfg.API_BASE_URL.replace(/\/+$/, '');
     if (cfg.API_ENDPOINT) return cfg.API_ENDPOINT.replace(/\/claim\/?$/, '').replace(/\/+$/, '');
-    return "https://legion-vpn-api.legiongraphics.workers.dev";
+    return "https://freevpn.dulangathipul.workers.dev";
   }
 
   async function loadMasterConfig() {
@@ -840,15 +950,175 @@
     }
   }
 
+  // --- Ad Verification Funnel Settings Manager ---
+  function updateFunnelUI(sgSteps, publicSteps) {
+    const selectSg = document.getElementById('select-sg-steps');
+    const selectPublic = document.getElementById('select-public-steps');
+    const sgBadge = document.getElementById('sg-steps-mode-badge');
+    const publicBadge = document.getElementById('public-steps-mode-badge');
+    const sgExplainer = document.getElementById('sg-steps-explainer');
+    const publicExplainer = document.getElementById('public-steps-explainer');
+
+    if (selectSg && sgSteps !== undefined) {
+      selectSg.value = String(sgSteps);
+    }
+    if (selectPublic && publicSteps !== undefined) {
+      selectPublic.value = String(publicSteps);
+    }
+
+    const currentSg = selectSg ? parseInt(selectSg.value, 10) : sgSteps;
+    const currentPublic = selectPublic ? parseInt(selectPublic.value, 10) : publicSteps;
+
+    if (sgBadge) {
+      if (currentSg === 1) {
+        sgBadge.textContent = "⚡ Instant (1 Ad)";
+        sgBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono";
+      } else {
+        sgBadge.textContent = "100 Ads (Standard)";
+        sgBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 font-mono";
+      }
+    }
+    if (sgExplainer) {
+      if (currentSg === 1) {
+        sgExplainer.innerHTML = `<span class="text-amber-400 font-semibold">⚡ Instant Bypass Active:</span> Users watch only 1 sponsor ad, hitting 100% instantly to release Singapore Master Node.`;
+      } else {
+        sgExplainer.textContent = "Current mode: Users must watch 100 sponsor ads across 9 sequential steps (Standard monetization).";
+      }
+    }
+
+    if (publicBadge) {
+      if (currentPublic === 1) {
+        publicBadge.textContent = "⚡ Instant (1 Ad)";
+        publicBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono";
+      } else {
+        publicBadge.textContent = "10 Ads (Standard)";
+        publicBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 font-mono";
+      }
+    }
+    if (publicExplainer) {
+      if (currentPublic === 1) {
+        publicExplainer.innerHTML = `<span class="text-amber-400 font-semibold">⚡ Instant Bypass Active:</span> Users watch 1 sponsor ad in the modal to immediately copy public server credentials.`;
+      } else {
+        publicExplainer.textContent = "Current mode: Users must watch 10 sponsor ads to copy server config (Standard verification).";
+      }
+    }
+  }
+
+  async function loadFunnelSettings() {
+    // 1. Initial render from local cache
+    const cached = (window.LegionStore && window.LegionStore.getFunnelSettings)
+      ? window.LegionStore.getFunnelSettings()
+      : { sg_steps: 100, public_steps: 10 };
+    updateFunnelUI(cached.sg_steps, cached.public_steps);
+
+    // 2. Sync live from Cloudflare Worker & MongoDB Atlas
+    const statusEl = document.getElementById('funnel-save-status');
+    if (statusEl) statusEl.textContent = "Syncing funnel modes...";
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/config`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const sgSteps = (data.sg_steps === 1) ? 1 : 100;
+        const publicSteps = (data.public_steps === 1) ? 1 : 10;
+        if (window.LegionStore && window.LegionStore.saveFunnelSettings) {
+          window.LegionStore.saveFunnelSettings({ sg_steps: sgSteps, public_steps: publicSteps });
+        }
+        updateFunnelUI(sgSteps, publicSteps);
+        if (statusEl) {
+          statusEl.textContent = "✓ Synced with MongoDB";
+          setTimeout(() => { if (statusEl && statusEl.textContent.includes("Synced")) statusEl.textContent = ""; }, 2500);
+        }
+      } else {
+        if (statusEl) statusEl.textContent = "Using local cache";
+      }
+    } catch (e) {
+      console.warn("loadFunnelSettings notice:", e);
+      if (statusEl) statusEl.textContent = "Using local cache";
+    }
+  }
+
+  async function handleSaveFunnelSettings() {
+    const selectSg = document.getElementById('select-sg-steps');
+    const selectPublic = document.getElementById('select-public-steps');
+    const btn = document.getElementById('btn-save-funnel-settings');
+    const statusEl = document.getElementById('funnel-save-status');
+
+    const sgSteps = selectSg ? parseInt(selectSg.value, 10) : 100;
+    const publicSteps = selectPublic ? parseInt(selectPublic.value, 10) : 10;
+
+    // Save locally
+    if (window.LegionStore && window.LegionStore.saveFunnelSettings) {
+      window.LegionStore.saveFunnelSettings({ sg_steps: sgSteps, public_steps: publicSteps });
+    }
+    updateFunnelUI(sgSteps, publicSteps);
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳ Saving to MongoDB Atlas...</span>`;
+    }
+    if (statusEl) statusEl.textContent = "Updating funnel settings...";
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(`${apiBase}/api/free/admin/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          sg_steps: sgSteps,
+          public_steps: publicSteps
+        })
+      });
+
+      const resJson = await response.json();
+      if (response.ok && resJson.success) {
+        if (btn) {
+          btn.innerHTML = `<span>✓ Saved to MongoDB!</span>`;
+          btn.classList.add('bg-emerald-400');
+          setTimeout(() => {
+            btn.innerHTML = `<span>💾 Save Funnel Settings</span>`;
+            btn.classList.remove('bg-emerald-400');
+            btn.disabled = false;
+          }, 2500);
+        }
+        if (statusEl) {
+          statusEl.textContent = "✓ Funnel settings saved to MongoDB Atlas!";
+          setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3500);
+        }
+      } else {
+        throw new Error(resJson.message || `HTTP ${response.status}`);
+      }
+    } catch (err) {
+      console.error("Save funnel settings failed:", err);
+      if (btn) {
+        btn.innerHTML = `<span>💾 Saved Locally</span>`;
+        btn.disabled = false;
+        setTimeout(() => {
+          btn.innerHTML = `<span>💾 Save Funnel Settings</span>`;
+        }, 3000);
+      }
+      if (statusEl) statusEl.textContent = `Saved locally (DB: ${err.message})`;
+      alert(`⚠️ Funnel settings saved locally, but MongoDB Atlas update failed:\n${err.message}`);
+    }
+  }
+
   // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     
     // Additional Loaders
-    renderPublicServers();
+    loadPublicServers();
     loadModalSettings();
     renderUsers();
     loadMasterConfig();
+    loadFunnelSettings();
 
     // Master Config Event Listeners
     const masterTextarea = document.getElementById('admin-master-vpn-config');
@@ -861,6 +1131,23 @@
       btnSaveMaster.addEventListener('click', handleSaveMasterConfig);
     }
 
+    // Funnel Settings Event Listeners
+    const selectSg = document.getElementById('select-sg-steps');
+    if (selectSg) {
+      selectSg.addEventListener('change', () => {
+        updateFunnelUI();
+      });
+    }
+    const selectPublic = document.getElementById('select-public-steps');
+    if (selectPublic) {
+      selectPublic.addEventListener('change', () => {
+        updateFunnelUI();
+      });
+    }
+    const btnSaveFunnel = document.getElementById('btn-save-funnel-settings');
+    if (btnSaveFunnel) {
+      btnSaveFunnel.addEventListener('click', handleSaveFunnelSettings);
+    }
     
     const btnRefAdmin = document.getElementById('btn-refresh-admin-logs');
     if (btnRefAdmin) btnRefAdmin.addEventListener('click', () => {

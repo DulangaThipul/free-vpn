@@ -1,4 +1,4 @@
-name = "legion-vpn-api"
+name = "freevpn"
 main = "cloudflare-worker.js"
 compatibility_date = "2025-03-20"
 compatibility_flags = ["nodejs_compat_v2"]

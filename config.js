@@ -12,8 +12,8 @@ window.LEGION_CONFIG = {
   HERO_VIDEO_URL: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-code-31910-large.mp4",
   
   // Real Cloudflare Worker API Endpoint
-  API_BASE_URL: "https://legion-vpn-api.legiongraphics.workers.dev",
-  API_ENDPOINT: "https://legion-vpn-api.legiongraphics.workers.dev/claim", 
+  API_BASE_URL: "https://freevpn.dulangathipul.workers.dev",
+  API_ENDPOINT: "https://freevpn.dulangathipul.workers.dev/claim", 
   
   // Adsterra / Monetag / CPA Network Monetization Settings
   ADS: {
@@ -41,6 +41,10 @@ window.LEGION_CONFIG = {
       8: 10,
       9: 15
     },
+    // Ad Verification Funnel Settings (Toggled by Admin Panel)
+    // Options: Standard (100 / 10) vs Instant 1-Step (1)
+    SG_STEPS: 100,
+    PUBLIC_STEPS: 10,
     TOTAL_ADS_REQUIRED: 100,
 
     // 9-Step Sequential Direct Smartlinks
