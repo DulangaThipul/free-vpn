@@ -1059,6 +1059,53 @@
     }
   }
 
+  async function syncGlobalSettings() {
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/global-settings`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const settings = data.settings || data.data;
+        if (settings && typeof settings === 'object') {
+          if (window.LegionStore && window.LegionStore.applyGlobalSettings) {
+            window.LegionStore.applyGlobalSettings(settings);
+          }
+          if (settings.sg_steps !== undefined || settings.public_steps !== undefined) {
+            applyFunnelSettings(settings.sg_steps, settings.public_steps);
+          }
+          renderPublicServersGrid();
+          renderPackages();
+          if (settings.modal_settings) {
+            applyModalSettingsToDOM(settings.modal_settings);
+          }
+
+          const urlParams = new URLSearchParams(window.location.search);
+          const pkgId = urlParams.get('pkg') || (state.selectedPackage && state.selectedPackage.id);
+          if (pkgId && window.LegionStore && window.LegionStore.getPackageById) {
+            const updatedPkg = window.LegionStore.getPackageById(pkgId);
+            if (updatedPkg) {
+              state.selectedPackage = updatedPkg;
+              const titleEl = document.getElementById('claim-pkg-title');
+              const descEl = document.getElementById('claim-pkg-desc');
+              const priceEl = document.getElementById('claim-pkg-price');
+              const simEl = document.getElementById('claim-pkg-sim');
+
+              if (titleEl) titleEl.textContent = updatedPkg.title;
+              if (descEl) descEl.textContent = updatedPkg.desc || 'High-speed Trojan protocol configuration.';
+              if (priceEl) priceEl.textContent = updatedPkg.ispPrice || 'Free VPS Slot';
+              if (simEl) simEl.textContent = '📶 ' + (updatedPkg.simType || 'Mobile Sim');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[syncGlobalSettings notice]:', e);
+    }
+  }
+
   async function syncPublicServers() {
     renderPublicServersGrid();
 
@@ -2218,6 +2265,7 @@ INSTRUCTIONS:
     initSocialBar();
     initAdRulesModal();
     initTurnstileBoxClick();
+    syncGlobalSettings();
     syncFunnelSettings();
     syncPublicServers();
     syncModalSettings();

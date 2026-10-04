@@ -215,6 +215,7 @@
 
   // --- Data Loader ---
   function loadDashboardData() {
+    loadGlobalSettingsFromBackend();
     packages = window.LegionStore.getPackages();
     users = window.LegionStore.getUsers();
     renderStats();
@@ -239,6 +240,73 @@
     if (statBanned) statBanned.textContent = bannedUsers;
     if (statAvailable) statAvailable.textContent = available;
     if (statOutOfStock) statOutOfStock.textContent = outOfStock;
+  }
+
+  // --- Push Packages to MongoDB Atlas via Cloudflare Worker ---
+  async function pushPackagesToBackend(pkgs) {
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/admin/packages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          packages: pkgs
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        showAdminToast("Package status synced to MongoDB Atlas!", "success");
+      }
+    } catch (err) {
+      console.warn("pushPackagesToBackend error:", err);
+    }
+  }
+
+  async function loadGlobalSettingsFromBackend() {
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/global-settings`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const settings = data.settings || data.data;
+        if (settings && typeof settings === 'object') {
+          if (window.LegionStore && window.LegionStore.applyGlobalSettings) {
+            window.LegionStore.applyGlobalSettings(settings);
+          }
+          packages = window.LegionStore.getPackages();
+          renderPackages();
+          renderStats();
+
+          // Master Config
+          const masterCfg = settings.master_config || settings.raw_config;
+          const textarea = document.getElementById('admin-master-vpn-config');
+          if (textarea && masterCfg) {
+            textarea.value = masterCfg;
+            updateMasterProtocolDisplay(masterCfg);
+          }
+
+          // Funnel UI
+          updateFunnelUI(settings.sg_steps, settings.public_steps);
+
+          // Public Servers
+          renderPublicServers();
+
+          // Modal Settings
+          if (settings.modal_settings) {
+            loadModalSettings();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("loadGlobalSettingsFromBackend notice:", e);
+    }
   }
 
   // --- Render Packages ---
@@ -291,10 +359,13 @@
 
     // Attach listeners
     document.querySelectorAll('.js-toggle-stock').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         window.LegionStore.togglePackageStock(id);
-        loadDashboardData();
+        packages = window.LegionStore.getPackages();
+        renderPackages();
+        renderStats();
+        await pushPackagesToBackend(packages);
       });
     });
 
@@ -473,6 +544,7 @@
 
     closeEditModal();
     loadDashboardData();
+    pushPackagesToBackend(window.LegionStore.getPackages()).catch(() => {});
   }
 
   // --- Public Servers Manager ---
@@ -1114,6 +1186,7 @@
     checkAuth();
     
     // Additional Loaders
+    loadGlobalSettingsFromBackend();
     loadPublicServers();
     loadModalSettings();
     renderUsers();

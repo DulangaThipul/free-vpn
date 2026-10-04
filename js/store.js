@@ -135,6 +135,37 @@
     return null;
   }
 
+  function packagesArrayToMap(list) {
+    const map = {};
+    if (!Array.isArray(list)) return map;
+    list.forEach(p => {
+      let key = (p.id || '').replace(/^pkg_/, '');
+      if (key === 'airtel_yt') key = 'airtel_youtube';
+      map[key] = {
+        inStock: !!p.inStock,
+        price: p.ispPrice || p.price || ''
+      };
+    });
+    return map;
+  }
+
+  function mergePackagesWithMap(baseList, pkgMap) {
+    if (!pkgMap || typeof pkgMap !== 'object') return baseList;
+    return baseList.map(p => {
+      let key = (p.id || '').replace(/^pkg_/, '');
+      if (key === 'airtel_yt') key = 'airtel_youtube';
+      const override = pkgMap[key];
+      if (override) {
+        return {
+          ...p,
+          inStock: override.inStock !== undefined ? override.inStock : p.inStock,
+          ispPrice: override.price || override.ispPrice || p.ispPrice
+        };
+      }
+      return p;
+    });
+  }
+
   // --- Users & Ban Management ---
   function getUsers() {
     try {
@@ -430,6 +461,56 @@
     return finalSettings;
   }
 
+  function applyGlobalSettings(settings) {
+    if (!settings || typeof settings !== 'object') return null;
+
+    // 1. Packages
+    if (settings.packages) {
+      if (Array.isArray(settings.packages)) {
+        savePackages(settings.packages);
+      } else if (typeof settings.packages === 'object') {
+        const merged = mergePackagesWithMap(DEFAULT_PACKAGES, settings.packages);
+        savePackages(merged);
+      }
+    } else if (settings.package_list && Array.isArray(settings.package_list)) {
+      savePackages(settings.package_list);
+    }
+
+    // 2. Public Servers
+    if (settings.public_servers && Array.isArray(settings.public_servers) && settings.public_servers.length > 0) {
+      savePublicServers(settings.public_servers);
+    }
+
+    // 3. Modal Settings
+    if (settings.modal_settings && typeof settings.modal_settings === 'object') {
+      const ms = settings.modal_settings;
+      const normalizedMs = {
+        ...getModalSettings(),
+        ...ms,
+        sgHeading: ms.sg_heading || ms.sgHeading,
+        sgValidityNotice: ms.sg_validity || ms.sgValidityNotice,
+        sgSupportBanner: ms.support_text || ms.sgSupportBanner
+      };
+      saveModalSettings(normalizedMs);
+    }
+
+    // 4. Master VPN Config
+    const masterCfg = settings.master_config || settings.raw_config;
+    if (masterCfg && typeof masterCfg === 'string') {
+      saveMasterConfig(masterCfg);
+    }
+
+    // 5. Funnel Steps
+    if (settings.sg_steps !== undefined || settings.public_steps !== undefined) {
+      saveFunnelSettings({
+        sg_steps: settings.sg_steps,
+        public_steps: settings.public_steps
+      });
+    }
+
+    return settings;
+  }
+
   // Global store export
   window.LegionStore = {
     ISP_SNI_MAP: ISP_SNI_MAP,
@@ -441,6 +522,9 @@
     saveFunnelSettings: saveFunnelSettings,
     getPackages: getPackages,
     savePackages: savePackages,
+    packagesArrayToMap: packagesArrayToMap,
+    mergePackagesWithMap: mergePackagesWithMap,
+    applyGlobalSettings: applyGlobalSettings,
     getPackageById: getPackageById,
     togglePackageStock: togglePackageStock,
     updatePackage: updatePackage,

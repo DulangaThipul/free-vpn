@@ -58,6 +58,150 @@ const DEFAULT_MODAL_SETTINGS = {
 let activePublicServers = JSON.parse(JSON.stringify(DEFAULT_PUBLIC_SERVERS));
 let activeModalSettings = JSON.parse(JSON.stringify(DEFAULT_MODAL_SETTINGS));
 
+// Default ISP Packages
+const DEFAULT_PACKAGES = [
+  {
+    id: "pkg_dialog_social",
+    title: "Dialog Social (20 GB)",
+    badge: "Normal Package",
+    badgeType: "normal",
+    network: "Dialog",
+    simType: "Mobile Sim",
+    ispPrice: "Rs. 348",
+    desc: "Dialog 20GB Social work plan high-speed tunnel.",
+    logins: "Up to 2 Logins (Unlimited 3 Logins)",
+    inStock: false,
+    trojanConfig: "trojan://legion-dialog-social-pass@sg01.legionvpn.net:443?security=tls&sni=m.facebook.com&type=tcp#LEGION-Dialog-Social-SG"
+  },
+  {
+    id: "pkg_dialog_tiktok",
+    title: "Dialog TikTok Unlimited",
+    badge: "Not Recommended",
+    badgeType: "warning",
+    network: "Dialog",
+    simType: "Mobile Sim",
+    ispPrice: "Rs. 297/wk",
+    desc: "50GB පසු වේගය 2Mbps දක්වා අඩු වේ.",
+    logins: "Up to 2 Logins (Unlimited 3 Logins)",
+    inStock: false,
+    trojanConfig: "trojan://legion-dialog-tiktok-pass@sg01.legionvpn.net:443?security=tls&sni=www.tiktok.com&type=tcp#LEGION-Dialog-TikTok-SG"
+  },
+  {
+    id: "pkg_airtel_tiktok",
+    title: "Airtel TikTok Unlimited",
+    badge: "Best Choice",
+    badgeType: "best",
+    network: "Airtel",
+    simType: "Mobile Sim",
+    ispPrice: "Rs. 297/wk",
+    desc: "Fastest speeds and zero restrictions on Airtel network.",
+    logins: "Up to 2 Logins (Unlimited 3 Logins)",
+    inStock: false,
+    trojanConfig: "trojan://legion-airtel-tiktok-pass@sg01.legionvpn.net:443?security=tls&sni=www.tiktok.com&type=tcp#LEGION-Airtel-TikTok-SG"
+  },
+  {
+    id: "pkg_airtel_yt",
+    title: "Airtel YouTube Unlimited",
+    badge: "Best Choice",
+    badgeType: "best",
+    network: "Airtel",
+    simType: "Mobile Sim",
+    ispPrice: "Rs. 260",
+    desc: "High stability tunneling for unlimited daily browsing.",
+    logins: "Up to 2 Logins (Unlimited 3 Logins)",
+    inStock: false,
+    trojanConfig: "trojan://legion-airtel-yt-pass@sg01.legionvpn.net:443?security=tls&sni=api.youtube.com&type=tcp#LEGION-Airtel-YouTube-SG"
+  },
+  {
+    id: "pkg_airtel_zoom",
+    title: "Airtel Zoom (30 GB)",
+    badge: "Normal Package",
+    badgeType: "normal",
+    network: "Airtel",
+    simType: "Mobile Sim",
+    ispPrice: "Rs. 215",
+    desc: "Standard speed tunneling for registered older SIMs.",
+    logins: "Up to 2 Logins (Unlimited 3 Logins)",
+    inStock: true,
+    trojanConfig: "trojan://legion-airtel-zoom-pass@sg01.legionvpn.net:443?security=tls&sni=zoom.us&type=tcp#LEGION-Airtel-Zoom-SG"
+  },
+  {
+    id: "pkg_hutch_zoom",
+    title: "Hutch Zoom (30 GB)",
+    badge: "Normal Package",
+    badgeType: "normal",
+    network: "Hutch",
+    simType: "Mobile Sim",
+    ispPrice: "Rs. 224",
+    desc: "Hutch network bypass for day-to-day internet needs.",
+    logins: "Up to 2 Logins (Unlimited 3 Logins)",
+    inStock: true,
+    trojanConfig: "trojan://legion-hutch-zoom-pass@sg01.legionvpn.net:443?security=tls&sni=zoom.us&type=tcp#LEGION-Hutch-Zoom-SG"
+  }
+];
+
+function packagesArrayToMap(list) {
+  const map = {};
+  if (!Array.isArray(list)) return map;
+  list.forEach(p => {
+    let key = (p.id || '').replace(/^pkg_/, '');
+    if (key === 'airtel_yt') key = 'airtel_youtube';
+    map[key] = {
+      inStock: !!p.inStock,
+      price: p.ispPrice || p.price || ''
+    };
+  });
+  return map;
+}
+
+function mergePackagesWithMap(baseList, pkgMap) {
+  if (!pkgMap || typeof pkgMap !== 'object') return baseList;
+  return baseList.map(p => {
+    let key = (p.id || '').replace(/^pkg_/, '');
+    if (key === 'airtel_yt') key = 'airtel_youtube';
+    const override = pkgMap[key];
+    if (override) {
+      return {
+        ...p,
+        inStock: override.inStock !== undefined ? override.inStock : p.inStock,
+        ispPrice: override.price || override.ispPrice || p.ispPrice
+      };
+    }
+    return p;
+  });
+}
+
+// Default Global Settings (Exact MongoDB Atlas _id: "global_settings" Schema)
+const DEFAULT_GLOBAL_SETTINGS = {
+  _id: "global_settings",
+  master_config: "trojan://y9emfz6sx1orp6ka@dulangafree.legiongraphics.site:119/?security=tls&fp=ios&sni=dulangafree.zoom.us&type=tcp&headerType=none#LEGION-VPN%20Free%20All%20ISP",
+  raw_config: "trojan://y9emfz6sx1orp6ka@dulangafree.legiongraphics.site:119/?security=tls&fp=ios&sni=dulangafree.zoom.us&type=tcp&headerType=none#LEGION-VPN%20Free%20All%20ISP",
+  protocol: "Trojan",
+  sg_steps: 1,
+  public_steps: 1,
+  packages: {
+    dialog_social: { inStock: false, price: "Rs. 348" },
+    dialog_tiktok: { inStock: false, price: "Rs. 297/wk" },
+    airtel_tiktok: { inStock: false, price: "Rs. 297/wk" },
+    airtel_youtube: { inStock: false, price: "Rs. 260" },
+    airtel_zoom: { inStock: true, price: "Rs. 215" },
+    hutch_zoom: { inStock: true, price: "Rs. 224" }
+  },
+  package_list: DEFAULT_PACKAGES,
+  public_servers: DEFAULT_PUBLIC_SERVERS,
+  modal_settings: {
+    sg_heading: "Your Singapore Node Credentials",
+    sg_validity: "Valid: 5 Days (50GB Limit)",
+    support_text: "Need help? Join our Telegram support group.",
+    sgHeading: "Your Singapore Node Credentials",
+    sgValidityNotice: "Valid: 5 Days (50GB Limit)",
+    sgSupportBanner: "Need help? Join our Telegram support group."
+  },
+  updated_at: new Date().toISOString()
+};
+
+let activeGlobalSettings = JSON.parse(JSON.stringify(DEFAULT_GLOBAL_SETTINGS));
+
 // Rate Limit Tracking
 const RATE_LIMIT_STORE = new Map();
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
@@ -548,10 +692,360 @@ export default {
     }
 
     // =========================================================================
+    // 2.5 GET /api/free/global-settings (or /api/free/settings)
+    // Returns the entire unified settings document (_id: "global_settings")
+    // =========================================================================
+    if (
+      (url.pathname === "/api/free/global-settings" ||
+      url.pathname === "/api/global-settings" ||
+      url.pathname === "/api/free/settings" ||
+      url.pathname === "/api/settings" ||
+      url.pathname.endsWith("/global-settings") ||
+      url.pathname.endsWith("/settings")) &&
+      !url.pathname.includes("/admin/")
+    ) {
+      if (request.method !== "GET") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use GET." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // 1. Check Cloudflare KV
+      if (env && env.LEGION_KV) {
+        try {
+          const kvSettings = await env.LEGION_KV.get("global_settings", "json");
+          if (kvSettings && typeof kvSettings === "object") {
+            activeGlobalSettings = { ...activeGlobalSettings, ...kvSettings };
+            return new Response(JSON.stringify({
+              success: true,
+              settings: activeGlobalSettings,
+              data: activeGlobalSettings,
+              source: "cloudflare_kv"
+            }), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+        } catch (e) {}
+      }
+
+      // 2. Fetch from MongoDB Atlas collection "settings" (_id: "global_settings")
+      if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+        try {
+          const result = await fetchAtlasDataApi("findOne", {
+            collection: "settings",
+            filter: { _id: "global_settings" }
+          }, env);
+
+          if (result && result.document) {
+            const doc = result.document;
+            activeGlobalSettings = {
+              ...activeGlobalSettings,
+              ...doc,
+              packages: doc.packages || activeGlobalSettings.packages,
+              package_list: doc.package_list || (doc.packages ? mergePackagesWithMap(DEFAULT_PACKAGES, doc.packages) : activeGlobalSettings.package_list),
+              public_servers: Array.isArray(doc.public_servers) && doc.public_servers.length > 0 ? doc.public_servers : activeGlobalSettings.public_servers,
+              modal_settings: doc.modal_settings || activeGlobalSettings.modal_settings,
+              master_config: doc.master_config || doc.raw_config || activeGlobalSettings.master_config,
+              raw_config: doc.raw_config || doc.master_config || activeGlobalSettings.raw_config,
+              sg_steps: doc.sg_steps !== undefined ? doc.sg_steps : activeGlobalSettings.sg_steps,
+              public_steps: doc.public_steps !== undefined ? doc.public_steps : activeGlobalSettings.public_steps,
+              updated_at: doc.updated_at || new Date().toISOString()
+            };
+            activeMasterConfig.raw_config = activeGlobalSettings.master_config;
+            activeMasterConfig.sg_steps = activeGlobalSettings.sg_steps;
+            activeMasterConfig.public_steps = activeGlobalSettings.public_steps;
+            activePublicServers = activeGlobalSettings.public_servers;
+            activeModalSettings = activeGlobalSettings.modal_settings;
+
+            return new Response(JSON.stringify({
+              success: true,
+              settings: activeGlobalSettings,
+              data: activeGlobalSettings,
+              source: "mongodb_atlas"
+            }), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+        } catch (e) {
+          console.warn("Atlas findOne global_settings notice:", e.message);
+        }
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        settings: activeGlobalSettings,
+        data: activeGlobalSettings,
+        source: "edge_runtime"
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // =========================================================================
+    // 2.6 POST /api/free/admin/global-settings (or /api/free/admin/settings)
+    // Persists the entire unified settings document (_id: "global_settings") into MongoDB Atlas
+    // Requires PIN: 80664227
+    // =========================================================================
+    if (
+      url.pathname === "/api/free/admin/global-settings" ||
+      url.pathname.endsWith("/admin/global-settings") ||
+      url.pathname === "/api/free/admin/settings" ||
+      url.pathname.endsWith("/admin/settings")
+    ) {
+      if (request.method !== "POST") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use POST." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      try {
+        const body = await request.json().catch(() => ({}));
+        const headerPin = request.headers.get("x-admin-pin") || 
+                          (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+        const pin = (headerPin || body.pin || body.adminPin || "").trim();
+        const verifiedPin = (env && env.ADMIN_PIN) || MONGO_CONFIG.adminPin || "80664227";
+
+        if (pin !== verifiedPin && pin !== "80664227") {
+          await logAdminActivity("save_global_settings_attempt", "Invalid PIN", request, env, {
+            pinAttempt: pin ? "****" : "empty"
+          });
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Unauthorized: Invalid Admin PIN"
+          }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        const now = new Date().toISOString();
+        const updateFields = {
+          updated_at: now
+        };
+
+        const rawConfig = body.master_config || body.raw_config || body.rawConfig || body.config;
+        if (rawConfig && typeof rawConfig === 'string') {
+          updateFields.master_config = rawConfig.trim();
+          updateFields.raw_config = rawConfig.trim();
+          updateFields.protocol = detectProtocol(rawConfig.trim());
+          activeGlobalSettings.master_config = updateFields.master_config;
+          activeGlobalSettings.raw_config = updateFields.raw_config;
+          activeGlobalSettings.protocol = updateFields.protocol;
+          activeMasterConfig.raw_config = updateFields.master_config;
+          activeMasterConfig.protocol = updateFields.protocol;
+        }
+
+        if (body.sg_steps !== undefined) {
+          const s = parseInt(body.sg_steps, 10);
+          updateFields.sg_steps = (s === 1) ? 1 : 100;
+          activeGlobalSettings.sg_steps = updateFields.sg_steps;
+          activeMasterConfig.sg_steps = updateFields.sg_steps;
+        }
+        if (body.public_steps !== undefined) {
+          const p = parseInt(body.public_steps, 10);
+          updateFields.public_steps = (p === 1) ? 1 : 10;
+          activeGlobalSettings.public_steps = updateFields.public_steps;
+          activeMasterConfig.public_steps = updateFields.public_steps;
+        }
+
+        if (body.packages) {
+          if (Array.isArray(body.packages)) {
+            updateFields.packages = packagesArrayToMap(body.packages);
+            updateFields.package_list = body.packages;
+          } else if (typeof body.packages === 'object') {
+            updateFields.packages = body.packages;
+            updateFields.package_list = mergePackagesWithMap(DEFAULT_PACKAGES, body.packages);
+          }
+          activeGlobalSettings.packages = updateFields.packages;
+          activeGlobalSettings.package_list = updateFields.package_list;
+        } else if (body.package_list && Array.isArray(body.package_list)) {
+          updateFields.packages = packagesArrayToMap(body.package_list);
+          updateFields.package_list = body.package_list;
+          activeGlobalSettings.packages = updateFields.packages;
+          activeGlobalSettings.package_list = updateFields.package_list;
+        }
+
+        if (body.public_servers && Array.isArray(body.public_servers)) {
+          updateFields.public_servers = body.public_servers;
+          activeGlobalSettings.public_servers = body.public_servers;
+          activePublicServers = body.public_servers;
+        }
+
+        if (body.modal_settings && typeof body.modal_settings === 'object') {
+          updateFields.modal_settings = { ...activeGlobalSettings.modal_settings, ...body.modal_settings };
+          activeGlobalSettings.modal_settings = updateFields.modal_settings;
+          activeModalSettings = updateFields.modal_settings;
+        }
+
+        activeGlobalSettings.updated_at = now;
+
+        if (env && env.LEGION_KV) {
+          try {
+            await env.LEGION_KV.put("global_settings", JSON.stringify(activeGlobalSettings));
+            await env.LEGION_KV.put("master_config", JSON.stringify(activeMasterConfig));
+            await env.LEGION_KV.put("public_servers", JSON.stringify(activeGlobalSettings.public_servers));
+            await env.LEGION_KV.put("modal_settings", JSON.stringify(activeGlobalSettings.modal_settings));
+          } catch (e) {}
+        }
+
+        let atlasPersisted = false;
+        if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+          try {
+            await fetchAtlasDataApi("updateOne", {
+              collection: "settings",
+              filter: { _id: "global_settings" },
+              update: { $set: updateFields },
+              upsert: true
+            }, env);
+            atlasPersisted = true;
+          } catch (e) {
+            console.warn("Atlas updateOne global_settings notice:", e.message);
+          }
+        }
+
+        await logAdminActivity("save_global_settings", "Success", request, env, {
+          fieldsUpdated: Object.keys(updateFields)
+        });
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Global settings persisted to MongoDB Atlas.",
+          settings: activeGlobalSettings,
+          atlasSynced: atlasPersisted
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Failed to persist global settings: " + err.message
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // =========================================================================
+    // 2.7 GET /api/free/packages & POST /api/free/admin/packages
+    // =========================================================================
+    if ((url.pathname === "/api/free/packages" || url.pathname === "/api/packages" || url.pathname.endsWith("/packages") || url.pathname.endsWith("/free/packages")) && !url.pathname.includes("/admin/")) {
+      if (request.method !== "GET") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use GET." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      return new Response(JSON.stringify({
+        success: true,
+        packages: activeGlobalSettings.packages,
+        package_list: activeGlobalSettings.package_list,
+        source: "edge_runtime"
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    if (url.pathname === "/api/free/admin/packages" || url.pathname.endsWith("/free/admin/packages") || url.pathname === "/api/admin/packages") {
+      if (request.method !== "POST") {
+        return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use POST." }), {
+          status: 405,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      try {
+        const body = await request.json().catch(() => ({}));
+        const headerPin = request.headers.get("x-admin-pin") || 
+                          (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+        const pin = (headerPin || body.pin || body.adminPin || "").trim();
+        const verifiedPin = (env && env.ADMIN_PIN) || MONGO_CONFIG.adminPin || "80664227";
+
+        if (pin !== verifiedPin && pin !== "80664227") {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Unauthorized: Invalid Admin PIN"
+          }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        const now = new Date().toISOString();
+        const incomingPkgs = body.packages || body.package_list || (Array.isArray(body) ? body : null);
+        let pkgMap = {};
+        let pkgList = [];
+
+        if (Array.isArray(incomingPkgs)) {
+          pkgMap = packagesArrayToMap(incomingPkgs);
+          pkgList = incomingPkgs;
+        } else if (incomingPkgs && typeof incomingPkgs === 'object') {
+          pkgMap = incomingPkgs;
+          pkgList = mergePackagesWithMap(DEFAULT_PACKAGES, incomingPkgs);
+        }
+
+        activeGlobalSettings.packages = pkgMap;
+        activeGlobalSettings.package_list = pkgList;
+        activeGlobalSettings.updated_at = now;
+
+        let atlasPersisted = false;
+        if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
+          try {
+            await fetchAtlasDataApi("updateOne", {
+              collection: "settings",
+              filter: { _id: "global_settings" },
+              update: {
+                $set: {
+                  packages: pkgMap,
+                  package_list: pkgList,
+                  updated_at: now
+                }
+              },
+              upsert: true
+            }, env);
+            atlasPersisted = true;
+          } catch (e) {
+            console.warn("Atlas updateOne packages notice:", e.message);
+          }
+        }
+
+        await logAdminActivity("save_packages", "Success", request, env, {
+          packageCount: pkgList.length
+        });
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Packages saved to MongoDB Atlas.",
+          packages: pkgMap,
+          package_list: pkgList,
+          atlasSynced: atlasPersisted
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Failed to update packages: " + err.message
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // =========================================================================
     // 3. GET /api/free/config
     // Fetches master_config from free-legion-vpn.settings
     // =========================================================================
-    if (url.pathname === "/api/free/config" || url.pathname.endsWith("/api/free/config") || url.pathname.endsWith("/free/config")) {
+    if ((url.pathname === "/api/free/config" || url.pathname === "/api/config" || url.pathname.endsWith("/api/free/config") || url.pathname.endsWith("/free/config")) && !url.pathname.includes("/admin/")) {
       if (request.method !== "GET") {
         return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use GET." }), {
           status: 405,
@@ -600,13 +1094,21 @@ export default {
       // Query MongoDB Atlas Data API if configured
       if (env && (env.MONGODB_DATA_API_URL || env.MONGODB_API_KEY)) {
         try {
-          const result = await fetchAtlasDataApi("findOne", {
-            filter: { _id: "master_config" }
+          let result = await fetchAtlasDataApi("findOne", {
+            collection: "settings",
+            filter: { _id: "global_settings" }
           }, env);
 
-          if (result && result.document && result.document.raw_config) {
+          if (!result || !result.document || (!result.document.raw_config && !result.document.master_config)) {
+            result = await fetchAtlasDataApi("findOne", {
+              collection: "settings",
+              filter: { _id: "master_config" }
+            }, env);
+          }
+
+          if (result && result.document && (result.document.raw_config || result.document.master_config)) {
             const doc = result.document;
-            const raw = doc.raw_config;
+            const raw = doc.master_config || doc.raw_config;
             const sgSteps = (doc.sg_steps === 1) ? 1 : (doc.sg_steps !== undefined ? doc.sg_steps : (activeMasterConfig.sg_steps || 100));
             const publicSteps = (doc.public_steps === 1) ? 1 : (doc.public_steps !== undefined ? doc.public_steps : (activeMasterConfig.public_steps || 10));
             activeMasterConfig = {
@@ -742,6 +1244,7 @@ export default {
               updated_at: now
             };
             if (rawConfig) {
+              updateFields.master_config = rawConfig;
               updateFields.raw_config = rawConfig;
               updateFields.protocol = protocol;
             }
@@ -754,12 +1257,21 @@ export default {
 
             await fetchAtlasDataApi("updateOne", {
               collection: "settings",
-              filter: { _id: "master_config" },
+              filter: { _id: "global_settings" },
               update: {
                 $set: updateFields
               },
               upsert: true
             }, env);
+
+            await fetchAtlasDataApi("updateOne", {
+              collection: "settings",
+              filter: { _id: "master_config" },
+              update: {
+                $set: updateFields
+              },
+              upsert: true
+            }, env).catch(() => {});
             atlasPersisted = true;
           } catch (err) {
             console.warn("Atlas Data API updateOne notice:", err.message);
@@ -801,7 +1313,7 @@ export default {
     // 4.1 GET /api/free/public-servers
     // Returns global public servers from MongoDB Atlas (_id: "global_settings")
     // =========================================================================
-    if (url.pathname === "/api/free/public-servers" || url.pathname.endsWith("/free/public-servers") || url.pathname === "/api/public-servers") {
+    if ((url.pathname === "/api/free/public-servers" || url.pathname === "/api/public-servers" || url.pathname.endsWith("/public-servers") || url.pathname.endsWith("/free/public-servers")) && !url.pathname.includes("/admin/")) {
       if (request.method !== "GET") {
         return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use GET." }), {
           status: 405,
@@ -970,7 +1482,7 @@ export default {
     // 4.3 GET /api/free/modal-settings
     // Returns modal titles & notices from MongoDB Atlas (_id: "global_settings")
     // =========================================================================
-    if (url.pathname === "/api/free/modal-settings" || url.pathname.endsWith("/free/modal-settings") || url.pathname === "/api/modal-settings") {
+    if ((url.pathname === "/api/free/modal-settings" || url.pathname === "/api/modal-settings" || url.pathname.endsWith("/modal-settings") || url.pathname.endsWith("/free/modal-settings")) && !url.pathname.includes("/admin/")) {
       if (request.method !== "GET") {
         return new Response(JSON.stringify({ success: false, message: "Method Not Allowed. Use GET." }), {
           status: 405,
@@ -1434,7 +1946,8 @@ export default {
           success: true,
           type: "admin",
           count: logs.length,
-          logs: logs
+          logs: logs,
+          adminLogs: logs
         }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -1464,7 +1977,9 @@ export default {
         success: true,
         type: "visitors",
         count: logs.length,
-        logs: logs
+        logs: logs,
+        visitorLogs: logs,
+        adminLogs: ADMIN_LOGINS_CACHE.slice(0, 50)
       }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
