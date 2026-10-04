@@ -636,14 +636,62 @@
     }, 4500);
   }
 
-  // --- GLOBAL POPUNDER SYSTEM (NEUTRALIZED) ---
-  // Neutralized: Ads strictly open ONLY when the user explicitly clicks a "Watch Ad" / "Verify Ad" button.
+  // --- HIGH-REVENUE CLICK-TRIGGERED POPUNDER ENGINE ---
+  let lastPopunderTime = 0;
+
   function triggerPopunder(customUrl) {
-    // No-op to prevent unintended ad redirects
+    const now = Date.now();
+    const config = window.LEGION_CONFIG || {};
+    const ads = config.ADS || {};
+    const cooldownSec = (ads.POPUNDER_COOLDOWN_SECONDS || 25);
+
+    if (now - lastPopunderTime < cooldownSec * 1000) {
+      return false;
+    }
+
+    const url = customUrl || ads.POPUNDER_URL || ads.SMARTLINK_URL || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
+    if (!url || url === "#") return false;
+
+    lastPopunderTime = now;
+    // Spawns ad cleanly in a new tab while user remains on the portal
+    dispatchAdLink(url);
+    return true;
   }
 
   function initGlobalPopunder() {
-    // No-op: No background popunders on blank area clicks
+    document.addEventListener('click', (e) => {
+      // Do not double-trigger on explicit verification buttons (they have their own direct handlers)
+      if (
+        e.target.closest('[id^="step-btn-"]') ||
+        e.target.closest('#public-ad-btn') ||
+        e.target.closest('#btn-copy-master-config') ||
+        e.target.closest('#btn-copy-public-config')
+      ) {
+        return;
+      }
+
+      // Fire click-triggered popunder on user clicks (packages, cards, page areas)
+      triggerPopunder();
+    }, true);
+  }
+
+  // --- SOCIAL BAR FLOATING WIDGET LOADER ---
+  function initSocialBar() {
+    const config = window.LEGION_CONFIG || {};
+    const ads = config.ADS || {};
+    if (ads.ENABLE_SOCIAL_BAR && ads.SOCIAL_BAR_SCRIPT_URL) {
+      setTimeout(() => {
+        try {
+          const s = document.createElement('script');
+          s.type = 'text/javascript';
+          s.src = ads.SOCIAL_BAR_SCRIPT_URL;
+          s.async = true;
+          document.body.appendChild(s);
+        } catch (e) {
+          console.warn("[Social Bar Notice]:", e);
+        }
+      }, 1500);
+    }
   }
 
   // --- ANTI-CLICKJACKING SENTINEL ---
@@ -1962,6 +2010,7 @@ INSTRUCTIONS:
     initVideoBackground();
     initLivePingTicker();
     initGlobalPopunder();
+    initSocialBar();
     initAdRulesModal();
     initTurnstileBoxClick();
     renderPublicServersGrid();

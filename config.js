@@ -17,12 +17,11 @@ window.LEGION_CONFIG = {
   
   // Adsterra / Monetag / CPA Network Monetization Settings
   ADS: {
-    // Popunder Script URL & Direct Fallback (Disabled for auto-load safety)
-    POPUNDER_SCRIPT_URL: "",
-    POPUNDER_URL: "",
+    // Click-Triggered Popunder URL
+    POPUNDER_URL: "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816",
     
-    // Cooldown in seconds before resetting global 2-click popunder quota
-    POPUNDER_COOLDOWN_SECONDS: 35,
+    // Cooldown in seconds before resetting click-triggered popunder quota
+    POPUNDER_COOLDOWN_SECONDS: 25,
 
     // Primary Smartlink applied across sequential verification steps & back-trap fallback
     SMARTLINK_URL: "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816",
@@ -71,16 +70,25 @@ window.LEGION_CONFIG = {
     // Timer seconds fallback
     STEP_WAIT_SECONDS: 5,
 
-    // Social Bar Settings (Disabled for auto-load safety)
-    ENABLE_SOCIAL_BAR: false,
-    SOCIAL_BAR_SCRIPT_URL: "",
+    // Social Bar Settings
+    ENABLE_SOCIAL_BAR: true,
+    SOCIAL_BAR_SCRIPT_URL: "https://bellnewyork.org/14/bcaf97a69f235dce718316bd23569411",
 
-    // Native Banner & Display Banner Zones (Disabled for auto-load safety)
+    // Native Banner & Display Banner Zones
     NATIVE_BANNER: {
-      CONTAINER_ID: "",
-      SCRIPT_URL: ""
+      CONTAINER_ID: "container-9a473b9de62958c724e520a2456b51da",
+      SCRIPT_URL: "https://bellnewyork.org/21/9a473b9de62958c724e520a2456b51da"
     },
-    BANNERS: {}
+    BANNERS: {
+      BANNER_728x90: {
+        KEY: "2599cc924a898c0a880a45e1ebdd01fb",
+        SCRIPT_URL: "https://bellnewyork.org/22/2599cc924a898c0a880a45e1ebdd01fb"
+      },
+      BANNER_300x250: {
+        KEY: "08fcf6f647e8306da74abc152fa8f88f",
+        SCRIPT_URL: "https://bellnewyork.org/22/08fcf6f647e8306da74abc152fa8f88f"
+      }
+    }
   },
   
   // Premium Plan Details
