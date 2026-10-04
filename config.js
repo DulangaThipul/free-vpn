@@ -12,6 +12,7 @@ window.LEGION_CONFIG = {
   HERO_VIDEO_URL: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-code-31910-large.mp4",
   
   // Real Cloudflare Worker API Endpoint
+  API_BASE_URL: "https://legion-vpn-api.legiongraphics.workers.dev",
   API_ENDPOINT: "https://legion-vpn-api.legiongraphics.workers.dev/claim", 
   
   // Adsterra / Monetag / CPA Network Monetization Settings

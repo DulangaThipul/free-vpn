@@ -9,6 +9,9 @@
   const PACKAGES_KEY = 'legion_vpn_packages';
   const USERS_KEY = 'legion_vpn_users_registry';
   const BANNED_KEY = 'legion_vpn_banned_users';
+  const MASTER_CONFIG_KEY = 'legion_master_vpn_config';
+
+  const DEFAULT_MASTER_CONFIG = 'trojan://y9emfz6sx1orp6ka@dulangafree.legiongraphics.site:119/?security=tls&fp=ios&sni=dulangafree.zoom.us&type=tcp&headerType=none#LEGION-VPN%20Free%20All%20ISP';
 
   // Default ISP Packages tailored for Sri Lankan Networks (as per user's design)
   const DEFAULT_PACKAGES = [
@@ -217,12 +220,12 @@
   const MODAL_SETTINGS_KEY = 'legion_vpn_modal_settings';
 
   const DEFAULT_PUBLIC_SERVERS = [
-    { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Online" },
-    { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Online" },
-    { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online" },
-    { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Online" },
-    { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Online" },
-    { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Online" },
+    { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://141-94-33-194-fr@141.94.33.194:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=141.94.33.194&path=%2F#LEGION-FRANCE-PUBLIC" } },
+    { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://57-129-121-229-de@57.129.121.229:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.129.121.229&path=%2F#LEGION-GERMANY-PUBLIC" } },
+    { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://54-36-162-84-gb@54.36.162.84:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=54.36.162.84&path=%2F#LEGION-UK-PUBLIC" } },
+    { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://51-158-147-186-nl@51.158.147.186:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=51.158.147.186&path=%2F#LEGION-NETHERLANDS-PUBLIC" } },
+    { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://57-131-38-151-it@57.131.38.151:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.131.38.151&path=%2F#LEGION-ITALY-PUBLIC" } },
+    { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://158-69-208-120-ca@158.69.208.120:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=158.69.208.120&path=%2F#LEGION-CANADA-PUBLIC" } },
   ];
 
   const DEFAULT_MODAL_SETTINGS = {
@@ -268,8 +271,140 @@
     localStorage.setItem(MODAL_SETTINGS_KEY, JSON.stringify(settings));
   }
 
+  // ISP Package SNI & Tag Mapping
+  const ISP_SNI_MAP = {
+    dialog_social: {
+      sni: "m.facebook.com",
+      name: "Dialog Social (20 GB)",
+      tag: "LEGION-VPN-DIALOG-SOCIAL"
+    },
+    dialog_tiktok: {
+      sni: "www.tiktok.com",
+      name: "Dialog TikTok Unlimited",
+      tag: "LEGION-VPN-DIALOG-TIKTOK"
+    },
+    airtel_tiktok: {
+      sni: "www.tiktok.com",
+      name: "Airtel TikTok Unlimited",
+      tag: "LEGION-VPN-AIRTEL-TIKTOK"
+    },
+    airtel_youtube: {
+      sni: "api.youtube.com",
+      name: "Airtel YouTube Unlimited",
+      tag: "LEGION-VPN-AIRTEL-YOUTUBE"
+    },
+    airtel_zoom: {
+      sni: "zoom.us",
+      name: "Airtel Zoom (30 GB)",
+      tag: "LEGION-VPN-AIRTEL-ZOOM"
+    },
+    hutch_zoom: {
+      sni: "zoom.us",
+      name: "Hutch Zoom (30 GB)",
+      tag: "LEGION-VPN-HUTCH-ZOOM"
+    }
+  };
+
+  function normalizePackageKey(key) {
+    if (!key) return "dialog_social";
+    let k = key.toString().toLowerCase().trim();
+    if (k.startsWith("pkg_")) k = k.slice(4);
+    if (k === "airtel_yt") return "airtel_youtube";
+    if (k === "airtel_zm") return "airtel_zoom";
+    if (k === "hutch_zm") return "hutch_zoom";
+    if (k === "dialog_soc") return "dialog_social";
+    if (k === "social") return "dialog_social";
+    if (k === "tiktok") return "dialog_tiktok";
+    if (k === "youtube") return "airtel_youtube";
+    if (k === "zoom") return "airtel_zoom";
+    return k;
+  }
+
+  function injectPackageSni(rawConfigUrl, packageKey) {
+    if (!rawConfigUrl) return rawConfigUrl;
+
+    const normKey = normalizePackageKey(packageKey);
+    const pkg = ISP_SNI_MAP[normKey];
+    if (!pkg) return rawConfigUrl;
+
+    const targetSni = pkg.sni;
+    const targetTag = pkg.tag;
+
+    // Handle VMess Base64 JSON
+    if (rawConfigUrl.startsWith("vmess://")) {
+      try {
+        const b64 = rawConfigUrl.substring(8);
+        const jsonStr = (typeof atob === "function") ? atob(b64) : "";
+        if (jsonStr) {
+          const vmessObj = JSON.parse(jsonStr);
+          vmessObj.sni = targetSni;
+          if (vmessObj.host) vmessObj.host = targetSni;
+          vmessObj.ps = targetTag;
+          const newB64 = (typeof btoa === "function") ? btoa(JSON.stringify(vmessObj)) : "";
+          return "vmess://" + newB64;
+        }
+      } catch (e) {}
+    }
+
+    // Handle Trojan / VLESS
+    try {
+      let hashIndex = rawConfigUrl.indexOf('#');
+      let urlWithoutHash = hashIndex !== -1 ? rawConfigUrl.substring(0, hashIndex) : rawConfigUrl;
+      let queryIndex = urlWithoutHash.indexOf('?');
+
+      if (queryIndex !== -1) {
+        let basePart = urlWithoutHash.substring(0, queryIndex);
+        let queryString = urlWithoutHash.substring(queryIndex + 1);
+        let searchParams = new URLSearchParams(queryString);
+
+        searchParams.set('sni', targetSni);
+        if (searchParams.has('host')) {
+          searchParams.set('host', targetSni);
+        }
+
+        return `${basePart}?${searchParams.toString()}#${targetTag}`;
+      } else {
+        return `${urlWithoutHash}?security=tls&sni=${encodeURIComponent(targetSni)}#${targetTag}`;
+      }
+    } catch (err) {
+      console.warn("injectPackageSni error:", err);
+      return rawConfigUrl;
+    }
+  }
+
+  function getMasterConfig() {
+    try {
+      const data = localStorage.getItem(MASTER_CONFIG_KEY);
+      if (data && data.trim()) {
+        const trimmed = data.trim();
+        if (trimmed.includes('sample-uuid@sg01.legionvpn.net')) {
+          localStorage.setItem(MASTER_CONFIG_KEY, DEFAULT_MASTER_CONFIG);
+          return DEFAULT_MASTER_CONFIG;
+        }
+        return trimmed;
+      }
+    } catch (e) {}
+    try {
+      localStorage.setItem(MASTER_CONFIG_KEY, DEFAULT_MASTER_CONFIG);
+    } catch (e) {}
+    return DEFAULT_MASTER_CONFIG;
+  }
+
+  function saveMasterConfig(config) {
+    const val = (config || '').trim();
+    try {
+      localStorage.setItem(MASTER_CONFIG_KEY, val);
+    } catch (e) {}
+    return val;
+  }
+
   // Global store export
   window.LegionStore = {
+    ISP_SNI_MAP: ISP_SNI_MAP,
+    normalizePackageKey: normalizePackageKey,
+    injectPackageSni: injectPackageSni,
+    getMasterConfig: getMasterConfig,
+    saveMasterConfig: saveMasterConfig,
     getPackages: getPackages,
     savePackages: savePackages,
     getPackageById: getPackageById,
@@ -285,3 +420,4 @@
     saveModalSettings: saveModalSettings
   };
 })();
+

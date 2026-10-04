@@ -178,37 +178,7 @@
   // Traps back-button navigation to prevent users from exiting to browser homepage,
   // keeping them on the portal while triggering the sponsored fallback smartlink in a new tab.
   function initBackNavigationTrap() {
-    try {
-      // Push an extra dummy state to browser history
-      window.history.pushState({ page: 'legion_stay' }, '', window.location.href);
-
-      window.addEventListener('popstate', () => {
-        // Re-push state so user cannot escape the portal via back button
-        window.history.pushState({ page: 'legion_stay' }, '', window.location.href);
-
-        // Synchronously open fallback smartlink in a new tab without altering window.location
-        const config = window.LEGION_CONFIG || {};
-        const fallbackUrl = (config.ADS && (config.ADS.SMARTLINK_URL || config.ADS.POPUNDER_URL)) || "https://ardance.org/4/a17425dfbc3bcf392107aeae62ecb816";
-        try {
-          const adWin = window.open(fallbackUrl, '_blank');
-          if (adWin) {
-            adWin.blur();
-            window.focus();
-          }
-        } catch (err) {
-          console.warn("Back trap popunder blocked:", err);
-        }
-
-        const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
-        const trapNotice = lang === 'si'
-          ? "⚠️ සර්වර් සැසිය සක්‍රියයි! කරුණාකර Trojan VPN එක ලබාගැනීමට පියවර සම්පූර්ණ කරන්න."
-          : "⚠️ Server session active! Complete verification steps to claim your node.";
-        showToast(trapNotice, "info");
-        triggerMobileHaptic();
-      });
-    } catch (e) {
-      console.warn("Back trap setup note:", e.message);
-    }
+    // Intentionally disabled to prevent history loop traps and unwanted bounces to home page
   }
 
   // --- Lenis Smooth Scrolling ---
@@ -560,24 +530,31 @@
 
   function triggerAdLink(stepNumber) {
     const link = getDirectLink(stepNumber);
-    if (link && link !== "#") {
-      try {
-        const a = document.createElement('a');
-        a.href = link;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          if (a.parentNode) a.parentNode.removeChild(a);
-        }, 100);
-      } catch (err) {
-        try {
-          window.open(link, '_blank');
-        } catch (e) {
-          console.warn("Direct link opener error:", e);
-        }
+    if (!link || link === "#") return;
+
+    // 1. Direct window.open on trusted user gesture guarantees a new tab in mobile & desktop browsers
+    try {
+      const win = window.open(link, '_blank');
+      if (win) {
+        return;
       }
+    } catch (e) {
+      console.warn("window.open new tab notice:", e);
+    }
+
+    // 2. Secondary fallback using dynamic <a> tag targeting _blank
+    try {
+      const a = document.createElement('a');
+      a.href = link;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+      }, 100);
+    } catch (err) {
+      console.warn("Direct link opener error:", err);
     }
   }
 
@@ -605,6 +582,94 @@
     }
   }
 
+  // --- Material 3 Central Warning & Validation Popup Window ---
+  function showWarningPopupModal(options = {}) {
+    const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
+    
+    let modal = document.getElementById('warning-popup-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'warning-popup-modal';
+      modal.className = 'fixed inset-0 z-[99999999] hidden modal-glass items-center justify-center p-4';
+      modal.innerHTML = '<div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-amber-500/60 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] overflow-y-auto">' +
+        '<div class="w-16 h-16 rounded-3xl bg-amber-950/40 border border-amber-500/50 text-amber-400 mx-auto flex items-center justify-center mb-4 sm:mb-5 shadow-[0_0_20px_rgba(245,158,11,0.25)]">' +
+          '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>' +
+          '</svg>' +
+        '</div>' +
+        '<h3 class="text-xl sm:text-2xl font-black text-white mb-2" id="warning-popup-title">' +
+          'දැන්වීම නැරඹීම අසම්පූර්ණයි!' +
+        '</h3>' +
+        '<div class="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 mb-5 text-left">' +
+          '<p class="text-xs sm:text-sm text-amber-200 leading-relaxed font-sans font-medium" id="warning-popup-desc-si">' +
+            'තප්පර 5ක් සයිට් එකේ ඉදල close කරලා ඊලග ad එක click කරන්න.' +
+          '</p>' +
+          '<p class="text-[11px] sm:text-xs text-zinc-400 mt-2 leading-relaxed border-t border-amber-500/20 pt-2" id="warning-popup-desc-en">' +
+            'Watch the sponsor ad for at least 5 seconds before returning to verify.' +
+          '</p>' +
+        '</div>' +
+        '<button id="btn-close-warning-modal" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm m3-btn shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">' +
+          '<span id="warning-popup-btn-text">මම තේරුම් ගත්තා (OK)</span>' +
+        '</button>' +
+      '</div>';
+      document.body.appendChild(modal);
+    }
+
+    const closeBtn = modal.querySelector('#btn-close-warning-modal');
+    if (closeBtn && !closeBtn._hasBound) {
+      closeBtn._hasBound = true;
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeWarningPopupModal();
+      });
+    }
+
+    if (!modal._hasBackdropBound) {
+      modal._hasBackdropBound = true;
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeWarningPopupModal();
+        }
+      });
+    }
+
+    const titleEl = modal.querySelector('#warning-popup-title');
+    const descSiEl = modal.querySelector('#warning-popup-desc-si');
+    const descEnEl = modal.querySelector('#warning-popup-desc-en');
+    const btnTextEl = modal.querySelector('#warning-popup-btn-text');
+
+    if (titleEl) {
+      titleEl.textContent = lang === 'si'
+        ? (options.titleSi || 'දැන්වීම නැරඹීම අසම්පූර්ණයි!')
+        : (options.titleEn || 'Action Incomplete!');
+    }
+    if (descSiEl) {
+      descSiEl.textContent = options.descSi || 'තප්පර 5ක් සයිට් එකේ ඉදල close කරලා ඊලග ad එක click කරන්න.';
+    }
+    if (descEnEl) {
+      descEnEl.textContent = options.descEn || 'Watch the sponsor ad for at least 5 seconds before returning to verify.';
+    }
+    if (btnTextEl) {
+      btnTextEl.textContent = lang === 'si'
+        ? (options.btnSi || 'මම තේරුම් ගත්තා (OK)')
+        : (options.btnEn || 'I Understand (OK)');
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.style.display = 'flex';
+    triggerMobileHaptic();
+  }
+
+  function closeWarningPopupModal() {
+    const modal = document.getElementById('warning-popup-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      modal.style.display = 'none';
+    }
+  }
+
   // --- STRICT 5-SECOND AD VIEWING ENFORCEMENT ENGINE ---
   let activeAdSession = null;
   let adCountdownInterval = null;
@@ -622,6 +687,16 @@
 
       showToast(warningMsg, "warning");
       triggerMobileHaptic();
+
+      // Show prominent, unmissable center popup modal
+      showWarningPopupModal({
+        titleSi: "දැන්වීම නැරඹීම අසම්පූර්ණයි!",
+        titleEn: "Ad Viewing Incomplete!",
+        descSi: "තප්පර 5ක් සයිට් එකේ ඉදල close කරලා ඊලග ad එක click කරන්න.",
+        descEn: "Watch the sponsor ad for at least 5 seconds before returning to verify.",
+        btnSi: "මම තේරුම් ගත්තා (OK)",
+        btnEn: "I Understand (OK)"
+      });
 
       if (adCountdownInterval) {
         clearInterval(adCountdownInterval);
@@ -677,6 +752,14 @@
     // 2. Validate prerequisites
     if (stepNumber > 1 && state.stepsCompleted < stepNumber - 1) {
       showToast(`Please complete Step ${stepNumber - 1} first!`, "error");
+      showWarningPopupModal({
+        titleSi: "????? ?? ????? ?????!",
+        titleEn: "Sequential Step Required!",
+        descSi: `??????? ????? ${stepNumber - 1} ?? ????? ???????? ?? ${stepNumber} ?? ????? Unlock ??????.`,
+        descEn: `Please complete Step ${stepNumber - 1} first before proceeding to Step ${stepNumber}.`,
+        btnSi: "??? (OK)",
+        btnEn: "Got it"
+      });
       return;
     }
     if (state.stepsCompleted >= stepNumber) {
@@ -934,170 +1017,174 @@
     }
   }
 
-  // --- Real Cloudflare Worker API Fetcher ---
-  // Mandatory: Releasing dedicated credentials requires 9 completed steps (100 total ads)!
-  async function fetchSecureVPNConfig() {
-    const config = window.LEGION_CONFIG || {};
-    const endpoint = config.API_ENDPOINT;
-    const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
-
-    const initialMsg = lang === 'si' 
-      ? "සිංගප්පූරු Trojan Credentials Cloudflare Worker මගින් ලබා ගනිමින්..." 
-      : "Contacting Cloudflare Worker API for Singapore Trojan Credentials...";
-    showToast(initialMsg, "info");
-
-    const user = window.LegionAuth ? window.LegionAuth.getUser() : null;
-    if (!user || !user.email) {
-      showToast(lang === 'si' ? "දෝෂයකි: කරුණාකර Google මගින් Log වන්න." : "Error: Google authentication required.", "error");
-      if (window.LegionAuth && window.LegionAuth.openLoginModal) {
-        window.LegionAuth.openLoginModal();
-      }
-      return;
-    }
-
-    const payload = {
-      email: user.email,
-      token: user.id || 'usr_session',
-      stepsCompleted: 9, // Exactly 9 verified steps completed
-      packageId: state.selectedPackage ? state.selectedPackage.id : 'dialog_social',
-      timestamp: Date.now()
-    };
-
-    try {
-      // If endpoint is in local preview mode
-      if (!endpoint || endpoint === "mock" || endpoint.includes("example.workers.dev")) {
-        console.warn("API_ENDPOINT is not yet pointing to a deployed worker. Using local preview generator.");
-        const fallbackData = generateTrojanFallbackConfig();
-        state.vpnConfig = fallbackData;
-        renderVPNConfigModal(fallbackData);
-        triggerCelebrationConfetti();
-        return;
-      }
-
-      // POST to Real Cloudflare Worker Endpoint
-      const response = await fetch(endpoint.endsWith('/claim') ? endpoint : `${endpoint}/claim`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-Token': user.id || 'usr_token'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const resJson = await response.json();
-
-      // Check HTTP Status and Success Payload
-      if (!response.ok || !resJson.success || !resJson.node) {
-        const errorMsg = resJson.message || "Failed to retrieve configuration from Cloudflare Worker.";
-        showToast(errorMsg, "error");
-
-        if (response.status === 429) {
-          alert(`⏱️ Rate Limit Exceeded:\n\n${errorMsg}`);
-        } else if (response.status === 403 && resJson.banned) {
-          if (window.LegionStore && window.LegionStore.banUser) {
-            window.LegionStore.banUser(user.email, "Cloudflare Worker Ban");
-          }
-          const banModal = document.getElementById('banned-user-modal');
-          if (banModal) {
-            banModal.classList.remove('hidden');
-            banModal.classList.add('flex');
-          }
-        } else {
-          alert(`⚠️ Verification Notice:\n\n${errorMsg}`);
-        }
-        return;
-      }
-
-      // Success: Render dynamically delivered Trojan credentials from the worker
-      state.vpnConfig = resJson.node;
-      renderVPNConfigModal(resJson.node);
-      triggerCelebrationConfetti();
-      showToast(lang === 'si' ? "Trojan කේත සාර්ථකව ලැබුණි!" : "Singapore Trojan Node Ready!", "success");
-
-    } catch (err) {
-      console.error("Cloudflare Worker API Fetch Error:", err);
-      const networkMsg = lang === 'si'
-        ? "Cloudflare Worker API සම්බන්ධතාවය අසාර්ථක විය: " + err.message
-        : "Failed to connect to Cloudflare Worker API: " + err.message;
-      showToast(networkMsg, "error");
-      alert(networkMsg);
-    }
+  // --- Protocol Auto-Detection ---
+  function detectProtocol(url) {
+    const u = (url || '').trim().toLowerCase();
+    if (u.startsWith('trojan://')) return 'Trojan';
+    if (u.startsWith('vless://')) return 'VLESS';
+    if (u.startsWith('vmess://')) return 'VMess';
+    return 'VPN';
   }
 
-  function generateTrojanFallbackConfig() {
-    const randomId = Math.random().toString(36).substring(2, 9).toUpperCase();
-    const pkg = state.selectedPackage || (window.LegionStore && window.LegionStore.getPackages()[0]) || {};
-
-    let trojanUrl = pkg.trojanConfig;
-    if (!trojanUrl) {
-      trojanUrl = `trojan://pass_${randomId}@sg01.legionvpn.net:443?security=tls&sni=m.facebook.com#LEGION-SG-TROJAN-${randomId}`;
-    }
-
-    return {
-      protocol: "Trojan (HTTPS Stealth)",
-      package_title: pkg.title || "Singapore Fast VPS Node",
-      server_name: "LEGION-SG-FAST-TROJAN-01",
-      location: "Singapore 🇸🇬 (Dedicated 1Gbps VPS)",
-      ping: `${state.currentPing} ms`,
-      expiry: "24 Hours (Renewable daily via ads)",
-      connection_code: `LEGION-SG-${randomId}-TROJAN`,
-      trojan_link: trojanUrl,
-      v2ray_link: `vless://8f4d99a2-5e1b-419a-9e12-3b2d1c9e8a7f@sg01.legionvpn.net:443?encryption=none&security=tls&type=ws&host=sg01.legionvpn.net&path=%2Fvless#LEGION-SG-${randomId}`
-    };
-  }
-
-  // --- Confetti Celebration Burst ---
+  // --- Confetti Celebration Burst (particleCount: 160, spread: 100, origin: { y: 0.6 }) ---
   function triggerCelebrationConfetti() {
     if (typeof confetti === 'function') {
       confetti({
-        particleCount: 140,
-        spread: 90,
-        origin: { y: 0.6 },
-        colors: ['#00FF66', '#00e65c', '#ffffff', '#10B981']
+        particleCount: 160,
+        spread: 100,
+        origin: { y: 0.6 }
       });
     }
   }
 
-  // --- Render Configuration Output Modal (Trojan & V2Ray ONLY - No WireGuard!) ---
-  function renderVPNConfigModal(data) {
-    if (!dom.configModal) return;
+  function getApiBaseUrl() {
+    const cfg = window.LEGION_CONFIG || {};
+    if (cfg.API_BASE_URL) return cfg.API_BASE_URL.replace(/\/+$/, '');
+    if (cfg.API_ENDPOINT) return cfg.API_ENDPOINT.replace(/\/claim\/?$/, '').replace(/\/+$/, '');
+    return "https://legion-vpn-api.legiongraphics.workers.dev";
+  }
 
-    const codeEl = document.getElementById('vpn-access-code');
-    const trojanEl = document.getElementById('vpn-trojan-link');
-    const v2rayEl = document.getElementById('vpn-v2ray-link');
-    const pingEl = document.getElementById('vpn-ping-stat');
-    const pkgTitleEl = document.getElementById('vpn-modal-pkg-name');
+  // --- Single Master VPN Config Delivery (Connected to MongoDB Atlas) ---
+  async function deliverMasterVPNConfig(preferredPkgId) {
+    // 1. Identify selected package ID (from argument, state, public state, or URL)
+    const rawPkgId = preferredPkgId || 
+                     (state.selectedPackage && (state.selectedPackage.id || state.selectedPackage.key)) || 
+                     (currentPublicState && currentPublicState.selectedPackageKey) || 
+                     (new URLSearchParams(window.location.search).get('pkg')) || 
+                     'dialog_social';
+    const pkgKey = (window.LegionStore && window.LegionStore.normalizePackageKey)
+      ? window.LegionStore.normalizePackageKey(rawPkgId)
+      : (rawPkgId || 'dialog_social').replace(/^pkg_/, '');
 
-    if (codeEl) codeEl.textContent = data.connection_code || "LEGION-SG-TROJAN";
-    if (trojanEl) trojanEl.value = data.trojan_link || "";
-    if (v2rayEl) v2rayEl.value = data.v2ray_link || "";
-    if (pingEl) pingEl.textContent = `${state.currentPing} ms`;
-    if (pkgTitleEl) pkgTitleEl.textContent = data.package_title || "Singapore Node";
+    let masterConfig = (window.LegionStore && window.LegionStore.getMasterConfig)
+      ? window.LegionStore.getMasterConfig()
+      : '';
+    let protocol = detectProtocol(masterConfig);
 
-    // Apply Dynamic Modal Settings if store exists
-    if (window.LegionStore && window.LegionStore.getModalSettings) {
-      const ms = window.LegionStore.getModalSettings();
-      const h = document.getElementById('sg-modal-heading');
-      if (h && ms.sgHeading) h.textContent = ms.sgHeading;
-      
-      const tag = document.getElementById('sg-modal-tag');
-      if (tag && ms.sgStatusTag) tag.textContent = ms.sgStatusTag;
-      
-      const pLabel = document.getElementById('sg-modal-protocol-label');
-      if (pLabel && ms.sgProtocolLabel) pLabel.textContent = ms.sgProtocolLabel;
-      
-      const v = document.getElementById('sg-modal-validity');
-      if (v && ms.sgValidityNotice) v.textContent = ms.sgValidityNotice;
-      
-      const s = document.getElementById('sg-modal-support-banner');
-      if (s && ms.sgSupportBanner) s.textContent = ms.sgSupportBanner;
-      
-      const f = document.getElementById('sg-modal-footer');
-      if (f && ms.sgFooter) f.textContent = ms.sgFooter;
+    // 2. Fetch tailored credentials from MongoDB Atlas / Worker API: GET /api/free/config?pkg=<pkgKey>
+    try {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(`${apiBase}/api/free/config?pkg=${encodeURIComponent(pkgKey)}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.config) {
+          masterConfig = data.config.trim();
+          protocol = data.protocol || detectProtocol(masterConfig);
+          if (data.raw_master_config && window.LegionStore && window.LegionStore.saveMasterConfig) {
+            window.LegionStore.saveMasterConfig(data.raw_master_config);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("MongoDB Atlas fetch fallback to local cache:", err);
     }
 
-    dom.configModal.classList.remove('hidden');
-    dom.configModal.classList.add('flex');
+    if (!masterConfig) {
+      masterConfig = 'trojan://y9emfz6sx1orp6ka@dulangafree.legiongraphics.site:119/?security=tls&fp=ios&sni=dulangafree.zoom.us&type=tcp&headerType=none#LEGION-VPN%20Free%20All%20ISP';
+    }
+
+    // 3. Client-side guarantee: Ensure SNI & tag match selected package even if offline or cached
+    if (window.LegionStore && window.LegionStore.injectPackageSni) {
+      masterConfig = window.LegionStore.injectPackageSni(masterConfig, pkgKey);
+    }
+    protocol = detectProtocol(masterConfig);
+
+    // Save in app state
+    state.vpnConfig = {
+      master_config: masterConfig,
+      protocol: protocol,
+      trojan_link: masterConfig,
+      v2ray_link: masterConfig,
+      package_id: pkgKey
+    };
+
+    renderCelebratoryCompletionModal(masterConfig, protocol, pkgKey);
+    triggerCelebrationConfetti();
+  }
+
+  // Backwards compatibility wrapper
+  async function fetchSecureVPNConfig() {
+    await deliverMasterVPNConfig();
+  }
+
+  // --- Celebratory Completion Modal Renderer ---
+  function renderCelebratoryCompletionModal(rawConfig, protocol, packageKey) {
+    const configModal = dom.configModal || document.getElementById('vpn-config-modal');
+    if (!configModal) return;
+
+    const headingEl = document.getElementById('sg-modal-heading');
+    const subtextEl = document.getElementById('sg-modal-subtext');
+    const rawConfigInput = document.getElementById('vpn-master-config-raw');
+    const protocolLabelEl = document.getElementById('sg-modal-protocol-label');
+    const copyLabel = document.getElementById('btn-copy-master-label');
+    const modalBox = document.getElementById('vpn-config-modal-box');
+    const pingEl = document.getElementById('vpn-ping-stat');
+
+    // Heading: 🎉 Congratulations! Copy Your Premium Free Singapore <PROTOCOL> Account
+    if (headingEl) {
+      headingEl.innerHTML = `🎉 Congratulations! Copy Your Premium Free Singapore <span id="sg-modal-protocol-name" class="text-neon">${protocol}</span> Account`;
+    }
+
+    // Subtext: "Your high-speed Singapore node is ready to use."
+    if (subtextEl) {
+      const map = (window.LegionStore && window.LegionStore.ISP_SNI_MAP) || {};
+      const normKey = (window.LegionStore && window.LegionStore.normalizePackageKey)
+        ? window.LegionStore.normalizePackageKey(packageKey)
+        : packageKey;
+      const pkgInfo = map[normKey];
+      if (pkgInfo && pkgInfo.name) {
+        subtextEl.textContent = `Your high-speed Singapore node for ${pkgInfo.name} is ready to use.`;
+      } else {
+        subtextEl.textContent = "Your high-speed Singapore node is ready to use.";
+      }
+    }
+
+    if (protocolLabelEl) {
+      protocolLabelEl.textContent = protocol;
+    }
+
+    if (pingEl) {
+      pingEl.textContent = `${state.currentPing || 45} ms`;
+    }
+
+    // Config Box: Readonly text input displaying the raw config URL
+    if (rawConfigInput) {
+      rawConfigInput.value = rawConfig;
+    }
+
+    // Copy Action button label: Copy <PROTOCOL> Config
+    if (copyLabel) {
+      copyLabel.textContent = `Copy ${protocol} Config`;
+    }
+
+    // Populate legacy inputs if present
+    const trojanEl = document.getElementById('vpn-trojan-link');
+    const v2rayEl = document.getElementById('vpn-v2ray-link');
+    if (trojanEl) trojanEl.value = rawConfig;
+    if (v2rayEl) v2rayEl.value = rawConfig;
+
+    // Apply custom modal settings if configured by admin
+    if (window.LegionStore && window.LegionStore.getModalSettings) {
+      const ms = window.LegionStore.getModalSettings();
+      const tag = document.getElementById('sg-modal-tag');
+      if (tag && ms.sgStatusTag) tag.textContent = ms.sgStatusTag;
+      const v = document.getElementById('sg-modal-validity');
+      if (v && ms.sgValidityNotice) v.textContent = ms.sgValidityNotice;
+      const s = document.getElementById('sg-modal-support-banner');
+      if (s && ms.sgSupportBanner) s.textContent = ms.sgSupportBanner;
+    }
+
+    // Pulsing green glow animation on modal container
+    if (modalBox) {
+      modalBox.classList.add('neon-pulse-glow');
+    }
+
+    // Reveal modal
+    configModal.classList.remove('hidden');
+    configModal.classList.add('flex');
   }
 
   // --- Download Trojan Configuration as .txt file ---
@@ -1222,7 +1309,7 @@ INSTRUCTIONS:
           <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">${srv.country}</h3>
           <div class="text-xs font-mono text-neon mb-4">IP: ${srv.ip}</div>
         </div>
-        <button class="js-open-public-btn w-full py-3 rounded-2xl ${isOnline ? 'bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white' : 'bg-red-950/20 border-red-900/40 text-red-500 cursor-not-allowed'} font-bold text-xs transition-colors flex items-center justify-center gap-2" ${isOnline ? '' : 'disabled'} data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
+        <button class="js-open-public-btn w-full py-3 rounded-2xl ${isOnline ? 'bg-surface-300 hover:bg-neon hover:text-black border border-emerald-900/50 text-white' : 'bg-red-950/20 border-red-900/40 text-red-500 cursor-not-allowed'} font-bold text-xs transition-colors flex items-center justify-center gap-2" ${isOnline ? '' : 'disabled'} data-id="${srv.id}" data-country="${srv.country}" data-code="${srv.flag}" data-ip="${srv.ip}" data-sni="${srv.sni}">
           <img src="https://flagcdn.com/w40/${srv.flag}.png" alt="${srv.country}" class="w-4 h-3 object-cover rounded-sm ${isOnline ? '' : 'opacity-50'}">
           <span>${isOnline ? '10 Ads Quick Unlock →' : 'Offline'}</span>
         </button>
@@ -1281,6 +1368,8 @@ INSTRUCTIONS:
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const target = e.currentTarget;
+        const srvId = target.getAttribute('data-id');
+        currentPublicState.id = srvId;
         currentPublicState.country = target.getAttribute('data-country');
         currentPublicState.flag = target.getAttribute('data-flag');
         currentPublicState.code = (target.getAttribute('data-code') || 'fr').toLowerCase();
@@ -1289,6 +1378,45 @@ INSTRUCTIONS:
         currentPublicState.turnstilePassed = false;
         currentPublicState.isCooldown = false;
         currentPublicState.pendingAd = null;
+
+        // Dynamic Filter: Only populate packages that have at least 1 character configured in Admin Panel
+        const servers = (window.LegionStore && window.LegionStore.getPublicServers) ? window.LegionStore.getPublicServers() : [];
+        const srv = servers.find(s => (srvId && s.id === srvId) || (s.country && s.country.toLowerCase() === currentPublicState.country.toLowerCase()));
+
+        const ALL_PACKAGES = [
+          { key: 'social', label: 'Social Media Package (Any ISP)' },
+          { key: 'tiktok', label: 'TikTok Package (Any ISP)' },
+          { key: 'youtube', label: 'YouTube Package (Any ISP)' },
+          { key: 'zoom', label: 'Zoom Package (Any ISP)' }
+        ];
+
+        const configs = (srv && srv.configs) ? srv.configs : {};
+        const availablePackages = ALL_PACKAGES.filter(p => {
+          const cfg = configs[p.key];
+          return typeof cfg === 'string' && cfg.trim().length > 0;
+        });
+
+        if (pkgSelect) {
+          if (availablePackages.length > 0) {
+            pkgSelect.innerHTML = availablePackages.map((p, idx) => 
+              `<option value="${p.key}" ${idx === 0 ? 'selected' : ''}>${p.label}</option>`
+            ).join('');
+            pkgSelect.disabled = false;
+            if (btnStart) {
+              btnStart.disabled = false;
+              btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
+              btnStart.innerHTML = '<span>Confirm Package & Start Verification</span>';
+            }
+          } else {
+            pkgSelect.innerHTML = '<option value="" disabled selected>No packages configured by Admin</option>';
+            pkgSelect.disabled = true;
+            if (btnStart) {
+              btnStart.disabled = true;
+              btnStart.classList.add('opacity-50', 'cursor-not-allowed');
+              btnStart.innerHTML = '<span>No Packages Available</span>';
+            }
+          }
+        }
 
         const flagEl = document.getElementById('public-modal-flag');
         if (flagEl) {
@@ -1331,6 +1459,9 @@ INSTRUCTIONS:
     if (btnStart) {
       btnStart.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (pkgSelect) {
+          currentPublicState.selectedPackageKey = pkgSelect.value;
+        }
         if (stepPkg) stepPkg.classList.add('hidden');
         if (stepVerify) stepVerify.classList.remove('hidden');
       }, { capture: true });
@@ -1422,37 +1553,21 @@ INSTRUCTIONS:
             triggerMobileHaptic();
 
             if (clicks >= 10) {
-              // 10 Ads Completed -> Output Custom Config
+              // 10 Ads Completed -> Close public modal & release Master Config via Celebratory Completion Modal
+              if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+              }
               if (stepVerify) stepVerify.classList.add('hidden');
               if (stepResult) stepResult.classList.remove('hidden');
-              showToast("🎉 Verification Complete! Releasing configuration...", "success");
 
-              const pkgKey = pkgSelect ? pkgSelect.value : 'social';
-              let customStr = '';
+              const masterConfig = (window.LegionStore && window.LegionStore.getMasterConfig)
+                ? window.LegionStore.getMasterConfig()
+                : '';
+              if (vlessOutput && masterConfig) vlessOutput.value = masterConfig;
 
-              // Fetch saved configuration for this server & package
-              if (window.LegionStore && window.LegionStore.getPublicServers) {
-                const servers = window.LegionStore.getPublicServers();
-                const srv = servers.find(s => s.country === currentPublicState.country);
-                if (srv && srv.configs && srv.configs[pkgKey]) {
-                  customStr = srv.configs[pkgKey];
-                }
-              }
-
-              // Fallback generator if empty
-              if (!customStr) {
-                const ip = currentPublicState.ip;
-                const country = currentPublicState.country.toUpperCase();
-                const sniMap = { social: 'm.facebook.com', tiktok: 'v16m-default.tiktokcdn.com', youtube: 'googlevideo.com', zoom: 'zoom.us' };
-                const sni = sniMap[pkgKey] || 'm.facebook.com';
-                const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                  var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-                  return v.toString(16);
-                });
-                customStr = `vless://${uuid}@${ip}:443?encryption=none&security=tls&sni=${sni}&type=ws&host=${ip}&path=%2F#LEGION-${country}-PUBLIC`;
-              }
-
-              if (vlessOutput) vlessOutput.value = customStr;
+              showToast("🎉 10 Ads Verified! Releasing Singapore Master VPN...", "success");
+              deliverMasterVPNConfig(currentPublicState.selectedPackageKey);
               return;
             }
 
@@ -1467,8 +1582,72 @@ INSTRUCTIONS:
     }
   }
 
-  // --- Copy to Clipboard helper ---
+  // --- Copy to Clipboard helper with cross-browser fallback ---
+  function copyTextToClipboard(text, btnEl) {
+    if (!text) return;
+    function showCopyFeedback() {
+      if (btnEl) {
+        const originalHtml = btnEl.innerHTML;
+        btnEl.innerHTML = `<span class="text-black font-extrabold">✓ Copied!</span>`;
+        btnEl.classList.remove('bg-neon');
+        btnEl.classList.add('bg-emerald-400', 'scale-[1.02]');
+        setTimeout(() => {
+          btnEl.innerHTML = originalHtml;
+          btnEl.classList.add('bg-neon');
+          btnEl.classList.remove('bg-emerald-400', 'scale-[1.02]');
+        }, 2200);
+      }
+      showToast("Config copied to clipboard!", "success");
+      triggerMobileHaptic();
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(showCopyFeedback).catch(() => {
+        fallbackExecCopy(text, showCopyFeedback);
+      });
+    } else {
+      fallbackExecCopy(text, showCopyFeedback);
+    }
+  }
+
+  function fallbackExecCopy(text, callback) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+    textarea.setAttribute('readonly', '');
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      const ok = document.execCommand('copy');
+      if (ok && callback) {
+        callback();
+      } else {
+        prompt("Copy to clipboard manually: Ctrl+C, Enter", text);
+      }
+    } catch (e) {
+      prompt("Copy to clipboard manually: Ctrl+C, Enter", text);
+    }
+    document.body.removeChild(textarea);
+  }
+
   function setupCopyButtons() {
+    // Master 1-Click Copy Button
+    const masterCopyBtn = document.getElementById('btn-copy-master-config');
+    if (masterCopyBtn) {
+      masterCopyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rawInput = document.getElementById('vpn-master-config-raw');
+        const text = (rawInput && rawInput.value)
+          ? rawInput.value
+          : (window.LegionStore && window.LegionStore.getMasterConfig ? window.LegionStore.getMasterConfig() : '');
+        copyTextToClipboard(text, masterCopyBtn);
+      }, { capture: true });
+    }
+
+    // Generic .js-copy-btn buttons
     document.querySelectorAll('.js-copy-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1476,15 +1655,7 @@ INSTRUCTIONS:
         const targetEl = document.getElementById(targetId);
         if (targetEl) {
           const text = targetEl.value || targetEl.textContent;
-          navigator.clipboard.writeText(text).then(() => {
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `<span class="text-black font-semibold">Copied!</span>`;
-            setTimeout(() => {
-              btn.innerHTML = originalHtml;
-            }, 2000);
-            showToast("Copied to clipboard!", "success");
-            triggerMobileHaptic();
-          });
+          copyTextToClipboard(text, btn);
         }
       }, { capture: true });
     });
@@ -1590,6 +1761,7 @@ INSTRUCTIONS:
   // Export public app helpers
   window.LegionApp = {
     showToast: showToast,
+    showWarningModal: showWarningPopupModal,
     resetFunnel: resetFunnel,
     renderPackages: renderPackages,
     checkAndShowRulesModal: checkAndShowRulesModal,
@@ -1599,3 +1771,6 @@ INSTRUCTIONS:
     }
   };
 })();
+
+
+

@@ -116,6 +116,34 @@
         </div>
       </section>
 
+      <!-- SECTION 0: Singapore Master VPN Config -->
+      <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-neon/50 space-y-5 relative overflow-hidden shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white">Singapore Master VPN Config</h2>
+              <span id="admin-master-protocol-badge" class="px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-neon/15 text-neon border border-neon/30">VLESS</span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-1">Single working Trojan/VLESS/VMess URL delivered directly to all users completing verification</p>
+          </div>
+          <button id="btn-save-master-config" type="button" class="px-6 py-2.5 rounded-2xl bg-neon text-black font-bold text-xs m3-btn flex items-center gap-2 self-start sm:self-auto hover:bg-emerald-400">
+            <span>💾 Save Master Config</span>
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-sans">
+            <span>Paste your working Singapore Trojan / VLESS / VMess URL:</span>
+            <span id="admin-master-detected-text" class="text-neon font-mono font-semibold">Detected Protocol: Trojan</span>
+          </div>
+          <textarea id="admin-master-vpn-config" rows="3" placeholder="vless://... or trojan://... or vmess://..." class="w-full px-4 py-3 rounded-2xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-xs font-mono text-emerald-300 leading-relaxed resize-y"></textarea>
+          <div class="flex items-center justify-between text-[11px] text-zinc-500 font-mono">
+            <span>Supports: trojan://, vless://, vmess://</span>
+            <span id="admin-master-save-status" class="text-emerald-400 font-sans"></span>
+          </div>
+        </div>
+      </section>
+
       <!-- SECTION 1: ISP Packages & Trojan Configurations Management -->
       <section class="m3-surface-1 p-6 sm:p-8 rounded-3xl border border-emerald-950 space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -285,6 +313,33 @@
           </div>
         </div>
 
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Social Media Package Config</label>
+          <input type="text" id="edit-pub-srv-social" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">TikTok Package Config</label>
+          <input type="text" id="edit-pub-srv-tiktok" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">YouTube Package Config</label>
+          <input type="text" id="edit-pub-srv-youtube" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Zoom Package Config</label>
+          <input type="text" id="edit-pub-srv-zoom" placeholder="vless://..." class="w-full px-4 py-2.5 rounded-xl bg-surface-100 border border-emerald-950 focus:border-neon focus:outline-none text-sm text-zinc-300 font-mono">
+        </div>
+
+        <button type="submit" class="w-full py-3.5 mt-2 rounded-2xl bg-neon hover:bg-emerald-400 text-black font-bold text-sm m3-btn">
+          Save Public Server Configurations
+        </button>
+      </form>
+    </div>
+  </div>
+
 <!-- ================= MODAL: EDIT / ADD PACKAGE ================= -->
   <div id="package-edit-modal" class="fixed inset-0 z-[999999] hidden modal-glass items-center justify-center p-4">
     <div class="m3-surface-2 p-6 sm:p-8 rounded-3xl border border-emerald-500/50 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -357,9 +412,11 @@
   </div>
 
 <script src="js/store.js"></script>
+  <script src="config.js"></script>
   <script src="js/admin.js"></script>
 
 </body>
 </html>
+
 
 

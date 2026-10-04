@@ -73,6 +73,7 @@
     packages = window.LegionStore.getPackages();
     users = window.LegionStore.getUsers();
     renderStats();
+    loadMasterConfig();
     renderPackages();
     renderUsers();
     renderPublicServers();
@@ -376,23 +377,32 @@
     });
 
     document.querySelectorAll('.js-edit-srv').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = btn.getAttribute('data-id');
         const srv = servers.find(s => s.id === id);
         if (srv) {
-          document.getElementById('edit-pub-srv-id').value = srv.id;
-          document.getElementById('pub-srv-modal-title').textContent = `Edit ${srv.country} Node`;
-          document.getElementById('edit-pub-srv-ip').value = srv.ip || '';
-          document.getElementById('edit-pub-srv-ping').value = srv.ping || '';
+          const setVal = (elemId, val) => {
+            const el = document.getElementById(elemId);
+            if (el) el.value = val || '';
+          };
+          setVal('edit-pub-srv-id', srv.id);
+          const title = document.getElementById('pub-srv-modal-title');
+          if (title) title.textContent = `Edit ${srv.country} Node`;
+          setVal('edit-pub-srv-ip', srv.ip);
+          setVal('edit-pub-srv-ping', srv.ping);
           
-          document.getElementById('edit-pub-srv-social').value = (srv.configs && srv.configs.social) ? srv.configs.social : '';
-          document.getElementById('edit-pub-srv-tiktok').value = (srv.configs && srv.configs.tiktok) ? srv.configs.tiktok : '';
-          document.getElementById('edit-pub-srv-youtube').value = (srv.configs && srv.configs.youtube) ? srv.configs.youtube : '';
-          document.getElementById('edit-pub-srv-zoom').value = (srv.configs && srv.configs.zoom) ? srv.configs.zoom : '';
+          setVal('edit-pub-srv-social', (srv.configs && srv.configs.social) ? srv.configs.social : '');
+          setVal('edit-pub-srv-tiktok', (srv.configs && srv.configs.tiktok) ? srv.configs.tiktok : '');
+          setVal('edit-pub-srv-youtube', (srv.configs && srv.configs.youtube) ? srv.configs.youtube : '');
+          setVal('edit-pub-srv-zoom', (srv.configs && srv.configs.zoom) ? srv.configs.zoom : '');
           
           const modal = document.getElementById('public-server-edit-modal');
-          modal.classList.remove('hidden');
-          modal.classList.add('flex');
+          if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.style.display = 'flex';
+          }
         }
       });
     });
@@ -403,6 +413,7 @@
     if (modal) {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+      modal.style.display = 'none';
     }
   }
 
@@ -531,6 +542,156 @@
     });
   }
 
+  // --- Singapore Master VPN Config Management ---
+  function detectProtocol(url) {
+    const u = (url || '').trim().toLowerCase();
+    if (u.startsWith('trojan://')) return 'Trojan';
+    if (u.startsWith('vless://')) return 'VLESS';
+    if (u.startsWith('vmess://')) return 'VMess';
+    return 'VPN';
+  }
+
+  function updateMasterProtocolDisplay(val) {
+    const badge = document.getElementById('admin-master-protocol-badge');
+    const textDesc = document.getElementById('admin-master-detected-text');
+    const proto = detectProtocol(val);
+
+    if (badge) {
+      badge.textContent = proto;
+      if (proto === 'Trojan') {
+        badge.className = 'px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/40';
+      } else if (proto === 'VLESS') {
+        badge.className = 'px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-neon/15 text-neon border border-neon/30';
+      } else if (proto === 'VMess') {
+        badge.className = 'px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/40';
+      } else {
+        badge.className = 'px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-zinc-500/15 text-zinc-400 border border-zinc-500/40';
+      }
+    }
+    if (textDesc) {
+      textDesc.textContent = `Detected Protocol: ${proto}`;
+    }
+  }
+
+  function getApiBaseUrl() {
+    const cfg = window.LEGION_CONFIG || {};
+    if (cfg.API_BASE_URL) return cfg.API_BASE_URL.replace(/\/+$/, '');
+    if (cfg.API_ENDPOINT) return cfg.API_ENDPOINT.replace(/\/claim\/?$/, '').replace(/\/+$/, '');
+    return "https://legion-vpn-api.legiongraphics.workers.dev";
+  }
+
+  async function loadMasterConfig() {
+    const textarea = document.getElementById('admin-master-vpn-config');
+    const status = document.getElementById('admin-master-save-status');
+    if (!textarea) return;
+
+    // 1. Immediately populate from local cache to prevent empty inputs
+    const currentConfig = window.LegionStore.getMasterConfig();
+    textarea.value = currentConfig;
+    updateMasterProtocolDisplay(currentConfig);
+
+    // 2. Auto-fetch active config from MongoDB Atlas via GET /api/free/config
+    if (status) status.textContent = "Syncing with MongoDB Atlas...";
+    try {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/free/config`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.config) {
+          textarea.value = data.config.trim();
+          updateMasterProtocolDisplay(data.config.trim());
+          window.LegionStore.saveMasterConfig(data.config.trim());
+          if (status) {
+            status.textContent = "✓ Synced live from MongoDB Atlas";
+            setTimeout(() => { if (status && status.textContent.includes("Synced")) status.textContent = ""; }, 3000);
+          }
+        }
+      } else {
+        if (status) status.textContent = "Using local cache (MongoDB API offline)";
+      }
+    } catch (e) {
+      console.warn("Could not sync with MongoDB Atlas:", e);
+      if (status) status.textContent = "Using local cache (Worker unreachable)";
+    }
+  }
+
+  async function handleSaveMasterConfig() {
+    const textarea = document.getElementById('admin-master-vpn-config');
+    const btn = document.getElementById('btn-save-master-config');
+    const status = document.getElementById('admin-master-save-status');
+    if (!textarea) return;
+
+    const val = textarea.value.trim();
+    if (!val) {
+      alert("Please enter a valid VPN configuration URI string.");
+      return;
+    }
+
+    const protocol = detectProtocol(val);
+    updateMasterProtocolDisplay(val);
+
+    // Save to local cache immediately
+    window.LegionStore.saveMasterConfig(val);
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳ Saving to MongoDB Atlas...</span>`;
+    }
+    if (status) status.textContent = "Pushing to MongoDB Atlas (settings.master_config)...";
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(`${apiBase}/api/free/admin/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          raw_config: val,
+          protocol: protocol
+        })
+      });
+
+      const resJson = await response.json();
+
+      if (response.ok && resJson.success) {
+        if (btn) {
+          btn.innerHTML = `<span>✓ Saved to MongoDB!</span>`;
+          btn.classList.add('bg-emerald-400');
+          setTimeout(() => {
+            btn.innerHTML = `<span>💾 Save Master Config</span>`;
+            btn.classList.remove('bg-emerald-400');
+            btn.disabled = false;
+          }, 2500);
+        }
+        if (status) {
+          status.textContent = "✓ Saved to MongoDB Atlas (free-legion-vpn.settings.master_config)!";
+          setTimeout(() => { status.textContent = ""; }, 4000);
+        }
+      } else {
+        throw new Error(resJson.message || `Server returned ${response.status}`);
+      }
+    } catch (err) {
+      console.error("Save to MongoDB Atlas failed:", err);
+      if (btn) {
+        btn.innerHTML = `<span>💾 Saved Locally (DB Offline)</span>`;
+        btn.disabled = false;
+        setTimeout(() => {
+          btn.innerHTML = `<span>💾 Save Master Config</span>`;
+        }, 3000);
+      }
+      if (status) {
+        status.textContent = `Saved locally (MongoDB note: ${err.message})`;
+      }
+      alert(`⚠️ Config saved to local cache, but MongoDB Atlas update failed:\n${err.message}\n\nPlease verify that your Cloudflare Worker is deployed with the MongoDB Atlas integration.`);
+    }
+  }
+
   // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
@@ -539,6 +700,18 @@
     renderPublicServers();
     loadModalSettings();
     renderUsers();
+    loadMasterConfig();
+
+    // Master Config Event Listeners
+    const masterTextarea = document.getElementById('admin-master-vpn-config');
+    if (masterTextarea) {
+      masterTextarea.addEventListener('input', (e) => updateMasterProtocolDisplay(e.target.value));
+      masterTextarea.addEventListener('change', (e) => updateMasterProtocolDisplay(e.target.value));
+    }
+    const btnSaveMaster = document.getElementById('btn-save-master-config');
+    if (btnSaveMaster) {
+      btnSaveMaster.addEventListener('click', handleSaveMasterConfig);
+    }
 
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);

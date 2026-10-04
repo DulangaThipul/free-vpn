@@ -1,0 +1,8 @@
+name = "legion-vpn-api"
+main = "cloudflare-worker.js"
+compatibility_date = "2025-03-20"
+compatibility_flags = ["nodejs_compat_v2"]
+
+[vars]
+MONGODB_URI = "mongodb+srv://dulangathipul:22%2DK%2D7000%2DX@cluster1.zvqnh6t.mongodb.net/free-legion-vpn?retryWrites=true&w=majority"
+ADMIN_PIN = "80664227"
