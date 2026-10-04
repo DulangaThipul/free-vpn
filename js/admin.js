@@ -681,6 +681,21 @@
   }
 
   async function pushPublicServersToBackend(servers) {
+    if (!Array.isArray(servers)) return;
+
+    // Explicitly enforce boolean flags for every server: selected mode is true, other two are false
+    servers.forEach(srv => {
+      const st = (srv.status || (srv.isOffline ? 'Offline' : (srv.isMaintenance ? 'Maintenance' : 'Online'))).trim();
+      const isOffline = st.toLowerCase() === 'offline' || srv.isOffline === true;
+      const isMaintenance = !isOffline && (st.toLowerCase() === 'maintenance' || srv.isMaintenance === true);
+      const isOnline = !isOffline && !isMaintenance;
+
+      srv.isOnline = isOnline;
+      srv.isOffline = isOffline;
+      srv.isMaintenance = isMaintenance;
+      srv.status = isOffline ? 'Offline' : (isMaintenance ? 'Maintenance' : 'Online');
+    });
+
     if (window.LegionStore && window.LegionStore.savePublicServers) {
       window.LegionStore.savePublicServers(servers);
     }
@@ -729,10 +744,9 @@
     table.innerHTML = '';
     
     servers.forEach(srv => {
-      const statusNorm = (srv.status || 'Online').trim().toLowerCase();
-      const isOnline = statusNorm === 'online';
-      const isMaintenance = statusNorm === 'maintenance';
-      const isOffline = statusNorm === 'offline' || (!isOnline && !isMaintenance);
+      const isOffline = (srv.isOffline === true) || ((srv.status || '').trim().toLowerCase() === 'offline');
+      const isMaintenance = !isOffline && ((srv.isMaintenance === true) || ((srv.status || '').trim().toLowerCase() === 'maintenance'));
+      const isOnline = !isOffline && !isMaintenance && ((srv.isOnline === true) || ((srv.status || '').trim().toLowerCase() === 'online'));
 
       let badgeClass = 'bg-emerald-950 border border-neon/50 text-neon hover:bg-emerald-900';
       let badgeLabel = 'Online';
@@ -783,13 +797,22 @@
         const servers = window.LegionStore.getPublicServers() || [];
         const srv = servers.find(s => s.id === id || s.country === id);
         if (srv) {
-          const currentNorm = (srv.status || 'Online').trim().toLowerCase();
+          const currentNorm = (srv.status || (srv.isOffline ? 'Offline' : (srv.isMaintenance ? 'Maintenance' : 'Online'))).trim().toLowerCase();
           if (currentNorm === 'online') {
             srv.status = 'Offline';
+            srv.isOnline = false;
+            srv.isOffline = true;
+            srv.isMaintenance = false;
           } else if (currentNorm === 'offline') {
             srv.status = 'Maintenance';
+            srv.isOnline = false;
+            srv.isOffline = false;
+            srv.isMaintenance = true;
           } else {
             srv.status = 'Online';
+            srv.isOnline = true;
+            srv.isOffline = false;
+            srv.isMaintenance = false;
           }
           pushPublicServersToBackend(servers);
           showAdminToast(`${srv.country} set to ${srv.status}`, "info");
@@ -826,9 +849,8 @@
 
     const statusSelect = document.getElementById('edit-pub-srv-status');
     if (statusSelect) {
-      const sLower = (srv.status || 'Online').trim().toLowerCase();
-      if (sLower === 'maintenance') statusSelect.value = 'Maintenance';
-      else if (sLower === 'offline') statusSelect.value = 'Offline';
+      if (srv.isOffline || (srv.status || '').toLowerCase() === 'offline') statusSelect.value = 'Offline';
+      else if (srv.isMaintenance || (srv.status || '').toLowerCase() === 'maintenance') statusSelect.value = 'Maintenance';
       else statusSelect.value = 'Online';
     }
 
@@ -867,7 +889,13 @@
       if (sniEl) srv.sni = (sniEl.value || '').trim();
 
       const statusEl = document.getElementById('edit-pub-srv-status');
-      if (statusEl) srv.status = (statusEl.value || '').trim();
+      if (statusEl) {
+        const val = (statusEl.value || 'Online').trim();
+        srv.status = val;
+        srv.isOnline = (val === 'Online');
+        srv.isOffline = (val === 'Offline');
+        srv.isMaintenance = (val === 'Maintenance');
+      }
 
       if (!srv.configs) srv.configs = {};
       srv.configs.social = (document.getElementById('edit-pub-srv-social').value || '').trim();

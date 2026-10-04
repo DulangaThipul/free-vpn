@@ -1897,11 +1897,9 @@ INSTRUCTIONS:
     grid.innerHTML = '';
     
     servers.forEach(srv => {
-      const statusStr = (srv.status || 'Online').trim();
-      const statusLower = statusStr.toLowerCase();
-      const isOnline = statusLower === 'online';
-      const isMaintenance = statusLower === 'maintenance';
-      const isOffline = statusLower === 'offline' || (!isOnline && !isMaintenance);
+      const isOffline = (srv.isOffline === true) || ((srv.status || '').trim().toLowerCase() === 'offline');
+      const isMaintenance = !isOffline && ((srv.isMaintenance === true) || ((srv.status || '').trim().toLowerCase() === 'maintenance'));
+      const isOnline = !isOffline && !isMaintenance && ((srv.isOnline === true) || ((srv.status || '').trim().toLowerCase() === 'online'));
 
       const card = document.createElement('div');
       let borderClass = 'border-emerald-900/40 hover:border-emerald-500/60';
@@ -2007,95 +2005,139 @@ INSTRUCTIONS:
       if (upVip && ms.pubVipPitch) upVip.textContent = ms.pubVipPitch;
     }
 
-    // Open Modal Handlers
-    document.querySelectorAll('.js-open-public-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const target = e.currentTarget;
-        const srvId = target.getAttribute('data-id');
-        currentPublicState.id = srvId;
-        currentPublicState.country = target.getAttribute('data-country');
-        currentPublicState.flag = target.getAttribute('data-flag');
-        currentPublicState.code = (target.getAttribute('data-code') || 'fr').toLowerCase();
-        currentPublicState.ip = target.getAttribute('data-ip');
-        currentPublicState.adClicks = 0;
-        currentPublicState.turnstilePassed = false;
-        currentPublicState.isCooldown = false;
-        currentPublicState.pendingAd = null;
+  function openPublicServerModal(target) {
+    if (!target) return;
+    const modal = document.getElementById('public-server-modal');
+    if (!modal) return;
 
-        // Dynamic Filter: Only populate packages that have at least 1 character configured in Admin Panel
-        const servers = (window.LegionStore && window.LegionStore.getPublicServers) ? window.LegionStore.getPublicServers() : [];
-        const srv = servers.find(s => (srvId && s.id === srvId) || (s.country && s.country.toLowerCase() === currentPublicState.country.toLowerCase()));
+    const titleEl = document.getElementById('public-modal-title');
+    const ipEl = document.getElementById('public-modal-ip');
+    const flagEl = document.getElementById('public-modal-flag');
+    const stepPkg = document.getElementById('public-step-pkg');
+    const stepVerify = document.getElementById('public-step-verify');
+    const stepResult = document.getElementById('public-step-result');
+    const pkgSelect = document.getElementById('public-pkg-select');
+    const btnStart = document.getElementById('public-btn-start');
+    const turnstileCheckbox = document.getElementById('public-turnstile-checkbox');
+    const turnstileText = document.getElementById('public-turnstile-text');
+    const btnAd = document.getElementById('public-btn-ad');
+    const adStatus = document.getElementById('public-ad-status');
 
-        const ALL_PACKAGES = [
-          { key: 'social', label: 'Social Media Package (Any ISP)' },
-          { key: 'tiktok', label: 'TikTok Package (Any ISP)' },
-          { key: 'youtube', label: 'YouTube Package (Any ISP)' },
-          { key: 'zoom', label: 'Zoom Package (Any ISP)' }
-        ];
+    const srvId = target.getAttribute('data-id');
+    currentPublicState.id = srvId;
+    currentPublicState.country = target.getAttribute('data-country') || 'Germany';
+    currentPublicState.flag = target.getAttribute('data-code') || 'de';
+    currentPublicState.code = (target.getAttribute('data-code') || 'de').toLowerCase();
+    currentPublicState.ip = target.getAttribute('data-ip') || '—';
+    currentPublicState.adClicks = 0;
+    currentPublicState.turnstilePassed = false;
+    currentPublicState.isCooldown = false;
+    currentPublicState.pendingAd = null;
 
-        const configs = (srv && srv.configs) ? srv.configs : {};
-        const availablePackages = ALL_PACKAGES.filter(p => {
-          const cfg = configs[p.key];
-          return typeof cfg === 'string' && cfg.trim().length > 0;
-        });
+    const ALL_PACKAGES = [
+      { key: 'social', label: 'Dialog / Mobitel / Airtel / Hutch Social (20 GB)' },
+      { key: 'tiktok', label: 'Dialog / Airtel TikTok Unlimited' },
+      { key: 'youtube', label: 'Airtel / Dialog YouTube Unlimited' },
+      { key: 'zoom', label: 'Airtel / Hutch Zoom (30 GB)' }
+    ];
 
-        if (pkgSelect) {
-          if (availablePackages.length > 0) {
-            pkgSelect.innerHTML = availablePackages.map((p, idx) => 
-              `<option value="${p.key}" ${idx === 0 ? 'selected' : ''}>${p.label}</option>`
-            ).join('');
-            pkgSelect.disabled = false;
-            if (btnStart) {
-              btnStart.disabled = false;
-              btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
-              btnStart.innerHTML = '<span>Confirm Package & Start Verification</span>';
-            }
-          } else {
-            pkgSelect.innerHTML = '<option value="" disabled selected>No packages configured by Admin</option>';
-            pkgSelect.disabled = true;
-            if (btnStart) {
-              btnStart.disabled = true;
-              btnStart.classList.add('opacity-50', 'cursor-not-allowed');
-              btnStart.innerHTML = '<span>No Packages Available</span>';
-            }
-          }
+    if (pkgSelect) {
+      pkgSelect.innerHTML = ALL_PACKAGES.map((p, idx) => 
+        `<option value="${p.key}" ${idx === 0 ? 'selected' : ''}>${p.label}</option>`
+      ).join('');
+      pkgSelect.disabled = false;
+    }
+
+    if (btnStart) {
+      btnStart.disabled = false;
+      btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
+      const isInstantPublic = (state.publicSteps === 1);
+      btnStart.innerHTML = isInstantPublic
+        ? '<span>⚡ Confirm Package & 1-Ad Instant Unlock →</span>'
+        : '<span>Confirm Package & Start Verification →</span>';
+    }
+
+    if (flagEl) {
+      flagEl.src = `https://flagcdn.com/w80/${currentPublicState.code}.png`;
+      flagEl.srcset = `https://flagcdn.com/w160/${currentPublicState.code}.png 2x`;
+      flagEl.alt = `${currentPublicState.country} Flag`;
+    }
+
+    if (titleEl) titleEl.textContent = `${currentPublicState.country} Public Server`;
+    if (ipEl) ipEl.textContent = currentPublicState.ip;
+    
+    if (stepPkg) stepPkg.classList.remove('hidden');
+    if (stepVerify) stepVerify.classList.add('hidden');
+    if (stepResult) stepResult.classList.add('hidden');
+    
+    if (turnstileCheckbox) turnstileCheckbox.innerHTML = '';
+    if (turnstileText) turnstileText.textContent = "Verify you are human";
+    if (btnAd) {
+      btnAd.disabled = true;
+      btnAd.classList.add('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'text-zinc-400');
+      btnAd.classList.remove('bg-neon', 'text-black', 'hover:bg-emerald-400');
+      btnAd.innerHTML = '<span>Complete Turnstile First</span>';
+    }
+    const isInstantPublic = (state.publicSteps === 1);
+    if (adStatus) {
+      adStatus.textContent = isInstantPublic
+        ? "Requires 1 Sponsored Impression (⚡ Instant Unlock)"
+        : "Requires 10 Sponsored Impressions";
+    }
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.style.display = 'flex';
+  }
+
+  // --- Global Public Servers (10 Ads Quick Access) ---
+  function initPublicServerModal() {
+    const modal = document.getElementById('public-server-modal');
+    const closeBtn = document.getElementById('close-public-modal');
+    const titleEl = document.getElementById('public-modal-title');
+    const ipEl = document.getElementById('public-modal-ip');
+    
+    const stepPkg = document.getElementById('public-step-pkg');
+    const stepVerify = document.getElementById('public-step-verify');
+    const stepResult = document.getElementById('public-step-result');
+    const pkgSelect = document.getElementById('public-pkg-select');
+    const btnStart = document.getElementById('public-btn-start');
+    
+    const turnstileBox = document.getElementById('public-turnstile-box');
+    const turnstileCheckbox = document.getElementById('public-turnstile-checkbox');
+    const turnstileText = document.getElementById('public-turnstile-text');
+    const btnAd = document.getElementById('public-btn-ad');
+    const adStatus = document.getElementById('public-ad-status');
+    const publicPill = document.getElementById('public-progress-pill');
+    
+    const resultConfig = document.getElementById('public-result-config');
+    const btnCopy = document.getElementById('public-btn-copy');
+    
+    // Apply Modal Dynamic Settings from Store
+    if (window.LegionStore && window.LegionStore.getModalSettings) {
+      const ms = window.LegionStore.getModalSettings();
+      const adv = document.getElementById('pub-modal-advisory');
+      if (adv && ms.pubAdvisoryBanner) adv.textContent = ms.pubAdvisoryBanner;
+      
+      const upFree = document.getElementById('pub-modal-upsell-free');
+      if (upFree && ms.pubUpsellPitch) upFree.textContent = ms.pubUpsellPitch;
+      
+      const upVip = document.getElementById('pub-modal-upsell-vip');
+      if (upVip && ms.pubVipPitch) upVip.textContent = ms.pubVipPitch;
+    }
+
+    // Delegated Click Handler on Document: Always fires for any .js-open-public-btn
+    if (!document._hasPublicServerBtnDelegation) {
+      document._hasPublicServerBtnDelegation = true;
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.js-open-public-btn');
+        if (btn) {
+          e.preventDefault();
+          e.stopPropagation();
+          openPublicServerModal(btn);
         }
-
-        const flagEl = document.getElementById('public-modal-flag');
-        if (flagEl) {
-          flagEl.src = `https://flagcdn.com/w80/${currentPublicState.code}.png`;
-          flagEl.srcset = `https://flagcdn.com/w160/${currentPublicState.code}.png 2x`;
-          flagEl.alt = `${currentPublicState.country} Flag`;
-        }
-
-        if (titleEl) titleEl.textContent = `${currentPublicState.country} Public Server`;
-        if (ipEl) ipEl.textContent = currentPublicState.ip;
-        
-        if (stepPkg) stepPkg.classList.remove('hidden');
-        if (stepVerify) stepVerify.classList.add('hidden');
-        if (stepResult) stepResult.classList.add('hidden');
-        
-        if (turnstileCheckbox) turnstileCheckbox.innerHTML = '';
-        if (turnstileText) turnstileText.textContent = "Verify you are human";
-        if (btnAd) {
-          btnAd.disabled = true;
-          btnAd.classList.add('opacity-50', 'cursor-not-allowed', 'bg-zinc-800', 'text-zinc-400', 'transition-all');
-          btnAd.classList.remove('bg-neon', 'text-black', 'hover:bg-emerald-400');
-          btnAd.innerHTML = '<span>Complete Turnstile First</span>';
-        }
-        const isInstantPublic = (state.publicSteps === 1);
-        const publicQuota = isInstantPublic ? 1 : 10;
-        if (adStatus) {
-          adStatus.textContent = isInstantPublic
-            ? "Requires 1 Sponsored Impression (⚡ Instant Unlock)"
-            : "Requires 10 Sponsored Impressions";
-        }
-        
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-      }, { capture: true });
-    });
+      });
+    }
 
     if (closeBtn) {
       closeBtn.addEventListener('click', (e) => {

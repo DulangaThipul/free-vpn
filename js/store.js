@@ -250,13 +250,32 @@
   const PUBLIC_SERVERS_KEY = 'legion_vpn_public_servers';
   const MODAL_SETTINGS_KEY = 'legion_vpn_modal_settings';
 
+  function normalizeServerModes(servers) {
+    if (!Array.isArray(servers)) return [];
+    return servers.map(srv => {
+      const s = (srv.status || '').toString().trim().toLowerCase();
+      let isOff = (srv.isOffline === true) || (s === 'offline');
+      let isMaint = !isOff && ((srv.isMaintenance === true) || (s === 'maintenance'));
+      let isOn = !isOff && !isMaint;
+      
+      const normalizedStatus = isOff ? 'Offline' : (isMaint ? 'Maintenance' : 'Online');
+      return {
+        ...srv,
+        status: normalizedStatus,
+        isOnline: isOn,
+        isOffline: isOff,
+        isMaintenance: isMaint
+      };
+    });
+  }
+
   const DEFAULT_PUBLIC_SERVERS = [
-    { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://141-94-33-194-fr@141.94.33.194:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=141.94.33.194&path=%2F#LEGION-FRANCE-PUBLIC" } },
-    { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://57-129-121-229-de@57.129.121.229:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.129.121.229&path=%2F#LEGION-GERMANY-PUBLIC" } },
-    { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://54-36-162-84-gb@54.36.162.84:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=54.36.162.84&path=%2F#LEGION-UK-PUBLIC" } },
-    { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://51-158-147-186-nl@51.158.147.186:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=51.158.147.186&path=%2F#LEGION-NETHERLANDS-PUBLIC" } },
-    { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://57-131-38-151-it@57.131.38.151:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.131.38.151&path=%2F#LEGION-ITALY-PUBLIC" } },
-    { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://158-69-208-120-ca@158.69.208.120:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=158.69.208.120&path=%2F#LEGION-CANADA-PUBLIC" } },
+    { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://141-94-33-194-fr@141.94.33.194:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=141.94.33.194&path=%2F#LEGION-FRANCE-PUBLIC" } },
+    { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Offline", isOnline: false, isOffline: true, isMaintenance: false, configs: { social: "vless://57-129-121-229-de@57.129.121.229:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.129.121.229&path=%2F#LEGION-GERMANY-PUBLIC" } },
+    { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online", isOnline: true, isOffline: false, isMaintenance: false, configs: { social: "vless://54-36-162-84-gb@54.36.162.84:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=54.36.162.84&path=%2F#LEGION-UK-PUBLIC" } },
+    { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://51-158-147-186-nl@51.158.147.186:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=51.158.147.186&path=%2F#LEGION-NETHERLANDS-PUBLIC" } },
+    { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://57-131-38-151-it@57.131.38.151:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.131.38.151&path=%2F#LEGION-ITALY-PUBLIC" } },
+    { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://158-69-208-120-ca@158.69.208.120:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=158.69.208.120&path=%2F#LEGION-CANADA-PUBLIC" } },
   ];
 
   const DEFAULT_MODAL_SETTINGS = {
@@ -278,7 +297,7 @@
         let parsed = JSON.parse(data);
         // Force remove Spain and Singapore
         parsed = parsed.filter(s => s.id !== 'pub_es' && s.id !== 'pub_sg');
-        return parsed;
+        return normalizeServerModes(parsed);
       }
     } catch (e) {}
     localStorage.setItem(PUBLIC_SERVERS_KEY, JSON.stringify(DEFAULT_PUBLIC_SERVERS));
@@ -286,7 +305,9 @@
   }
 
   function savePublicServers(servers) {
-    localStorage.setItem(PUBLIC_SERVERS_KEY, JSON.stringify(servers));
+    const normalized = normalizeServerModes(servers);
+    localStorage.setItem(PUBLIC_SERVERS_KEY, JSON.stringify(normalized));
+    return normalized;
   }
 
   function getModalSettings() {
@@ -534,6 +555,7 @@
     toggleBanUser: toggleBanUser,
     getPublicServers: getPublicServers,
     savePublicServers: savePublicServers,
+    normalizeServerModes: normalizeServerModes,
     getModalSettings: getModalSettings,
     saveModalSettings: saveModalSettings
   };

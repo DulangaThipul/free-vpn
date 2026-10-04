@@ -31,14 +31,33 @@ let activeMasterConfig = {
   updated_at: new Date().toISOString()
 };
 
+function normalizeServerModes(servers) {
+  if (!Array.isArray(servers)) return [];
+  return servers.map(srv => {
+    const s = (srv.status || '').toString().trim().toLowerCase();
+    let isOff = (srv.isOffline === true) || (s === 'offline');
+    let isMaint = !isOff && ((srv.isMaintenance === true) || (s === 'maintenance'));
+    let isOn = !isOff && !isMaint;
+    
+    const normalizedStatus = isOff ? 'Offline' : (isMaint ? 'Maintenance' : 'Online');
+    return {
+      ...srv,
+      status: normalizedStatus,
+      isOnline: isOn,
+      isOffline: isOff,
+      isMaintenance: isMaint
+    };
+  });
+}
+
 // Default Public Servers (Fallback & Initial State)
 const DEFAULT_PUBLIC_SERVERS = [
-  { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://141-94-33-194-fr@141.94.33.194:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=141.94.33.194&path=%2F#LEGION-FRANCE-PUBLIC" } },
-  { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://57-129-121-229-de@57.129.121.229:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.129.121.229&path=%2F#LEGION-GERMANY-PUBLIC" } },
-  { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://54-36-162-84-gb@54.36.162.84:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=54.36.162.84&path=%2F#LEGION-UK-PUBLIC" } },
-  { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://51-158-147-186-nl@51.158.147.186:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=51.158.147.186&path=%2F#LEGION-NETHERLANDS-PUBLIC" } },
-  { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://57-131-38-151-it@57.131.38.151:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.131.38.151&path=%2F#LEGION-ITALY-PUBLIC" } },
-  { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Online", configs: { social: "vless://158-69-208-120-ca@158.69.208.120:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=158.69.208.120&path=%2F#LEGION-CANADA-PUBLIC" } }
+  { id: "pub_fr", country: "France", flag: "fr", ip: "141.94.33.194", ping: "280ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://141-94-33-194-fr@141.94.33.194:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=141.94.33.194&path=%2F#LEGION-FRANCE-PUBLIC" } },
+  { id: "pub_de", country: "Germany", flag: "de", ip: "57.129.121.229", ping: "260ms Ping", sni: "m.facebook.com", status: "Offline", isOnline: false, isOffline: true, isMaintenance: false, configs: { social: "vless://57-129-121-229-de@57.129.121.229:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.129.121.229&path=%2F#LEGION-GERMANY-PUBLIC" } },
+  { id: "pub_gb", country: "United Kingdom", flag: "gb", ip: "54.36.162.84", ping: "270ms Ping", sni: "m.facebook.com", status: "Online", isOnline: true, isOffline: false, isMaintenance: false, configs: { social: "vless://54-36-162-84-gb@54.36.162.84:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=54.36.162.84&path=%2F#LEGION-UK-PUBLIC" } },
+  { id: "pub_nl", country: "Netherlands", flag: "nl", ip: "51.158.147.186", ping: "255ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://51-158-147-186-nl@51.158.147.186:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=51.158.147.186&path=%2F#LEGION-NETHERLANDS-PUBLIC" } },
+  { id: "pub_it", country: "Italy", flag: "it", ip: "57.131.38.151", ping: "290ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://57-131-38-151-it@57.131.38.151:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=57.131.38.151&path=%2F#LEGION-ITALY-PUBLIC" } },
+  { id: "pub_ca", country: "Canada", flag: "ca", ip: "158.69.208.120", ping: "320ms Ping", sni: "m.facebook.com", status: "Maintenance", isOnline: false, isOffline: false, isMaintenance: true, configs: { social: "vless://158-69-208-120-ca@158.69.208.120:443?encryption=none&security=tls&sni=m.facebook.com&type=ws&host=158.69.208.120&path=%2F#LEGION-CANADA-PUBLIC" } }
 ];
 
 // Default Modal Settings (Fallback & Initial State)
@@ -797,7 +816,7 @@ export default {
               ...doc,
               packages: doc.packages || activeGlobalSettings.packages,
               package_list: doc.package_list || (doc.packages ? mergePackagesWithMap(DEFAULT_PACKAGES, doc.packages) : activeGlobalSettings.package_list),
-              public_servers: Array.isArray(doc.public_servers) && doc.public_servers.length > 0 ? doc.public_servers : activeGlobalSettings.public_servers,
+              public_servers: Array.isArray(doc.public_servers) && doc.public_servers.length > 0 ? normalizeServerModes(doc.public_servers) : normalizeServerModes(activeGlobalSettings.public_servers),
               modal_settings: doc.modal_settings || activeGlobalSettings.modal_settings,
               master_config: doc.master_config || doc.raw_config || activeGlobalSettings.master_config,
               raw_config: doc.raw_config || doc.master_config || activeGlobalSettings.raw_config,
@@ -929,9 +948,10 @@ export default {
         }
 
         if (body.public_servers && Array.isArray(body.public_servers)) {
-          updateFields.public_servers = body.public_servers;
-          activeGlobalSettings.public_servers = body.public_servers;
-          activePublicServers = body.public_servers;
+          const normPublicServers = normalizeServerModes(body.public_servers);
+          updateFields.public_servers = normPublicServers;
+          activeGlobalSettings.public_servers = normPublicServers;
+          activePublicServers = normPublicServers;
         }
 
         if (body.modal_settings && typeof body.modal_settings === 'object') {
@@ -1384,7 +1404,7 @@ export default {
         try {
           const kvServers = await env.LEGION_KV.get("public_servers", "json");
           if (Array.isArray(kvServers) && kvServers.length > 0) {
-            activePublicServers = kvServers;
+            activePublicServers = normalizeServerModes(kvServers);
             return new Response(JSON.stringify({
               success: true,
               servers: activePublicServers,
@@ -1407,7 +1427,7 @@ export default {
           }, env);
 
           if (result && result.document && Array.isArray(result.document.public_servers) && result.document.public_servers.length > 0) {
-            activePublicServers = result.document.public_servers;
+            activePublicServers = normalizeServerModes(result.document.public_servers);
             return new Response(JSON.stringify({
               success: true,
               servers: activePublicServers,
@@ -1425,6 +1445,7 @@ export default {
       }
 
       // 3. Fallback to active edge cache / default public servers
+      activePublicServers = normalizeServerModes(activePublicServers);
       return new Response(JSON.stringify({
         success: true,
         servers: activePublicServers,
@@ -1468,8 +1489,8 @@ export default {
           });
         }
 
-        const servers = body.servers || body.public_servers || (Array.isArray(body) ? body : null);
-        if (!Array.isArray(servers)) {
+        const rawServers = body.servers || body.public_servers || (Array.isArray(body) ? body : null);
+        if (!Array.isArray(rawServers)) {
           return new Response(JSON.stringify({
             success: false,
             message: "Bad Request: servers must be an array"
@@ -1479,6 +1500,7 @@ export default {
           });
         }
 
+        const servers = normalizeServerModes(rawServers);
         const now = new Date().toISOString();
         activePublicServers = servers;
         activeGlobalSettings.public_servers = servers;
