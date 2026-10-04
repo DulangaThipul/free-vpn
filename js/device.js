@@ -66,13 +66,18 @@
     if (!url || url === '#' || url.startsWith('javascript:')) return null;
 
     // Method 1: Programmatic <a> click with target="_blank" and rel="noopener noreferrer"
-    // In desktop browsers, an anchor click on a user gesture always opens a real new tab
+    // Rendered offscreen with fixed coordinates (WebKit/iOS Safari compatible, never display:none)
     try {
       const a = document.createElement('a');
       a.href = url;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.style.display = 'none';
+      a.style.position = 'fixed';
+      a.style.left = '-9999px';
+      a.style.top = '-9999px';
+      a.style.width = '1px';
+      a.style.height = '1px';
+      a.style.opacity = '0.01';
       document.body.appendChild(a);
       a.click();
       setTimeout(function () {
@@ -85,7 +90,7 @@
 
     // Method 2: Native window.open with '_blank' and NO feature strings
     // In Chromium and Firefox desktop, passing feature strings causes the browser to open a popup window!
-    // Calling it with only ('_blank') opens a browser tab.
+    // Calling it with only ('_blank') opens a real browser tab.
     try {
       const win = _origWindowOpen.call(window, url, '_blank');
       if (win) {
@@ -101,43 +106,52 @@
 
   /**
    * Device-Aware Ad Opener
-   * - PC: Strictly opens in a new tab
-   * - Mobile & Tablet: Preserves current mobile workflow (window.open with noopener,noreferrer)
+   * Opens ads reliably across all mobile (Android/iOS) and desktop browsers without triggering popup blockers
    */
   function openAd(url) {
     if (!url || url === '#' || url.startsWith('javascript:')) return;
 
     if (detectedType === 'pc') {
       return openAdInNewTabPC(url);
-    } else {
-      // Mobile and Tablet: Keep existing logic exactly as is!
-      try {
-        const win = _origWindowOpen.call(window, url, '_blank', 'noopener,noreferrer');
-        if (win) return win;
-      } catch (e) {}
-
-      try {
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function () {
-          if (a.parentNode) a.parentNode.removeChild(a);
-        }, 100);
-      } catch (err) {}
     }
+
+    // Mobile & Tablet:
+    // First try standard window.open(url, '_blank') WITHOUT feature strings
+    // (Passing 'noopener,noreferrer' as windowFeatures is what causes mobile Chrome & Safari popup blockers to fire!)
+    try {
+      const win = _origWindowOpen.call(window, url, '_blank');
+      if (win) {
+        try { win.opener = null; } catch (e) {}
+        return win;
+      }
+    } catch (e) {}
+
+    // Fallback: offscreen rendered anchor tag (works reliably on iOS Safari & Android Chrome)
+    try {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.position = 'fixed';
+      a.style.left = '-9999px';
+      a.style.top = '-9999px';
+      a.style.width = '1px';
+      a.style.height = '1px';
+      a.style.opacity = '0.01';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        if (a.parentNode) a.parentNode.removeChild(a);
+      }, 150);
+    } catch (err) {}
   }
 
   // --- GLOBAL WINDOW.OPEN INTERCEPTION ---
   window.open = function (url, target, features) {
     if (detectedType === 'pc') {
-      // On PC, every ad must open in a new tab (never a popup window, never in current tab)
       return openAdInNewTabPC(url);
     } else {
-      // On Mobile and Tablet, keep existing behavior exactly as is!
-      return _origWindowOpen.call(window, url, '_blank', 'noopener,noreferrer');
+      return openAd(url);
     }
   };
 

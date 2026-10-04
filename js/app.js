@@ -75,11 +75,13 @@
   // Global window.open wrapper respecting platform rules
   const _origWindowOpen = window._legionOrigWindowOpen || window.open;
   window.open = function (url, target, features) {
+    if (window.LegionDevice && window.LegionDevice.openAd) {
+      return window.LegionDevice.openAd(url);
+    }
     if (LegionDevice.isPC()) {
       return LegionDevice.openAdInNewTabPC(url);
     }
-    // Mobile and Tablet: Keep existing logic exactly as is!
-    return _origWindowOpen.call(window, url, '_blank', 'noopener,noreferrer');
+    return _origWindowOpen.call(window, url, '_blank');
   };
 
   // Prevent rogue external navigation via window.location.assign and replace
@@ -392,6 +394,10 @@
     function handleReturn() {
       // 1. Handle active ad countdown return
       if (activeAdSession) {
+        const elapsed = (Date.now() - activeAdSession.startTime) / 1000;
+        if (elapsed < 1.2) {
+          return; // Ignore immediate touch/click gesture focus noise
+        }
         if (!cancelAdSessionIfEarly()) {
           completeAdSessionIfEligible();
         }
@@ -416,11 +422,17 @@
       restoreVerificationProgress();
     }
 
+    window.addEventListener('blur', () => {
+      if (activeAdSession) activeAdSession.hasLeftWindow = true;
+    });
+
     window.addEventListener('focus', handleReturn);
+
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         handleReturn();
       } else {
+        if (activeAdSession) activeAdSession.hasLeftWindow = true;
         saveVerificationProgress();
       }
     });
@@ -820,34 +832,40 @@
     const link = getDirectLink(stepNumber);
     if (!link || link === "#") return;
 
-    // On PC: Strictly enforce opening in a clean new tab without popup flags or parent redirection
-    if (window.LegionDevice && window.LegionDevice.isPC()) {
-      window.LegionDevice.openAdInNewTabPC(link);
+    // Use device intelligence orchestrator
+    if (window.LegionDevice && window.LegionDevice.openAd) {
+      window.LegionDevice.openAd(link);
       return;
     }
 
-    // Mobile & Tablet: Preserves existing verified mobile behavior
-    // 1. Direct window.open on trusted user gesture guarantees a new tab in mobile browsers
+    // Direct clean window.open without popup features (features trigger mobile popup blockers!)
     try {
-      const win = window.open(link, '_blank', 'noopener,noreferrer');
+      const win = _origWindowOpen.call(window, link, '_blank');
       if (win) {
+        try { win.opener = null; } catch (e) {}
         return;
       }
     } catch (e) {
       console.warn("window.open new tab notice:", e);
     }
 
-    // 2. Secondary fallback using dynamic <a> tag targeting _blank
+    // Secondary fallback using offscreen rendered <a> tag
     try {
       const a = document.createElement('a');
       a.href = link;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
+      a.style.position = 'fixed';
+      a.style.left = '-9999px';
+      a.style.top = '-9999px';
+      a.style.width = '1px';
+      a.style.height = '1px';
+      a.style.opacity = '0.01';
       document.body.appendChild(a);
       a.click();
       setTimeout(() => {
         if (a.parentNode) a.parentNode.removeChild(a);
-      }, 100);
+      }, 150);
     } catch (err) {
       console.warn("Direct link opener error:", err);
     }
@@ -973,6 +991,17 @@
     if (!activeAdSession) return false;
 
     const elapsed = (Date.now() - activeAdSession.startTime) / 1000;
+
+    // 1. Immunity period: Ignore touch/click micro-events in first 1.2s on mobile
+    if (elapsed < 1.2) {
+      return false;
+    }
+
+    // 2. If the user never actually switched away from the tab, let the button countdown run down naturally
+    if (!activeAdSession.hasLeftWindow && document.visibilityState === 'visible') {
+      return false;
+    }
+
     if (elapsed < 4.8) {
       // User switched back or closed ad before 5 seconds!
       const lang = (window.LegionI18n && window.LegionI18n.getLanguage()) || 'en';
@@ -1023,21 +1052,6 @@
       }
     }
   }
-
-  // Listen for tab focus & visibility change for strict 5-second verification
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      if (!cancelAdSessionIfEarly()) {
-        completeAdSessionIfEligible();
-      }
-    }
-  });
-
-  window.addEventListener('focus', () => {
-    if (!cancelAdSessionIfEarly()) {
-      completeAdSessionIfEligible();
-    }
-  });
 
   // --- Unified 9-Step 100-Ad Action Handler with Real-Time Click Engine ---
   function handleStepClick(stepNumber) {
