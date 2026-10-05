@@ -6,8 +6,15 @@
 (function () {
   'use strict';
 
+  const API_BASE_URL = 'https://freevpn.dulangathipul.workers.dev';
   const ADMIN_SESSION_KEY = 'legion_admin_auth_token';
   const DEFAULT_PIN = '80664227';
+
+  function normalizeStatus(val) {
+    if (val === 1 || val === '1' || val === 'online' || val === 'Online' || (typeof val === 'string' && val.trim().toLowerCase() === 'online')) return 1;
+    if (val === 0 || val === '0' || val === 'offline' || val === 'Offline' || (typeof val === 'string' && val.trim().toLowerCase() === 'offline')) return 0;
+    return 2; // Default to Maintenance
+  }
 
   // State
   let packages = [];
@@ -259,6 +266,20 @@
           packages: pkgs
         })
       });
+
+      // Dual-push to global-settings doc
+      await fetch(`${apiBase}/api/free/admin/global-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          packages: pkgs
+        })
+      }).catch(() => {});
+
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
         showAdminToast("Package status synced to MongoDB Atlas!", "success");
@@ -683,33 +704,14 @@
   async function pushPublicServersToBackend(servers) {
     if (!Array.isArray(servers)) return;
 
-    // Explicitly enforce boolean flags for every server: selected mode is true, other two are false
+    // Enforce numeric mode: 0 = Offline, 1 = Online, 2 = Maintenance
     servers.forEach(srv => {
-      const s = (srv.status || '').toString().trim().toLowerCase();
-      let isOff = false;
-      let isMaint = false;
-      let isOn = false;
-
-      if (s === 'online') {
-        isOn = true;
-      } else if (s === 'offline') {
-        isOff = true;
-      } else if (s === 'maintenance') {
-        isMaint = true;
-      } else if (srv.isOffline === true) {
-        isOff = true;
-      } else if (srv.isMaintenance === true) {
-        isMaint = true;
-      } else if (srv.isOnline === true) {
-        isOn = true;
-      } else {
-        isOn = true;
-      }
-
-      srv.isOnline = isOn;
-      srv.isOffline = isOff;
-      srv.isMaintenance = isMaint;
-      srv.status = isOff ? 'Offline' : (isMaint ? 'Maintenance' : 'Online');
+      const mode = normalizeStatus(srv.status !== undefined ? srv.status : (srv.isOffline ? 0 : (srv.isMaintenance ? 2 : 1)));
+      srv.status = mode;
+      srv.statusLabel = mode === 1 ? 'Online' : (mode === 0 ? 'Offline' : 'Maintenance');
+      srv.isOnline = (mode === 1);
+      srv.isOffline = (mode === 0);
+      srv.isMaintenance = (mode === 2);
     });
 
     if (window.LegionStore && window.LegionStore.savePublicServers) {
@@ -760,30 +762,13 @@
     table.innerHTML = '';
     
     servers.forEach(srv => {
-      const s = (srv.status || '').toString().trim().toLowerCase();
-      let isOffline = false;
-      let isMaintenance = false;
-      let isOnline = false;
-      if (s === 'online') {
-        isOnline = true;
-      } else if (s === 'offline') {
-        isOffline = true;
-      } else if (s === 'maintenance') {
-        isMaintenance = true;
-      } else if (srv.isOffline === true) {
-        isOffline = true;
-      } else if (srv.isMaintenance === true) {
-        isMaintenance = true;
-      } else {
-        isOnline = true;
-      }
-
+      const mode = normalizeStatus(srv.status !== undefined ? srv.status : (srv.isOffline ? 0 : (srv.isMaintenance ? 2 : 1)));
       let badgeClass = 'bg-emerald-950 border border-neon/50 text-neon hover:bg-emerald-900';
       let badgeLabel = 'Online';
-      if (isOffline) {
+      if (mode === 0) {
         badgeClass = 'bg-red-950 border border-red-500/50 text-red-400 hover:bg-red-900';
         badgeLabel = 'Offline';
-      } else if (isMaintenance) {
+      } else if (mode === 2) {
         badgeClass = 'bg-amber-950 border border-amber-500/50 text-amber-400 hover:bg-amber-900';
         badgeLabel = 'Maintenance';
       }
@@ -799,7 +784,7 @@
         <td class="py-3.5 px-4 font-mono text-amber-400">${srv.ping || '—'}</td>
         <td class="py-3.5 px-4 font-mono text-zinc-300 text-[10px]">${srv.sni || '—'}</td>
         <td class="py-3.5 px-4">
-          <button type="button" class="js-toggle-srv-status px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all ${badgeClass}" data-id="${srv.id || srv.country}" title="Click to cycle status: Online -> Offline -> Maintenance">
+          <button type="button" class="js-toggle-srv-status px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all ${badgeClass}" data-id="${srv.id || srv.country}" title="Click to cycle status: Online (1) -> Offline (0) -> Maintenance (2)">
             ${badgeLabel}
           </button>
         </td>
@@ -827,25 +812,23 @@
         const servers = window.LegionStore.getPublicServers() || [];
         const srv = servers.find(s => s.id === id || s.country === id);
         if (srv) {
-          const currentNorm = (srv.status || (srv.isOffline ? 'Offline' : (srv.isMaintenance ? 'Maintenance' : 'Online'))).trim().toLowerCase();
-          if (currentNorm === 'online') {
-            srv.status = 'Offline';
-            srv.isOnline = false;
-            srv.isOffline = true;
-            srv.isMaintenance = false;
-          } else if (currentNorm === 'offline') {
-            srv.status = 'Maintenance';
-            srv.isOnline = false;
-            srv.isOffline = false;
-            srv.isMaintenance = true;
+          const currentMode = normalizeStatus(srv.status !== undefined ? srv.status : (srv.isOffline ? 0 : (srv.isMaintenance ? 2 : 1)));
+          // Cycle: 1 (Online) -> 0 (Offline) -> 2 (Maintenance) -> 1 (Online)
+          let nextMode = 1;
+          if (currentMode === 1) {
+            nextMode = 0;
+          } else if (currentMode === 0) {
+            nextMode = 2;
           } else {
-            srv.status = 'Online';
-            srv.isOnline = true;
-            srv.isOffline = false;
-            srv.isMaintenance = false;
+            nextMode = 1;
           }
+          srv.status = nextMode;
+          srv.statusLabel = nextMode === 1 ? 'Online' : (nextMode === 0 ? 'Offline' : 'Maintenance');
+          srv.isOnline = (nextMode === 1);
+          srv.isOffline = (nextMode === 0);
+          srv.isMaintenance = (nextMode === 2);
           pushPublicServersToBackend(servers);
-          showAdminToast(`${srv.country} set to ${srv.status}`, "info");
+          showAdminToast(`${srv.country} set to ${srv.statusLabel}`, "info");
         }
         return;
       }
@@ -879,9 +862,8 @@
 
     const statusSelect = document.getElementById('edit-pub-srv-status');
     if (statusSelect) {
-      if (srv.isOffline || (srv.status || '').toLowerCase() === 'offline') statusSelect.value = 'Offline';
-      else if (srv.isMaintenance || (srv.status || '').toLowerCase() === 'maintenance') statusSelect.value = 'Maintenance';
-      else statusSelect.value = 'Online';
+      const mode = normalizeStatus(srv.status !== undefined ? srv.status : (srv.isOffline ? 0 : (srv.isMaintenance ? 2 : 1)));
+      statusSelect.value = String(mode);
     }
 
     setVal('edit-pub-srv-social', (srv.configs && srv.configs.social) ? srv.configs.social : '');
@@ -920,11 +902,12 @@
 
       const statusEl = document.getElementById('edit-pub-srv-status');
       if (statusEl) {
-        const val = (statusEl.value || 'Online').trim();
-        srv.status = val;
-        srv.isOnline = (val === 'Online');
-        srv.isOffline = (val === 'Offline');
-        srv.isMaintenance = (val === 'Maintenance');
+        const mode = normalizeStatus(statusEl.value);
+        srv.status = mode;
+        srv.statusLabel = mode === 1 ? 'Online' : (mode === 0 ? 'Offline' : 'Maintenance');
+        srv.isOnline = (mode === 1);
+        srv.isOffline = (mode === 0);
+        srv.isMaintenance = (mode === 2);
       }
 
       if (!srv.configs) srv.configs = {};
@@ -957,7 +940,11 @@
         ip: ip.trim(),
         ping: ping ? ping.trim() : "200ms Ping",
         sni: sni ? sni.trim() : "m.facebook.com",
-        status: "Online"
+        status: 1,
+        statusLabel: "Online",
+        isOnline: true,
+        isOffline: false,
+        isMaintenance: false
       });
       pushPublicServersToBackend(servers);
     }
@@ -1023,6 +1010,20 @@
           modal_settings: ms
         })
       });
+
+      // Also ensure global-settings doc gets updated
+      await fetch(`${apiBase}/api/free/admin/global-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          modal_settings: ms
+        })
+      }).catch(() => {});
+
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
         if (btn) {
@@ -1083,10 +1084,7 @@
   }
 
   function getApiBaseUrl() {
-    const cfg = window.LEGION_CONFIG || {};
-    if (cfg.API_BASE_URL) return cfg.API_BASE_URL.replace(/\/+$/, '');
-    if (cfg.API_ENDPOINT) return cfg.API_ENDPOINT.replace(/\/claim\/?$/, '').replace(/\/+$/, '');
-    return "https://freevpn.dulangathipul.workers.dev";
+    return API_BASE_URL;
   }
 
   async function loadMasterConfig() {
@@ -1157,7 +1155,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Admin-Pin': DEFAULT_PIN
+          'x-admin-pin': DEFAULT_PIN
         },
         body: JSON.stringify({
           pin: DEFAULT_PIN,
@@ -1165,6 +1163,19 @@
           protocol: protocol
         })
       });
+
+      // Dual-push to global-settings doc
+      await fetch(`${apiBase}/api/free/admin/global-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          master_config: val
+        })
+      }).catch(() => {});
 
       const resJson = await response.json();
 
@@ -1319,7 +1330,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Admin-Pin': DEFAULT_PIN
+          'x-admin-pin': DEFAULT_PIN
         },
         body: JSON.stringify({
           pin: DEFAULT_PIN,
@@ -1327,6 +1338,20 @@
           public_steps: publicSteps
         })
       });
+
+      // Dual-push to global-settings doc
+      await fetch(`${apiBase}/api/free/admin/global-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': DEFAULT_PIN
+        },
+        body: JSON.stringify({
+          pin: DEFAULT_PIN,
+          sg_steps: sgSteps,
+          public_steps: publicSteps
+        })
+      }).catch(() => {});
 
       const resJson = await response.json();
       if (response.ok && resJson.success) {
