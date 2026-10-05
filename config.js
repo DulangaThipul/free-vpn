@@ -97,7 +97,7 @@ window.LEGION_CONFIG = {
   
   // Premium Plan Details
   PREMIUM: {
-    PRICE: "LKR 250 / mo",
+    PRICE: "LKR 100 / mo",
     WEBSITE_ORDER: "https://vpn.legiongraphics.site",
     WHATSAPP_SUPPORT: "https://wa.me/441163504152"
   }

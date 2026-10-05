@@ -87,7 +87,7 @@ const DEFAULT_MODAL_SETTINGS = {
   sgFooter: "Recommended Apps: v2rayNG (Android), Nekobox (PC), Shadowrocket (iOS)",
   pubAdvisoryBanner: "⚠️ High Latency / Speed Advisory: ශ්‍රී ලංකාවේ සිට මෙම රටවලට ඇති භෞතික දුර අධික වීම (Intercontinental Distance) සහ International Routing Hops වැඩිවීම නිසා Latency / Ping අගය 250ms - 380ms දක්වා ඉහළ යයි. මේවා සාමාන්‍ය Web Browsing සඳහා ප්‍රමාණවත් වේ.",
   pubUpsellPitch: "Ads 100 ක් බලා 1Gbps Dedicated Port එකක් ලබාගන්න (Valid: Days 5 | Quota: 50GB).",
-  pubVipPitch: "රු. 250 කට >1Gbps Ultra-Speed, Zero Ads, Unlimited Data (Valid: 30 Days / 1 Month)."
+  pubVipPitch: "රු. 100 කට >1Gbps Ultra-Speed, Zero Ads, Unlimited Data (Valid: 30 Days / 1 Month)."
 };
 
 // In-Memory Edge Runtime Cache for Public Servers & Modals

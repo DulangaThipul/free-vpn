@@ -2047,7 +2047,7 @@ Package: ${pkgName}
 Session: ${sessionCode}
 Protocol: Trojan (Port 443 HTTPS TLS) + V2Ray / VLESS
 Generated At: ${new Date().toLocaleString()}
-Notice: Free VPN has NO inbox support. Upgrade to VIP (LKR 250) for 24/7 dedicated support.
+Notice: Free VPN has NO inbox support. Upgrade to VIP (LKR 100) for 24/7 dedicated support.
 =====================================================
 
 1. TROJAN CONFIGURATION LINK:
