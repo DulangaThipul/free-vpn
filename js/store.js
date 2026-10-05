@@ -270,11 +270,28 @@
   function normalizeServerModes(servers) {
     if (!Array.isArray(servers)) return [];
     return servers.map(srv => {
+      if (!srv || typeof srv !== 'object') return srv;
       const s = (srv.status || '').toString().trim().toLowerCase();
-      let isOff = (srv.isOffline === true) || (s === 'offline');
-      let isMaint = !isOff && ((srv.isMaintenance === true) || (s === 'maintenance'));
-      let isOn = !isOff && !isMaint;
-      
+      let isOff = false;
+      let isMaint = false;
+      let isOn = false;
+
+      if (s === 'online') {
+        isOn = true;
+      } else if (s === 'offline') {
+        isOff = true;
+      } else if (s === 'maintenance') {
+        isMaint = true;
+      } else if (srv.isOffline === true) {
+        isOff = true;
+      } else if (srv.isMaintenance === true) {
+        isMaint = true;
+      } else if (srv.isOnline === true) {
+        isOn = true;
+      } else {
+        isOn = true;
+      }
+
       const normalizedStatus = isOff ? 'Offline' : (isMaint ? 'Maintenance' : 'Online');
       return {
         ...srv,

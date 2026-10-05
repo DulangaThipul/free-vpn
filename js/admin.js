@@ -685,15 +685,31 @@
 
     // Explicitly enforce boolean flags for every server: selected mode is true, other two are false
     servers.forEach(srv => {
-      const st = (srv.status || (srv.isOffline ? 'Offline' : (srv.isMaintenance ? 'Maintenance' : 'Online'))).trim();
-      const isOffline = st.toLowerCase() === 'offline' || srv.isOffline === true;
-      const isMaintenance = !isOffline && (st.toLowerCase() === 'maintenance' || srv.isMaintenance === true);
-      const isOnline = !isOffline && !isMaintenance;
+      const s = (srv.status || '').toString().trim().toLowerCase();
+      let isOff = false;
+      let isMaint = false;
+      let isOn = false;
 
-      srv.isOnline = isOnline;
-      srv.isOffline = isOffline;
-      srv.isMaintenance = isMaintenance;
-      srv.status = isOffline ? 'Offline' : (isMaintenance ? 'Maintenance' : 'Online');
+      if (s === 'online') {
+        isOn = true;
+      } else if (s === 'offline') {
+        isOff = true;
+      } else if (s === 'maintenance') {
+        isMaint = true;
+      } else if (srv.isOffline === true) {
+        isOff = true;
+      } else if (srv.isMaintenance === true) {
+        isMaint = true;
+      } else if (srv.isOnline === true) {
+        isOn = true;
+      } else {
+        isOn = true;
+      }
+
+      srv.isOnline = isOn;
+      srv.isOffline = isOff;
+      srv.isMaintenance = isMaint;
+      srv.status = isOff ? 'Offline' : (isMaint ? 'Maintenance' : 'Online');
     });
 
     if (window.LegionStore && window.LegionStore.savePublicServers) {
@@ -744,9 +760,23 @@
     table.innerHTML = '';
     
     servers.forEach(srv => {
-      const isOffline = (srv.isOffline === true) || ((srv.status || '').trim().toLowerCase() === 'offline');
-      const isMaintenance = !isOffline && ((srv.isMaintenance === true) || ((srv.status || '').trim().toLowerCase() === 'maintenance'));
-      const isOnline = !isOffline && !isMaintenance && ((srv.isOnline === true) || ((srv.status || '').trim().toLowerCase() === 'online'));
+      const s = (srv.status || '').toString().trim().toLowerCase();
+      let isOffline = false;
+      let isMaintenance = false;
+      let isOnline = false;
+      if (s === 'online') {
+        isOnline = true;
+      } else if (s === 'offline') {
+        isOffline = true;
+      } else if (s === 'maintenance') {
+        isMaintenance = true;
+      } else if (srv.isOffline === true) {
+        isOffline = true;
+      } else if (srv.isMaintenance === true) {
+        isMaintenance = true;
+      } else {
+        isOnline = true;
+      }
 
       let badgeClass = 'bg-emerald-950 border border-neon/50 text-neon hover:bg-emerald-900';
       let badgeLabel = 'Online';

@@ -378,10 +378,26 @@
 
     return list.map((srv, idx) => {
       const fallback = DEFAULT_PUBLIC_SERVERS[idx] || DEFAULT_PUBLIC_SERVERS[0];
-      const st = (srv.status || '').toString().trim().toLowerCase();
-      const isOff = (srv.isOffline === true) || (st === 'offline');
-      const isMaint = !isOff && ((srv.isMaintenance === true) || (st === 'maintenance'));
-      const isOn = !isOff && !isMaint;
+      const s = (srv.status || '').toString().trim().toLowerCase();
+      let isOff = false;
+      let isMaint = false;
+      let isOn = false;
+
+      if (s === 'online') {
+        isOn = true;
+      } else if (s === 'offline') {
+        isOff = true;
+      } else if (s === 'maintenance') {
+        isMaint = true;
+      } else if (srv.isOffline === true) {
+        isOff = true;
+      } else if (srv.isMaintenance === true) {
+        isMaint = true;
+      } else if (srv.isOnline === true) {
+        isOn = true;
+      } else {
+        isOn = true;
+      }
 
       return {
         id: srv.id || fallback.id,
@@ -2122,9 +2138,23 @@ INSTRUCTIONS:
       grid.innerHTML = '';
       
       servers.forEach(srv => {
-        const isOffline = (srv.isOffline === true) || ((srv.status || '').trim().toLowerCase() === 'offline');
-        const isMaintenance = !isOffline && ((srv.isMaintenance === true) || ((srv.status || '').trim().toLowerCase() === 'maintenance'));
-        const isOnline = !isOffline && !isMaintenance;
+        const s = (srv.status || '').toString().trim().toLowerCase();
+        let isOffline = false;
+        let isMaintenance = false;
+        let isOnline = false;
+        if (s === 'online') {
+          isOnline = true;
+        } else if (s === 'offline') {
+          isOffline = true;
+        } else if (s === 'maintenance') {
+          isMaintenance = true;
+        } else if (srv.isOffline === true) {
+          isOffline = true;
+        } else if (srv.isMaintenance === true) {
+          isMaintenance = true;
+        } else {
+          isOnline = true;
+        }
 
         const card = document.createElement('div');
         let borderClass = 'border-emerald-900/40 hover:border-emerald-500/60';
@@ -2307,8 +2337,18 @@ INSTRUCTIONS:
     const adStatus = document.getElementById('public-ad-status');
     const publicPill = document.getElementById('public-progress-pill');
     
-    const resultConfig = document.getElementById('public-result-config');
-    const btnCopy = document.getElementById('public-btn-copy');
+    const resultConfig = document.getElementById('public-result-config') || document.getElementById('public-vless-output');
+    const btnCopy = document.getElementById('public-btn-copy') || (stepResult ? stepResult.querySelector('.js-copy-btn') : null);
+
+    if (btnCopy) {
+      btnCopy.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const out = document.getElementById('public-result-config') || document.getElementById('public-vless-output');
+        if (out) {
+          copyTextToClipboard(out.value, btnCopy);
+        }
+      });
+    }
     
     // Apply Modal Dynamic Settings from Store
     if (window.LegionStore && window.LegionStore.getModalSettings) {
@@ -2448,24 +2488,58 @@ INSTRUCTIONS:
             triggerMobileHaptic();
 
             if (clicks >= currentQuota) {
-              // 10 Ads Completed -> Close public modal & release Master Config via Celebratory Completion Modal
+              // Ads Completed -> Keep public modal open, show Step C (stepResult), populate deliveredConfig
               if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modal.style.display = 'flex';
               }
               if (stepVerify) stepVerify.classList.add('hidden');
               if (stepResult) stepResult.classList.remove('hidden');
 
-              const masterConfig = (window.LegionStore && window.LegionStore.getMasterConfig)
-                ? window.LegionStore.getMasterConfig()
-                : '';
-              if (vlessOutput && masterConfig) vlessOutput.value = masterConfig;
+              const pkgKey = currentPublicState.selectedPackageKey || 'social';
+              const servers = (window.LegionStore && window.LegionStore.getPublicServers)
+                ? window.LegionStore.getPublicServers()
+                : DEFAULT_PUBLIC_SERVERS;
+              const srv = servers.find(s => s && (s.id === currentPublicState.id || s.country === currentPublicState.country)) || servers[0];
 
-              const toastMsg = isInstantPublicNow
-                ? "🎉 1 Ad Verified! Releasing Singapore Master VPN..."
-                : "🎉 10 Ads Verified! Releasing Singapore Master VPN...";
-              showToast(toastMsg, "success");
-              deliverMasterVPNConfig(currentPublicState.selectedPackageKey);
+              let baseConfig = (srv && srv.configs && (srv.configs[pkgKey] || srv.configs.social || Object.values(srv.configs)[0])) || '';
+              if (!baseConfig && srv) {
+                const ip = srv.ip || currentPublicState.ip || '141.94.33.194';
+                const targetTag = `LEGION-${(srv.country || 'PUBLIC').toUpperCase()}-${pkgKey.toUpperCase()}`;
+                baseConfig = `vless://${ip.replace(/\./g, '-')}-${(srv.flag || 'node')}@${ip}:443?encryption=none&security=tls&type=ws&host=${ip}&path=%2F#${encodeURIComponent(targetTag)}`;
+              }
+
+              const deliveredConfig = (window.LegionStore && window.LegionStore.injectPackageSni)
+                ? window.LegionStore.injectPackageSni(baseConfig, pkgKey)
+                : baseConfig;
+
+              const resultOutput = document.getElementById('public-result-config') || document.getElementById('public-vless-output');
+              if (resultOutput) {
+                resultOutput.value = deliveredConfig;
+              }
+
+              const resultLabel = document.getElementById('public-result-label') || (stepResult ? stepResult.querySelector('label') : null);
+              if (resultLabel) {
+                resultLabel.textContent = `✓ Verification Complete (${clicks}/${currentQuota} Ads)`;
+              }
+
+              const copyBtnEl = document.getElementById('public-btn-copy') || (stepResult ? stepResult.querySelector('.js-copy-btn') : null);
+              if (copyBtnEl) {
+                copyBtnEl.onclick = (evt) => {
+                  evt.preventDefault();
+                  evt.stopPropagation();
+                  copyTextToClipboard(deliveredConfig, copyBtnEl);
+                };
+              }
+
+              if (typeof triggerCelebrationConfetti === 'function') {
+                triggerCelebrationConfetti();
+              }
+              triggerMobileHaptic();
+
+              const srvName = (srv && srv.country) ? srv.country : (currentPublicState.country || 'Public Server');
+              showToast(`🎉 Verification Complete! ${srvName} node unlocked.`, "success");
               return;
             }
 

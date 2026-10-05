@@ -597,10 +597,10 @@
 
       <!-- Step C: Output Result (Hidden initially) -->
       <div id="public-step-result" class="mb-2 hidden text-left">
-        <label class="block text-xs font-bold text-neon mb-2 uppercase tracking-wider">✓ Verification Complete (10/10 Ads)</label>
+        <label id="public-result-label" class="block text-xs font-bold text-neon mb-2 uppercase tracking-wider">✓ Verification Complete (10/10 Ads)</label>
         <div class="flex flex-col gap-2">
           <textarea id="public-vless-output" readonly rows="4" class="w-full bg-surface-100 border border-emerald-900/50 text-zinc-300 font-mono text-[10px] sm:text-xs rounded-xl p-3 focus:outline-none resize-none break-all"></textarea>
-          <button class="js-copy-btn w-full py-3 rounded-xl bg-neon text-black font-bold text-sm m3-btn" data-target="public-vless-output">
+          <button id="public-btn-copy" class="js-copy-btn w-full py-3 rounded-xl bg-neon text-black font-bold text-sm m3-btn" data-target="public-vless-output">
             Copy Configuration Key
           </button>
         </div>
